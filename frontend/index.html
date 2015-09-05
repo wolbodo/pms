@@ -1,0 +1,91 @@
+<!doctype html>
+
+<title>MMS: Member Management System</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="style.css" rel="stylesheet">
+<link href="lib/material-design-lite/material.css" rel="stylesheet">
+
+<login></login>
+
+<content>
+    <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+      <thead>
+        <tr>
+          <th class="mdl-data-table__cell--non-numeric">Naam</th>
+          <th>Achternaam</th>
+          <th>Straat</th>
+          <th>Postcode</th>
+          <th>Plaats</th>
+          <th>Mobiel</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
+          <td>Olbodo</td>
+          <td>Einde van de weg 8^8</td>
+          <td>4242AZ</td>
+          <td>Delft</td>
+          <td>0634345373</td>
+          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
+        </tr>
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
+          <td>Olbodo</td>
+          <td>Einde van de weg 8^8</td>
+          <td>4242AZ</td>
+          <td>Delft</td>
+          <td>0634345373</td>
+          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
+        </tr>
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
+          <td>Olbodo</td>
+          <td>Einde van de weg 8^8</td>
+          <td>4242AZ</td>
+          <td>Delft</td>
+          <td>0634345373</td>
+          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
+        </tr>
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
+          <td>Olbodo</td>
+          <td>Einde van de weg 8^8</td>
+          <td>4242AZ</td>
+          <td>Delft</td>
+          <td>0634345373</td>
+          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
+        </tr>
+      </tbody>
+    </table>
+</content>
+
+<script src="lib/rivets/dist/rivets.bundled.min.js"></script>
+<script src="lib/material-design-lite/material.min.js"></script>
+<script src="http.js"></script>
+<script>
+
+  function FormController(data) {
+    console.log("data", data);
+
+    this.data = data;
+  }
+
+
+rivets.components['login'] = {
+  // Return the template for the component.
+  template: function() {
+    return $http('login.html').get();
+  },
+
+  // Takes the original element and the data that was passed into the
+  // component (either from rivets.init or the attributes on the component
+  // element in the template).
+  initialize: function(el, data) {
+    return new FormController({})
+  }
+}
+</script>
