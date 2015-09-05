@@ -9,7 +9,7 @@ function $http(url){
   var core = {
 
     // Method that performs the ajax request
-    ajax : function (method, url, args) {
+    ajax : function (method, url, args, headers) {
 
       // Creating a promise
       var promise = new Promise( function (resolve, reject) {
@@ -19,6 +19,13 @@ function $http(url){
 
         client.open(method, url);
         client.setRequestHeader("Content-Type", "application/json");
+
+        for (var k in headers) {
+          if (headers.hasOwnProperty(k)) {
+            client.setRequestHeader(k, headers[k]);
+          }
+        }
+
         client.send(JSON.stringify(args));
 
         client.onload = function () {
@@ -42,11 +49,11 @@ function $http(url){
 
   // Adapter pattern
   return {
-    'get' : function(args) {
-      return core.ajax('GET', url, args);
+    'get' : function(args, headers) {
+      return core.ajax('GET', url, args, headers);
     },
-    'post' : function(args) {
-      return core.ajax('POST', url, args);
+    'post' : function(args, headers) {
+      return core.ajax('POST', url, args, headers);
     },
     'put' : function(args) {
       return core.ajax('PUT', url, args);
