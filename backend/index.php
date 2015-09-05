@@ -1,11 +1,15 @@
 <?php
 
 // run with sudo php -S 0.0.0.0:80 index.php
+// clear && SIG=$(curl localhost/token -H 'Content-Type: application/json' -d '{"user":"test", "password": "test"}'  | base64 -w 0)
+// curl localhost/self -H "Authorization: $SIG"
+
 if (strncmp($_SERVER['SERVER_SOFTWARE'], 'PHP', 3) === 0) { //if php test server, fix args
-	$_GET['args'] = substr($_SERVER['REQUEST_URI'], 1);
+    $_GET['args'] = substr($_SERVER['REQUEST_URI'], 1);
 }
 
 $secretKey = 'replace-this-with-true-random-data';
+$timeout = 60 * 60 * 24 * 7; // 7 days
 
 function getCSPHeaderName()
 {
@@ -48,7 +52,7 @@ function response($json = array(), $code = '200 OK')
 function getJsonPost()
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-	    throw new Exception('Must be post.');
+        throw new Exception('Must be post.');
     }
     if (!isset($_SERVER['CONTENT_TYPE']) && !isset($_SERVER['HTTP_CONTENT_TYPE'])) {
         throw new Exception('Content-Type header not found');
@@ -71,6 +75,31 @@ function getJsonPost()
         throw new Exception('No JSON object posted');
     }
     return $json;
+}
+
+/**
+ * @see Zend _secureStringCompare
+ * Securely compare two strings for equality while avoided C level memcmp()
+ * optimizations capable of leaking timing information useful to an attacker
+ * attempting to iteratively guess the unknown string (e.g. password) being
+ * compared against.
+ *
+ * @param  string  $left  Left string.
+ * @param  string  $right Right string.
+ *
+ * @return boolean        True if equal, false if unequal,
+ *                        in a time independent of the amount of characters that matched.
+ */
+function secureStringCompare($left, $right)
+{
+    if (strlen($left) !== strlen($right)) {
+        return false;
+    }
+    $result = 0;
+    for ($i = 0; $i < strlen($left); $i++) {
+        $result |= ord($left[$i]) ^ ord($right[$i]);
+    }
+    return $result === 0;
 }
 
 /**
@@ -100,7 +129,7 @@ function getJsonVar($json, $name, $defaultValue = null)
                 }
                 return $defaultValue;
             }
-            $json = cast('mixed[string]', $value);
+            $json = $value;
         }
         if (!array_key_exists($names[$i], $json)) {
             if (func_num_args() === 2) {
@@ -117,7 +146,7 @@ function getJsonVar($json, $name, $defaultValue = null)
 //int $errno , string $errstr, string $errfile, int $errline, array $errcontext)
 function errorHandler($errno, $errstr, $errfile, $errline, $errcontext)
 {
-	throw new Exception($errstr);
+    throw new Exception($errstr);
 }
 
 function exceptionHandler(Exception $ex)
@@ -138,22 +167,60 @@ header('Expires: Thu, 1 Jan 1970 00:00:00 GMT');
 
 
 if (!isset($_GET['args'])) {
-	throw new Exception('Please supply an action');
+    throw new Exception('Please supply an action');
 }
 
 $arguments = explode('/', $_GET['args']);
 
+function verifyAuthorization()
+{
+    global $timeout, $secretKey;
+    if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        throw new Exception('Authorization header not found');
+    }
+    $value = base64_decode((string)$_SERVER['HTTP_AUTHORIZATION'], true);
+    if (!$value) {
+       throw new Exception('Authorization header is not valid base64'); 
+    }
+    $json = json_decode($value, true);
+    if (is_null($json)) {
+        throw new Exception('No valid JSON in Authorization: '. json_last_error_msg());
+    }
+    if (!is_array($json)) {
+        throw new Exception('No JSON object in Authorization');
+    }
+    $msg = array(
+        'timestamp' => getJsonVar($json, 'message.timestamp'),
+        'id' => getJsonVar($json, 'message.id')
+    );
+    if ($msg['timestamp'] < time() - $timeout) {
+        throw new Exception('Authentication timeout', 400);
+    }
+    // check if id exists and is still valid
+    if (!secureStringCompare(
+        getJsonVar($json, 'signature'),
+        hash_hmac('sha256', json_encode($msg), $secretKey)
+    )) {
+        throw new Exception('Authentication signature invalid', 400);
+    }
+    return $msg['id'];
+}
+
 switch($arguments[0]) {
-	case 'token':
-		$json = getJsonPost();
+    case 'token':
+        $json = getJsonPost();
         $user = getJsonVar($json, 'user');
         $password = getJsonVar($json, 'password');
         //do password bcrypt (password_hash & verify)
         if ($user === 'invalid') {
-        	throw new Exception('Incorrect login', 400);
+            throw new Exception('Incorrect login', 400);
         }
-        $msg = array('ts' => time(), 'user' => $user, 'id' => 42);
-		response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
-	default:
-		throw new Exception('Invalid action "' . $arguments[0] . '"');
+        $msg = array('timestamp' => time(), 'id' => 42);
+        response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
+    case 'self':
+        $id = verifyAuthorization();
+        //query DB for record ID
+        response(array('id' => $id));
+    default:
+        throw new Exception('Invalid action "' . $arguments[0] . '"');
 }
