@@ -11,8 +11,8 @@
 <header>
   <form rv-if="loggedOff" rv-on-submit="login">
         <div class="mdl-textfield mdl-js-textfield">
-          <input class="mdl-textfield__input" type="text" name="username"/>
-          <label class="mdl-textfield__label" for="username">Naam</label>
+          <input class="mdl-textfield__input" type="text" name="user" id="user"/>
+          <label class="mdl-textfield__label" for="user">Naam</label>
         </div>
         <div class="mdl-textfield mdl-js-textfield">
           <input class="mdl-textfield__input" type="password" name="password"/>
@@ -46,7 +46,7 @@
         data[this[i].name] = this[i].value;
       }
 
-      $http('/backend/token').post(data)
+      $http('/api/token').post(data)
         .then(function (res) {
           console.log("Res", res);
         })
