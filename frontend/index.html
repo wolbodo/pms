@@ -49,7 +49,7 @@
       $http('/api/token').post(data)
         .then(function (res) {
           console.log("Res", res);
-          return $http('/api/self').get({}, {'Authorization':atob(res)});
+          return $http('/api/self').get({}, {'Authorization':btoa(res)});
         })
         .then(function (res) {
           console.log("Self:", res);
