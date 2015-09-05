@@ -7,85 +7,53 @@
 <link href="style.css" rel="stylesheet">
 <link href="lib/material-design-lite/material.css" rel="stylesheet">
 
-<login></login>
+
+<header>
+  <form rv-if="loggedOff" rv-on-submit="login">
+        <div class="mdl-textfield mdl-js-textfield">
+          <input class="mdl-textfield__input" type="text" name="username"/>
+          <label class="mdl-textfield__label" for="username">Naam</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield">
+          <input class="mdl-textfield__input" type="password" name="password"/>
+          <label class="mdl-textfield__label" for="password">Wachtwoord</label>
+        </div>
+      <input class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" type='submit' value='login'>
+  </form>
+  <div>
+    <label>{ user.name }</label>
+  </div>
+</header>
 
 <content>
-    <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
-      <thead>
-        <tr>
-          <th class="mdl-data-table__cell--non-numeric">Naam</th>
-          <th>Achternaam</th>
-          <th>Straat</th>
-          <th>Postcode</th>
-          <th>Plaats</th>
-          <th>Mobiel</th>
-          <th>Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
-          <td>Olbodo</td>
-          <td>Einde van de weg 8^8</td>
-          <td>4242AZ</td>
-          <td>Delft</td>
-          <td>0634345373</td>
-          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
-        </tr>
-        <tr>
-          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
-          <td>Olbodo</td>
-          <td>Einde van de weg 8^8</td>
-          <td>4242AZ</td>
-          <td>Delft</td>
-          <td>0634345373</td>
-          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
-        </tr>
-        <tr>
-          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
-          <td>Olbodo</td>
-          <td>Einde van de weg 8^8</td>
-          <td>4242AZ</td>
-          <td>Delft</td>
-          <td>0634345373</td>
-          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
-        </tr>
-        <tr>
-          <td class="mdl-data-table__cell--non-numeric">Wikkert</td>
-          <td>Olbodo</td>
-          <td>Einde van de weg 8^8</td>
-          <td>4242AZ</td>
-          <td>Delft</td>
-          <td>0634345373</td>
-          <td><a href='mailto://email@example.com'>w@lbodo.nl</a></td>
-        </tr>
-      </tbody>
-    </table>
+  <div rv-if="members.list"></div>
 </content>
 
+<script src="lib/lodash/lodash.min.js"></script>
 <script src="lib/rivets/dist/rivets.bundled.min.js"></script>
 <script src="lib/material-design-lite/material.min.js"></script>
 <script src="http.js"></script>
 <script>
 
-  function FormController(data) {
-    console.log("data", data);
+  var context = {
+    loggedOff: true,
+    login: function (e) {
+      var i, data = {};
 
-    this.data = data;
-  }
+      e.preventDefault();
 
+      for (i=0; i<this.length; i++) {
+        data[this[i].name] = this[i].value;
+      }
 
-rivets.components['login'] = {
-  // Return the template for the component.
-  template: function() {
-    return $http('login.html').get();
-  },
+      $http('/backend/token').post(data)
+        .then(function (res) {
+          console.log("Res", res);
+        })
 
-  // Takes the original element and the data that was passed into the
-  // component (either from rivets.init or the attributes on the component
-  // element in the template).
-  initialize: function(el, data) {
-    return new FormController({})
-  }
-}
+      return false;
+    }
+  };
+
+  rivets.bind(document.body, context);
 </script>
