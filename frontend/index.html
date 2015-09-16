@@ -79,7 +79,7 @@
                 <tr rv-each-member='members'>
                   <td class="mdl-data-table__cell--non-numeric">{member.nickname}</td>
                   <td class="mdl-data-table__cell--non-numeric">{member.infix} {member.lastname}</td>
-                  <td class="mdl-data-table__cell--non-numeric">{member.street} {member.lastname}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{member.street} {member.housenumber}</td>
                   <td>{member.zipcode}</td>
                   <td class="mdl-data-table__cell--non-numeric">{member.city}</td>
                   <td class="mdl-data-table__cell--non-numeric">{member.mobile}</td>
@@ -93,26 +93,109 @@
           </section>
         </div>
 
-
         <div class="mdl-layout__tab-panel" id="wijzig">
           <form rv-on-submit="edit">
           <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
             <div class="mdl-card mdl-cell mdl-cell--12-col">
               <div class="mdl-card__title mdl-card--expand">
-                <h2 class="mdl-card__title-text">Wijzig gegevens</h2>
+                <h2 class="mdl-card__title-text">Persoonsgegevens</h2>
               </div>
-              <div class="mdl-card__supporting-text">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Aenan convallis.
+
+              <div class="mdl-card__formset">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="nickname" name='nickname' rv-value='editUser.nickname'/>
+                  <label class="mdl-textfield__label" for="nickname">Bijnaam</label>
+                </div>
+              </div>
+              <div class="mdl-card__formset">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="firstname" name='firstname' rv-value='editUser.firstname'/>
+                  <label class="mdl-textfield__label" for="firstname">Voornaam</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="infix" name='infix' rv-value='editUser.infix'/>
+                  <label class="mdl-textfield__label" for="infix">Infix</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="lastname" name='lastname' rv-value='editUser.lastname'/>
+                  <label class="mdl-textfield__label" for="lastname">Achternaam</label>
+                </div>
+              </div>
+
+              <div class="mdl-card__formset">
+                <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="gender-1">
+                  <input type="radio" id="gender-1" class="mdl-radio__button" name="gender" value="male" checked />
+                  <span class="mdl-radio__label">Man</span>
+                </label>
+                <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="gender-2">
+                  <input type="radio" id="gender-2" class="mdl-radio__button" name="gender" value="female" />
+                  <span class="mdl-radio__label">Vrouw</span>
+                </label>
+              </div>
+
+            </div>
+          </section>
+
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+              <div class="mdl-card__title mdl-card--expand">
+                <h2 class="mdl-card__title-text">Contactgegevens</h2>
+              </div>
+
+              <div class="mdl-card__formset">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="email" name='email' rv-value='editUser.email'/>
+                  <label class="mdl-textfield__label" for="email">Email</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="mobile" name='mobile' rv-value='editUser.mobile'/>
+                  <label class="mdl-textfield__label" for="mobile">Mobiel</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="phone" name='phone' rv-value='editUser.phone'/>
+                  <label class="mdl-textfield__label" for="phone">Telefoon</label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+              <div class="mdl-card__title mdl-card--expand">
+                <h2 class="mdl-card__title-text">Adresgegevens</h2>
+              </div>
+
+              <div class="mdl-card__formset">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="street" name='street' rv-value='editUser.street'/>
+                  <label class="mdl-textfield__label" for="street">Straat</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="housenumber" name='housenumber' rv-value='editUser.housenumber'/>
+                  <label class="mdl-textfield__label" for="housenumber">Huisnummer</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="zipcode" name='zipcode' rv-value='editUser.zipcode'/>
+                  <label class="mdl-textfield__label" for="zipcode">Postcode</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="city" name='city' rv-value='editUser.city'/>
+                  <label class="mdl-textfield__label" for="city">Plaats</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input class="mdl-textfield__input" type="text" id="country" name='country' rv-value='editUser.country'/>
+                  <label class="mdl-textfield__label" for="country">Land</label>
+                </div>
               </div>
               <div class="mdl-card__actions mdl-card--border">
                 <input type='submit' value='Opslaan' class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"></input>
               </div>
             </div>
           </section>
-          </form>
 
+          </form>
         </div>
+
       </main>
     </div>
 
@@ -129,22 +212,27 @@
 
 var api = new API('https://wolbodo.dxlb.nl/api/');
 
+function parseForm(form) {
+  // returns data found in the form
+  var i, data = {};
+  // parse form
+  for (i=0; i<form.length; i++) {
+    if (form[i].name && form[i].value) {
+      data[form[i].name] = form[i].value;
+    }
+  }
+  return data;
+}
+
 var context = {
-  links: [
-    {href: '#login', title: "Log in"}
-  ],
+  user: {id:1},
   members : members,
+  editUser : members[0],
+
   login: function (e) {
-    var i, data = {};
+    var data = parseForm(this);
 
     e.preventDefault();
-
-    // parse form
-    for (i=0; i<this.length; i++) {
-      if (this[i].name) {
-        data[this[i].name] = this[i].value;
-      }
-    }
 
     // Login
     api.login(data)
@@ -167,16 +255,17 @@ var context = {
     document.querySelector("[href='#login']").click();
 
     return false;
+  },
+  edit: function (e) {
+    var formData = parseForm(this);
+
+    e.preventDefault();
+
+    console.log("Got formdata:", formData);
+
+    return false;
   }
 };
 rivets.bind(document.body, context);
-
-
-sightglass(context, 'user', function (a, b, c) {
-  // user changed, show list.
-
-  context.members = members;
-
-});
 
 </script>

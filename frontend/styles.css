@@ -101,6 +101,23 @@ html, body {
   color: inherit;
   width: calc(100% - 80px);
 }
+#app .mdl-card .mdl-card__formset {
+  font-size: 13px;
+  line-height: 18px;
+  overflow: hidden;
+  margin: 5px 40px;
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  padding: 0;
+  color: rgba(0,0,0,.54);
+  width: calc(100% - 80px);
+}
+#app .mdl-card .mdl-card__formset:last-child {
+  margin-bottom: 40px;
+}
+
 #app#app .mdl-card__supporting-text h4 {
   margin-top: 0;
   margin-bottom: 20px;
@@ -232,41 +249,26 @@ html, body {
 #app .mdl-card .mdl-card__supporting-text > h3:first-child {
   margin-bottom: 24px;
 }
-#app .mdl-layout__tab-panel:not(#login, #features) {
-  background-color: white;
-}
-#app #features section {
-  margin-bottom: 72px;
-}
-#app #features h4, #features h5 {
-  margin-bottom: 16px;
-}
-#app .toc {
-  border-left: 4px solid #C1EEF4;
-  margin: 24px;
-  padding: 0;
-  padding-left: 8px;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-      -ms-flex-direction: column;
-          flex-direction: column;
-}
-#app .toc h4 {
-  font-size: 0.9rem;
-  margin-top: 0;
-}
-#app .toc a {
-  color: #4DD0E1;
-  text-decoration: none;
-  font-size: 16px;
-  line-height: 28px;
-  display: block;
-}
 #app .mdl-menu__container {
   z-index: 99;
 }
+
+
+#wijzig .mdl-textfield {
+  width: auto;
+  max-width:300px;
+}
+
+#wijzig input#nickname {width: 100px;}
+#wijzig input#firstname {width: 100px;}
+#wijzig input#infix {width: 50px;}
+#wijzig input#lastname {width: 100px;}
+#wijzig input#gender {width: 200px;}
+#wijzig input#email {width: 200px;}
+#wijzig input#mobile {width: 120px;}
+#wijzig input#phone {width: 120px;}
+#wijzig input#street {width: 140px;}
+#wijzig input#housenumber {width: 90px;}
+#wijzig input#zipcode {width: 200px;}
+#wijzig input#city {width: 200px;}
+#wijzig input#country {width: 200px;}
