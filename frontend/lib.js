@@ -12,10 +12,10 @@ function API(url) {
   this.host = $http.server(url);
 }
 API.prototype.login = function (data) {
-  return wait(0)
-          .then(function () {
-            return {id: 42};
-          });
+  // return wait(0)
+  //         .then(function () {
+  //           return {id: 42};
+  //         });
 
   return this.token(data)
          .then(this.self.bind(this));
