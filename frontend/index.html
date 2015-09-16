@@ -1,63 +1,182 @@
 <!doctype html>
 
-<title>MMS: Member Management System</title>
+<title>Wolbodo:ledenlijst</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<link href="style.css" rel="stylesheet">
-<link href="lib/material-design-lite/material.css" rel="stylesheet">
+<!-- <link href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en" rel="stylesheet"> -->
 
+<link href="lib/material.min.css" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
 
-<header>
-  <form rv-if="loggedOff" rv-on-submit="login">
-        <div class="mdl-textfield mdl-js-textfield">
-          <input class="mdl-textfield__input" type="text" name="user" id="user"/>
-          <label class="mdl-textfield__label" for="user">Naam</label>
+<body id="app" class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
         </div>
-        <div class="mdl-textfield mdl-js-textfield">
-          <input class="mdl-textfield__input" type="password" name="password"/>
-          <label class="mdl-textfield__label" for="password">Wachtwoord</label>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+          <h3>Wolbodo:ledenlijst</h3>
         </div>
-      <input class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" type='submit' value='login'>
-  </form>
-  <div>
-    <label>{ user.name }</label>
-  </div>
-</header>
+        <div class="mdl-layout--large-screen-only mdl-layout__header-row">
+        </div>
+        <div class="mdl-layout__tab-bar mdl-color--primary-dark">
+          <a rv-hide="user" href='#login' class="mdl-layout__tab is-active">Log in</a>
+          <a rv-show='user' href="#ledenlijst" class="mdl-layout__tab">Ledenlijst</a>
+          <a rv-show='user' href="#wijzig" class="mdl-layout__tab">Wijzig gegevens</a>
+          <a rv-show='user' href="#logout" rv-on-click='logout' class="mdl-layout__tab">Log uit</a>
+        </div>
+<!--           <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-shadow--4dp mdl-color--accent" id="add">
+            <i class="material-icons" role="presentation">add</i>
+            <span class="visuallyhidden">Add</span>
+          </button>
+ -->        
+      </header>
+      <main class="mdl-layout__content">
 
-<content>
-  <div rv-if="members.list"></div>
-</content>
+        <div class="mdl-layout__tab-panel is-active" id="login">
+          <form rv-on-submit="login">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+            <header class="section__play-btn mdl-cell mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--4-col-phone mdl-color--teal-100 mdl-color-text--white">
+              <i class="material-icons">person</i>
+            </header>
+            <div class="mdl-card mdl-cell mdl-cell--9-col-desktop mdl-cell--6-col-tablet mdl-cell--4-col-phone">
 
-<script src="lib/lodash/lodash.min.js"></script>
-<script src="lib/rivets/dist/rivets.bundled.min.js"></script>
-<script src="lib/material-design-lite/material.min.js"></script>
+              <div class="mdl-card__supporting-text">
+                <div class="mdl-textfield mdl-js-textfield">
+                  <input class="mdl-textfield__input" type="text" name="user" id="user"/>
+                  <label class="mdl-textfield__label" for="user">Naam</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield">
+                  <input class="mdl-textfield__input" type="password" name="password"/>
+                  <label class="mdl-textfield__label" for="password">Wachtwoord</label>
+                </div>
+              </div>
+              <div class="mdl-card__actions">
+                  <input class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" type='submit' value='login'>
+              </div>
+            </div>
+          </section>
+
+          </form>
+        </div>
+
+        <div class="mdl-layout__tab-panel" id="ledenlijst">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+              <table rv-if="members" class="mdl-data-table mdl-shadow--2dp">
+                <thead>
+                <tr>
+                  <th class="mdl-data-table__cell--non-numeric">Naam</th>
+                  <th class="mdl-data-table__cell--non-numeric">Achternaam</th>
+                  <th class="mdl-data-table__cell--non-numeric">Straat</th>
+                  <th>Postcode</th>
+                  <th class="mdl-data-table__cell--non-numeric">Plaats</th>
+                  <th class="mdl-data-table__cell--non-numeric">Mobiel</th>
+                  <th class="mdl-data-table__cell--non-numeric">Email</th>
+                  <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr rv-each-member='members'>
+                  <td class="mdl-data-table__cell--non-numeric">{member.nickname}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{member.infix} {member.lastname}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{member.street} {member.lastname}</td>
+                  <td>{member.zipcode}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{member.city}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{member.mobile}</td>
+                  <td class="mdl-data-table__cell--non-numeric"><a rv-mailto='member.email'>{member.email}</a></td>
+                  <td><i class='material-icons' rv-on-click='edit'>edit</i></td>
+                </tr>
+                </tbody>
+              </table>
+            
+            </div>
+          </section>
+        </div>
+
+
+        <div class="mdl-layout__tab-panel" id="wijzig">
+          <form rv-on-submit="edit">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--2dp">
+            <div class="mdl-card mdl-cell mdl-cell--12-col">
+              <div class="mdl-card__title mdl-card--expand">
+                <h2 class="mdl-card__title-text">Wijzig gegevens</h2>
+              </div>
+              <div class="mdl-card__supporting-text">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Aenan convallis.
+              </div>
+              <div class="mdl-card__actions mdl-card--border">
+                <input type='submit' value='Opslaan' class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"></input>
+              </div>
+            </div>
+          </section>
+          </form>
+
+        </div>
+      </main>
+    </div>
+
+
+<script src="lib/lodash.min.js"></script>
+<script src="lib/rivets.bundled.min.js"></script>
+<script src="lib/material.min.js"></script>
+
 <script src="http.js"></script>
+<script src="lib.js"></script>
+
+<script src="memberstub.js"></script>
 <script>
 
-  var context = {
-    loggedOff: true,
-    login: function (e) {
-      var i, data = {};
+var api = new API('http://localhost:8001/');
 
-      e.preventDefault();
+var context = {
+  links: [
+    {href: '#login', title: "Log in"}
+  ],
+  members : members,
+  login: function (e) {
+    var i, data = {};
 
-      for (i=0; i<this.length; i++) {
+    e.preventDefault();
+
+    // parse form
+    for (i=0; i<this.length; i++) {
+      if (this[i].name) {
         data[this[i].name] = this[i].value;
       }
-
-      $http('/api/token').post(data)
-        .then(function (res) {
-          console.log("Res", res);
-          return $http('/api/self').get({}, {'Authorization':btoa(res)});
-        })
-        .then(function (res) {
-          console.log("Self:", res);
-        })
-
-      return false;
     }
-  };
 
-  rivets.bind(document.body, context);
+    // Login
+    api.login(data)
+       .then(function (self) {
+        console.log("Self:", self);
+        context.user = self;
+
+        document.querySelector("[href='#ledenlijst']").click();
+      });
+
+
+    return false;
+  },
+  logout: function (e) {
+    e.preventDefault();
+    e.stopImmediatePropagation(); // stop mdl event handlers
+
+    context.user = undefined;
+
+    document.querySelector("[href='#login']").click();
+
+    return false;
+  }
+};
+rivets.bind(document.body, context);
+
+
+sightglass(context, 'user', function (a, b, c) {
+  // user changed, show list.
+
+  context.members = members;
+
+});
+
 </script>

@@ -63,3 +63,9 @@ function $http(url){
     }
   };
 };
+
+$http.server = function (host) {
+  return function (url) {
+    return $http(host + url);
+  }
+}
