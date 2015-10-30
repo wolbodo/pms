@@ -57,16 +57,23 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 }
 
 fn handle_members(req: &mut Request) -> IronResult<Response> {
+    // Returns a list of members, might be using filters. 
+
     unimplemented!();
     // Err(Response::with((status::Ok)));
 }
 
 fn handle_edit(req: &mut Request) -> IronResult<Response> {
+    // Update an existing member.
+
     unimplemented!();
     // Err(Response::with((status::Ok)));
 }
 
 fn handle_create(req: &mut Request) -> IronResult<Response> {
+    // Create a new member. 
+
+
     unimplemented!();
     // Err(Response::with((status::Ok)));
 }
@@ -85,5 +92,5 @@ fn main() {
 
     let mut chain = Chain::new(router);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
-    Iron::new(chain).http("localhost:3000").unwrap();
+    Iron::new(chain).http("localhost:4242").unwrap();
 }

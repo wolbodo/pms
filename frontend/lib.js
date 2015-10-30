@@ -21,7 +21,7 @@ API.prototype.login = function (data) {
          .then(this.self.bind(this));
 }
 API.prototype.token = function(data) {
-  return this.host('token')
+  return this.host('login')
          .post(data)
          .then(function (res) {
           localStorage.setItem('authorization', btoa(res));
