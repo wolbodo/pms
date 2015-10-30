@@ -1,0 +1,4 @@
+[package]
+name = "backend"
+version = "0.1.0"
+authors = ["dexter <dexter@dexterlabs.nl>", "benjamin <bwb@bwblabs.com>"]
