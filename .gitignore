@@ -1,1 +1,3 @@
 .directory
+backend/Cargo.lock
+backend/target/
