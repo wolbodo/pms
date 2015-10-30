@@ -10,3 +10,7 @@ rust-crypto = "^0.2"
 persistent = "*"
 rustc-serialize = "*"
 bodyparser = "*"
+postgres = "*"
+
+[dependencies.iron-postgres-middleware]
+git = "https://github.com/martinsp/iron-postgres-middleware.git"

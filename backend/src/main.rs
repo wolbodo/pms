@@ -4,12 +4,16 @@ extern crate persistent;
 extern crate rustc_serialize;
 extern crate crypto;
 extern crate router;
+extern crate postgres;
+extern crate iron_postgres_middleware as pg_middleware;
 
 use persistent::Read;
 use iron::status;
 use iron::prelude::*;
 use router::{Router};
 use rustc_serialize::json;
+use postgres::{Connection, SslMode};
+use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
 //use crypto::digest::Digest;
 //use crypto::sha2::Sha256;
@@ -33,8 +37,8 @@ struct Login {
 //hasher.input_str("hello world");
 //let hex = hasher.result_str();
 
-const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
+const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     let login = match req.get::<bodyparser::Struct<Login>>() {
@@ -53,35 +57,30 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     //response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
         Ok(Response::with((status::Ok)))
     }
-
 }
 
 fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
-    unimplemented!();
+    Ok(Response::with((status::Ok)))
     // Err(Response::with((status::Ok)));
 }
 
 fn handle_edit(req: &mut Request) -> IronResult<Response> {
     // Update an existing member.
 
-    unimplemented!();
-    // Err(Response::with((status::Ok)));
+    Ok(Response::with((status::Ok)))
 }
 
 fn handle_create(req: &mut Request) -> IronResult<Response> {
     // Create a new member. 
 
-
-    unimplemented!();
-    // Err(Response::with((status::Ok)));
+    Ok(Response::with((status::Ok)))
 }
 
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
-    // let mut router = Router::new();  // Alternative syntax:
 
     let router = router!(
         post "/login" => handle_login,
@@ -91,6 +90,10 @@ fn main() {
     );
 
     let mut chain = Chain::new(router);
+
+    let pg_middleware = PostgresMiddleware::new("postgres://postgres@localhost/mms");
+
+    chain.link_before(pg_middleware);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("localhost:4242").unwrap();
 }
