@@ -9,12 +9,14 @@ use persistent::Read;
 use iron::status;
 use iron::prelude::*;
 use router::{Router};
+use rustc_serialize::json;
+
 //use crypto::digest::Digest;
 //use crypto::sha2::Sha256;
 //use crypto::util::fixed_time_eq
 
 
-#[derive(Debug, Clone, RustcDecodable)]
+#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 struct Login {
     user: String,
     password: String,
@@ -27,7 +29,10 @@ const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
 fn handleLogin(login: Login) -> IronResult<Response> {
     if login.user == "invalid" {
-        Ok(Response::with((status::ImATeapot, "test")))
+        let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
+        let payload = json::encode(&peanut).unwrap();
+
+        Ok(Response::with((status::ImATeapot, payload)))
     } else {
     //$msg = array('timestamp' => time(), 'id' => 42);
     //response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
@@ -55,12 +60,3 @@ fn main() {
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("localhost:3000").unwrap();
 }
-
-/*
-
-
-fn main() {
-
-    Iron::new(router).http("localhost:3000").unwrap();
-
-}*/
