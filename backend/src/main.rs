@@ -27,7 +27,14 @@ struct Login {
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
-fn handleLogin(login: Login) -> IronResult<Response> {
+
+fn handle_login(req: &mut Request) -> IronResult<Response> {
+    let login = match req.get::<bodyparser::Struct<Login>>() {
+        Ok(Some(x)) => x,//println!("Parsed body:\n{:?}", login),
+        Ok(None) => return Ok(Response::with((status::BadRequest))),//println!("No postdata"),
+        Err(_err) => return Ok(Response::with((status::BadRequest)))//println!("Error: {:?}", err)
+    };
+
     if login.user == "invalid" {
         let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
         let payload = json::encode(&peanut).unwrap();
@@ -38,6 +45,19 @@ fn handleLogin(login: Login) -> IronResult<Response> {
     //response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
         Ok(Response::with((status::Ok)))
     }
+
+}
+
+fn handle_members(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((status:ImATeapot)));
+}
+
+fn handle_edit(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((status:ImATeapot)));
+}
+
+fn handle_create(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((status:ImATeapot)));
 }
 
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
@@ -45,16 +65,11 @@ fn handleLogin(login: Login) -> IronResult<Response> {
 fn main() {
     let mut router = Router::new();  // Alternative syntax:
     //router.get("/", handler);        // let router = router!(get "/" => handler,
-    router.post("/token", token);  //                      get "/:query" => handler);
+    router.post("/login", handle_login);  //                      get "/:query" => handler);
+    router.get("/members", handle_members);
+    router.put("/member/:id", handle_edit);
+    router.post("/member/new", handle_create);
 
-    fn token(req: &mut Request) -> IronResult<Response> {
-        let login = req.get::<bodyparser::Struct<Login>>();
-        match login {
-            Ok(Some(login)) => handleLogin(login),//println!("Parsed body:\n{:?}", login),
-            Ok(None) => Ok(Response::with((status::BadRequest))),//println!("No postdata"),
-            Err(err) => Ok(Response::with((status::BadRequest)))//println!("Error: {:?}", err)
-        }
-    }
 
     let mut chain = Chain::new(router);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
