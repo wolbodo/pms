@@ -15,6 +15,14 @@ use rustc_serialize::json;
 //use crypto::sha2::Sha256;
 //use crypto::util::fixed_time_eq
 
+// Iron router macro ?why
+macro_rules! router {
+    ($($method:ident $glob:expr => $handler:expr),+ $(,)*) => ({
+        let mut router = Router::new();
+        $(router.$method($glob, $handler);)*
+        router
+    });
+}
 
 #[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 struct Login {
@@ -49,27 +57,31 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 }
 
 fn handle_members(req: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((status:ImATeapot)));
+    unimplemented!();
+    // Err(Response::with((status::Ok)));
 }
 
 fn handle_edit(req: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((status:ImATeapot)));
+    unimplemented!();
+    // Err(Response::with((status::Ok)));
 }
 
 fn handle_create(req: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((status:ImATeapot)));
+    unimplemented!();
+    // Err(Response::with((status::Ok)));
 }
 
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
-    let mut router = Router::new();  // Alternative syntax:
-    //router.get("/", handler);        // let router = router!(get "/" => handler,
-    router.post("/login", handle_login);  //                      get "/:query" => handler);
-    router.get("/members", handle_members);
-    router.put("/member/:id", handle_edit);
-    router.post("/member/new", handle_create);
+    // let mut router = Router::new();  // Alternative syntax:
 
+    let router = router!(
+        post "/login" => handle_login,
+        get "/members" => handle_members,
+        put "/member/:id" => handle_edit,
+        post "/member/new" => handle_create
+    );
 
     let mut chain = Chain::new(router);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
