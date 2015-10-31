@@ -1,0 +1,41 @@
+{
+  "name": "mms-frontend",
+  "version": "1.0.0",
+  "description": "The react frontend for the membership management system",
+  "main": "index.jsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dexter",
+  "license": "ISC",
+  "dest": {
+    "app": "app.js",
+    "dist": "build",
+    "vendor": "build/vendor"
+  },
+  "paths": {
+    "jsx": "./*.jsx",
+    "html": "./*.html",
+    "css": "./*.css"
+  },
+  "dependencies": {
+    "lodash": "^3.10.1",
+    "material-design-lite": "^1.0.5",
+    "react": "^0.14.0",
+    "react-dom": "^0.14.0",
+    "react-mdl": "^0.15.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "babelify": "^6.3.0",
+    "browserify": "^11.2.0",
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-couchapp": "^0.1.0",
+    "gulp-inject": "^3.0.0",
+    "gulp-util": "^3.0.7",
+    "stream-series": "^0.1.1",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.5.0"
+  }
+}

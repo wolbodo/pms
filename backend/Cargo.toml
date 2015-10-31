@@ -12,3 +12,7 @@ rustc-serialize = "*"
 bodyparser = "*"
 rand = "*"
 time = "*"
+postgres = "*"
+
+[dependencies.iron-postgres-middleware]
+git = "https://github.com/martinsp/iron-postgres-middleware.git"
