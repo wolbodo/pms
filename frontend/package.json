@@ -14,9 +14,11 @@
     "vendor": "build/vendor"
   },
   "paths": {
-    "jsx": "./*.jsx",
-    "html": "./*.html",
-    "css": "./*.css"
+    "jsx": "./app/*.jsx",
+    "html": "./app/*.html",
+    "less": "./app/*.less",
+    "json": "./app/*.json",
+    "img": "./app/img/*"
   },
   "dependencies": {
     "lodash": "^3.10.1",
@@ -26,13 +28,13 @@
     "react-mdl": "^0.15.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.0",
     "babelify": "^6.3.0",
     "browserify": "^11.2.0",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
     "gulp-couchapp": "^0.1.0",
     "gulp-inject": "^3.0.0",
+    "gulp-less": "^3.0.3",
     "gulp-util": "^3.0.7",
     "stream-series": "^0.1.1",
     "vinyl-source-stream": "^1.1.0",

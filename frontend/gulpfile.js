@@ -4,6 +4,7 @@ var gulp = require("gulp"),
     babelify = require('babelify'),
     browserify = require('browserify'),
     inject = require('gulp-inject'),
+    less = require('gulp-less'),
     concat = require('gulp-concat'),
     series = require('stream-series'),
     package = require('./package')
@@ -18,7 +19,7 @@ gulp.task('mdl', function () {
 
 gulp.task('jsx', function () {
   return browserify({
-    entries: './index.jsx',
+    entries: './app/index.jsx',
     extensions: ['.jsx'],
     debug: true,
 
@@ -57,13 +58,21 @@ gulp.task('jsx', function () {
 // })
 
 
-gulp.task('css', function () {
-    return gulp.src([package.paths.css])
+gulp.task('less', function () {
+    return gulp.src([package.paths.less])
+        .pipe(less({
+          // paths: [ path.join(__dirname, 'less', 'includes') ]
+        }))
         .pipe(concat('app.css'))
         .pipe(gulp.dest(package.dest.dist));
 });
 
-gulp.task('index', ['jsx', 'css'], function () {
+gulp.task('img', function () {
+    return gulp.src([package.paths.img], {cwd: '.'})
+        .pipe(gulp.dest(package.dest.dist));
+});
+
+gulp.task('index', ['jsx', 'less', 'img'], function () {
 
   // It's not necessary to read the files (will speed up things), we're only after their paths: 
   var vendor = gulp.src([package.dest.vendor + '/*'], {read: false});
@@ -83,7 +92,8 @@ gulp.task('default', ['build'], function () {
     return gulp.watch([
         package.paths.html,
         package.paths.jsx,
-        package.paths.css
+        package.paths.less,
+        package.paths.json
     ], [
         'index'
     ]);

@@ -1,0 +1,161 @@
+{
+	"person": {
+		"title": "Persoon",
+		"fields": [{
+				"type": "string",
+				"label": "Bijnaam",
+				"name": "nickname" 
+			},[
+			{
+				"type": "string",
+				"label": "Voornaam",
+				"name": "firstname"
+			}, {
+				"type": "string",
+				"label": "Tussenvoegsel",
+				"name": "infix"
+			}, {
+				"type": "string",
+				"label": "Achternaam",
+				"name": "lastname"
+			}], 
+			{
+				"type": "option",
+				"label": "Geslacht",
+				"name": "gender",
+				"options": {
+					"male": "Man",
+					"female": "Vrouw",
+					"other": "Anders"
+				}
+			},
+			[{
+				"type": "string",
+				"name": "birthdate",
+				"label": "Geboortedatum"
+			}, {
+				"type": "string",
+				"name": "deathdate",
+				"label": "Sterfdatum"
+			}]
+		]
+	},
+	"adress": {
+		"title": "Adres",
+		"fields": [
+			[{
+				"type": "string",
+				"name": "street",
+				"label": "Straat"
+			}, {
+				"type": "string",
+				"name": "housenumber",
+				"label": "Huisnummer"
+			}], [{
+				"type": "string",
+				"name": "zipcode",
+				"label": "Postcode"
+			}, {
+				"type": "string",
+				"name": "city",
+				"label": "Woonplaats"
+			}], {
+				"type": "string",
+				"name": "country",
+				"label": "Land"
+			}
+		]
+	},
+	"contact": {
+		"title": "Contact",
+		"fields": [
+			{
+				"type": "string",
+				"name": "email",
+				"label": "Email"
+			}, [{
+				"type": "string",
+				"name": "mobile",
+				"label": "Mobiel"
+			}, {
+				"type": "string",
+				"name": "phone",
+				"label": "Telefoon"
+			}], {
+				"type": "string",
+				"name": "iban",
+				"label": "IBAN"
+			}, {
+				"type": "string",
+				"name": "emergencyinfo",
+				"label": "Noodgeval info"
+			}
+		]
+	}, 
+	"details": {
+		"title": "Details",
+		"fields": [
+			{
+				"type": "string",
+				"name": "membertype",
+				"label": "Lid type"
+			}, [{
+				"type": "string",
+				"name": "membersince",
+				"label": "Lid sinds"
+			}, {
+				"type": "string",
+				"name": "membertill",
+				"label": "Lid tot"
+			}], {
+				"type": "string",
+				"name": "functions",
+				"label": "Functies"
+			}, {
+				"type": "string",
+				"name": "notes",
+				"label": "Opmerkingen"
+			}, {
+				"type": "string",
+				"name": "wantscontact",
+				"label": "Wil contact"
+			}, {
+				"type": "string",
+				"name": "keycode",
+				"label": "KeyCode"
+			}, {
+				"type": "boolean",
+				"name": "coasters",
+				"label": "Viltjes"
+			}, {
+				"type": "boolean",
+				"name": "cashregister",
+				"label": "Kassasysteem"
+			}, {
+				"type": "boolean",
+				"name": "frontdoor",
+				"label": "Voordeur"
+			}, {
+				"type": "string",
+				"name": "directdebit",
+				"label": "Overboeking"
+			}, {
+				"type": "boolean",
+				"name": "isadmin",
+				"label": "Admin"
+			}, {
+				"type": "string",
+				"name": "passwordhash",
+				"label": "Wachtwoord"
+			}, {
+				"type": "string",
+				"name": "modified",
+				"label": "Gewijzigd"
+			}, {
+				"type": "string",
+				"name": "created",
+				"label": "Aangemaakt"
+			}
+		]
+	}
+}
