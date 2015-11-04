@@ -17,6 +17,13 @@ gulp.task('mdl', function () {
         .pipe(gulp.dest(package.dest.vendor));
 });
 
+gulp.task('appcache', function () {
+    return gulp.src([
+            "app/*.appcache"
+        ])
+        .pipe(gulp.dest(package.dest.dist))
+})
+
 gulp.task('jsx', function () {
   return browserify({
     entries: './app/index.jsx',
@@ -72,7 +79,7 @@ gulp.task('img', function () {
         .pipe(gulp.dest(package.dest.dist));
 });
 
-gulp.task('index', ['jsx', 'less', 'img'], function () {
+gulp.task('index', ['jsx', 'less', 'img', 'appcache'], function () {
 
   // It's not necessary to read the files (will speed up things), we're only after their paths: 
   var vendor = gulp.src([package.dest.vendor + '/*'], {read: false});

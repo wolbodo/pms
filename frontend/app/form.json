@@ -66,6 +66,18 @@
 			}
 		]
 	},
+	"bank": {
+		"title": "Bankgegevens",
+		"fields": [{
+			"type": "string",
+			"name": "iban",
+			"label": "IBAN"
+		}, {
+			"type": "string",
+			"name": "directdebit",
+			"label": "Overboeking"
+		}]
+	},
 	"contact": {
 		"title": "Contact",
 		"fields": [
@@ -83,17 +95,13 @@
 				"label": "Telefoon"
 			}], {
 				"type": "string",
-				"name": "iban",
-				"label": "IBAN"
-			}, {
-				"type": "string",
 				"name": "emergencyinfo",
 				"label": "Noodgeval info"
 			}
 		]
 	}, 
-	"details": {
-		"title": "Details",
+	"member": {
+		"title": "Lidmaatschap",
 		"fields": [
 			{
 				"type": "string",
@@ -119,43 +127,47 @@
 				"type": "string",
 				"name": "wantscontact",
 				"label": "Wil contact"
-			}, {
-				"type": "string",
-				"name": "keycode",
-				"label": "KeyCode"
-			}, {
-				"type": "boolean",
-				"name": "coasters",
-				"label": "Viltjes"
-			}, {
-				"type": "boolean",
-				"name": "cashregister",
-				"label": "Kassasysteem"
-			}, {
-				"type": "boolean",
-				"name": "frontdoor",
-				"label": "Voordeur"
-			}, {
-				"type": "string",
-				"name": "directdebit",
-				"label": "Overboeking"
-			}, {
-				"type": "boolean",
-				"name": "isadmin",
-				"label": "Admin"
-			}, {
-				"type": "string",
-				"name": "passwordhash",
-				"label": "Wachtwoord"
-			}, {
-				"type": "string",
-				"name": "modified",
-				"label": "Gewijzigd"
-			}, {
-				"type": "string",
-				"name": "created",
-				"label": "Aangemaakt"
 			}
 		]
+	},
+	"compukey": {
+		"title": "Sleutel",
+		"fields": [{
+			"type": "string",
+			"name": "keycode",
+			"label": "KeyCode"
+		}, {
+			"type": "boolean",
+			"name": "coasters",
+			"label": "Viltjes"
+		}, {
+			"type": "boolean",
+			"name": "cashregister",
+			"label": "Kassasysteem"
+		}, {
+			"type": "boolean",
+			"name": "frontdoor",
+			"label": "Voordeur"
+		}]
+	},
+	"system": {
+		"title": "Systeem",
+		"fields": [{
+			"type": "boolean",
+			"name": "isadmin",
+			"label": "Admin"
+		}, {
+			"type": "string",
+			"name": "passwordhash",
+			"label": "Wachtwoord"
+		}, {
+			"type": "string",
+			"name": "modified",
+			"label": "Gewijzigd"
+		}, {
+			"type": "string",
+			"name": "created",
+			"label": "Aangemaakt"
+		}]
 	}
 }

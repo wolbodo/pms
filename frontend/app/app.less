@@ -40,24 +40,43 @@ body {
 		}
 	}
 
-	.mdl-card {
-		width: 400px;
+	.content {
 
-		.mdl-card__form {
-			display: flex;
-			flex-direction: column;
+		display: flex;
+		flex-wrap: wrap;
+		padding: 0.5rem;
 
-			.mdl-card__formset {
+		.mdl-card {
+			flex-grow: 1;
+			width: 400px;
+			margin: 0.5rem;
+
+			&.login {
+				flex-grow: 0;
+				padding: 2rem;
+				width: 600px;
+
+				.mdl-button {
+					width: 150px;
+				}
+			}
+			.mdl-card__form {
 				display: flex;
-			}
+				flex-direction: column;
+				padding-left: 3rem;
 
-			.mdl-textfield {
-			    width: 400px;
-				margin-right: 1rem;
+				.mdl-card__formset {
+					display: flex;
+				}
 
-			}
-			.mdl-radio {
-				margin: 0 1rem 1rem 1rem;
+				.mdl-textfield {
+				    width: 400px;
+					margin-right: 1rem;
+
+				}
+				.mdl-radio {
+					margin: 0 1rem 1rem 1rem;
+				}
 			}
 		}
 	}

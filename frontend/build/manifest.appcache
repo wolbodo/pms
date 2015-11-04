@@ -1,0 +1,10 @@
+CACHE MANIFEST
+# 2015-10-14:v01
+
+NETWORK:
+*
+
+CACHE:
+https://fonts.googleapis.com/*
+https://fonts.gstatic.com/s/*
+https://fonts.gstatic.com/s/materialicons/v7/*

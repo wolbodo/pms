@@ -19,7 +19,10 @@ export default class MemberCreate extends React.Component {
 				memberForm.person,
 				memberForm.adress,
 				memberForm.contact,
-				memberForm.details
+				memberForm.bank,
+				memberForm.member,
+				memberForm.compukey,
+				memberForm.system
 			],
 			model: {}
 		};
@@ -35,9 +38,9 @@ export default class MemberCreate extends React.Component {
 	render() {
 
 		return (
-			<form onSubmit={this.handleSubmit}>
-				{this.state.forms.map((form, key) => (
-				<mdl.Card key={key}>
+		<form className='content' onSubmit={this.handleSubmit}>
+			{this.state.forms.map((form, key) => (
+				<mdl.Card key={key}  className='mdl-color--white mdl-shadow--2dp'>
 					<mdl.CardTitle>
 						{form.title}
 					</mdl.CardTitle>
@@ -60,12 +63,11 @@ export default class MemberCreate extends React.Component {
 						))}
 					</div>
 					<mdl.CardActions>
-						<mdl.Button colored>Opslaan</mdl.Button>
+						<mdl.Button primary raised colored>Opslaan</mdl.Button>
 					</mdl.CardActions>
 				</mdl.Card>
-				))}
-			</form>
-
+			))}
+		</form>
 		)
 	}
 }

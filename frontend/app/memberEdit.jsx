@@ -5,6 +5,9 @@ import mdl from 'react-mdl';
 import memberForm from './form';
 import FormField from './formField';
 
+import members from './members';
+
+
 import _ from 'lodash';
 
 export default class MemberEdit extends React.Component {
@@ -18,9 +21,12 @@ export default class MemberEdit extends React.Component {
 				memberForm.person,
 				memberForm.adress,
 				memberForm.contact,
-				memberForm.details
+				memberForm.bank,
+				memberForm.member,
+				memberForm.compukey,
+				memberForm.system
 			],
-			model: this.props.member
+			model: members[0]
 		};
 	}
 	handleChange(value, key) {
@@ -32,12 +38,12 @@ export default class MemberEdit extends React.Component {
 		});
 	}
 	render() {
-		var data = this.props.member || {};
+		var data = this.state.model;
 
 		return (
-			<form onSubmit={this.handleSubmit}>
-				{this.state.forms.map((form, key) => (
-				<mdl.Card key={key}>
+		<form className='content' onSubmit={this.handleSubmit}>
+			{this.state.forms.map((form, key) => (
+				<mdl.Card key={key}  className='mdl-color--white mdl-shadow--2dp'>
 					<mdl.CardTitle>
 						{form.title}
 					</mdl.CardTitle>
@@ -60,11 +66,11 @@ export default class MemberEdit extends React.Component {
 						))}
 					</div>
 					<mdl.CardActions>
-						<mdl.Button colored>Opslaan</mdl.Button>
+						<mdl.Button primary raised colored>Opslaan</mdl.Button>
 					</mdl.CardActions>
 				</mdl.Card>
-				))}
-			</form>
+			))}
+		</form>
 
 		)
 	}

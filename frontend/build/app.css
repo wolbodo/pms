@@ -46,21 +46,37 @@ body {
 #app .mdl-layout__drawer header img {
   width: 100%;
 }
-#app .mdl-card {
-  width: 400px;
+#app .content {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.5rem;
 }
-#app .mdl-card .mdl-card__form {
+#app .content .mdl-card {
+  flex-grow: 1;
+  width: 400px;
+  margin: 0.5rem;
+}
+#app .content .mdl-card.login {
+  flex-grow: 0;
+  padding: 2rem;
+  width: 600px;
+}
+#app .content .mdl-card.login .mdl-button {
+  width: 150px;
+}
+#app .content .mdl-card .mdl-card__form {
   display: flex;
   flex-direction: column;
+  padding-left: 3rem;
 }
-#app .mdl-card .mdl-card__form .mdl-card__formset {
+#app .content .mdl-card .mdl-card__form .mdl-card__formset {
   display: flex;
 }
-#app .mdl-card .mdl-card__form .mdl-textfield {
+#app .content .mdl-card .mdl-card__form .mdl-textfield {
   width: 400px;
   margin-right: 1rem;
 }
-#app .mdl-card .mdl-card__form .mdl-radio {
+#app .content .mdl-card .mdl-card__form .mdl-radio {
   margin: 0 1rem 1rem 1rem;
 }
 #app .mdl-navigation {
