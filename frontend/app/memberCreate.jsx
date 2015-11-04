@@ -62,9 +62,6 @@ export default class MemberCreate extends React.Component {
 							</div>
 						))}
 					</div>
-					<mdl.CardActions>
-						<mdl.Button primary raised colored>Opslaan</mdl.Button>
-					</mdl.CardActions>
 				</mdl.Card>
 			))}
 		</form>

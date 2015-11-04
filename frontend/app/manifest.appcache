@@ -5,6 +5,15 @@ NETWORK:
 *
 
 CACHE:
-https://fonts.googleapis.com/*
-https://fonts.gstatic.com/s/*
-https://fonts.gstatic.com/s/materialicons/v7/*
+/fonts/muli-light-webfont.eot  
+/fonts/muli-light-webfont.ttf   
+/fonts/muli-light-webfont.woff2  
+/fonts/muli-regular-webfont.svg  
+/fonts/muli-regular-webfont.woff
+
+/fonts/muli-light-webfont.svg  
+/fonts/muli-light-webfont.woff  
+/fonts/muli-regular-webfont.eot  
+/fonts/muli-regular-webfont.ttf  
+/fonts/muli-regular-webfont.woff2
+

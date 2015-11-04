@@ -9,7 +9,7 @@ var gulp = require("gulp"),
     series = require('stream-series'),
     package = require('./package')
 
-gulp.task('mdl', function () {
+gulp.task('mdl', ['material-icons'], function () {
     return gulp.src([
                 "node_modules/react-mdl/extra/material.js",
                 "node_modules/react-mdl/extra/material.css"
@@ -45,6 +45,16 @@ gulp.task('jsx', function () {
 
 });
 
+gulp.task('material-icons', function () {
+    return gulp.src(['./node_modules/material-design-icons/iconfont/Material*'])
+        .pipe(gulp.dest(package.dest.dist + '/fonts'));
+})
+
+gulp.task('fonts', function () {
+    return gulp.src(['./app/fonts/*'])
+        .pipe(gulp.dest(package.dest.dist + '/fonts'));
+})
+
 // gulp.task('jsx-reload', function () {
 
 //   var watcher = watchify(bundler);
@@ -79,7 +89,7 @@ gulp.task('img', function () {
         .pipe(gulp.dest(package.dest.dist));
 });
 
-gulp.task('index', ['jsx', 'less', 'img', 'appcache'], function () {
+gulp.task('index', ['jsx', 'less', 'img', 'appcache', 'fonts'], function () {
 
   // It's not necessary to read the files (will speed up things), we're only after their paths: 
   var vendor = gulp.src([package.dest.vendor + '/*'], {read: false});

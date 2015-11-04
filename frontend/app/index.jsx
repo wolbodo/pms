@@ -4,98 +4,23 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import {Router, Route, Link, IndexRoute } from 'react-router';
+import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
 
 import members from './members';
-import auth from './auth';
+import {auth, Login, Logout} from './auth';
 
 import MembersList from './membersList';
 import MemberEdit from './memberEdit';
 import MemberCreate from './memberCreate';
 
-class Login extends React.Component {
-  // // mixins: [ History ],
-  // static contextTypes = {
-  // 	history: RouterPropTypes.history
-  // }
-
-  constructor(props) {
-  	super(props);
-
-  	this.handleSubmit = this.handleSubmit.bind(this);
-  	this.state = {
-      error: false
-    }
-  }
-
-  handleSubmit(event) {
-    event.preventDefault()
-
-    const name = this.state.name.value
-    const password = this.state.password.value
-
-    auth.login(name, password, (loggedIn) => {
-      if (!loggedIn)
-        return this.setState({ error: true })
-
-      const { location } = this.props
-
-      if (location.state && location.state.nextPathname) {
-        this.history.replaceState(null, location.state.nextPathname)
-      } else {
-        this.history.replaceState(null, '/about')
-      }
-    })
-  }
-
-  onChange(name, value) {
-  	this.state[name] = value;
-
-  	this.setState(this.state);
-  }
-
-  render() {
-    return (
-      <form className='content' onSubmit={this.handleSubmit}>
-      	<mdl.Card className='login mdl-color--white mdl-shadow--2dp'>
-      		<mdl.CardTitle>Log in!</mdl.CardTitle>
-			<div className="mdl-card__form">
-		      	<mdl.Textfield 
-		      		label="Naam" 
-		      		onChange={value => this.onChange('name', value)} 
-		      		floatingLabel />
-		      	<div className="mdl-textfield mdl-js-textfield mdl-textfield__floating-label">
-		      		<input 
-		      			className="mdl-textfield__input" 
-		      			onChange={e => this.onChange('password', e.target.value)} 
-		      			type="password" 
-		      			id="login-password" />
-		      		<label className="mdl-textfield__label" htmlFor="login-password">Wachtwoord</label>
-		      	</div>
-
-				<mdl.Button primary raised colored>Verstuur</mdl.Button>
-		        {this.state.error && (
-		          <p>Bad login information</p>
-		        )}
-      		</div>
-  		</mdl.Card>
-      </form>
-    )
-  }
+class HeaderBar extends React.Component {
+	render() {
+		return (
+			<mdl.Button primary raised colored>Opslaan</mdl.Button>
+		);
+	}
 }
-
-
-const Logout = React.createClass({
-  componentDidMount() {
-    auth.logout()
-  },
-
-  render() {
-    return <p>You are now logged out</p>
-  }
-})
-
 
 class App extends React.Component {
 
@@ -105,7 +30,6 @@ class App extends React.Component {
 		var member = members[0];
 
 		this.state = {
-			loggedIn: auth.loggedIn(),
 			currentPage: 0
 		}
 
@@ -127,13 +51,12 @@ class App extends React.Component {
 	}
 
 	render() {
-		var {main, headerbar} = this.props.children || {};
+		var {main, header} = this.props.children || {};
 		return (
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
-					<mdl.HeaderRow>
-						{ headerbar }
-						<h3>Wolbodo:ledenlijst</h3>
+					<mdl.HeaderRow title="Wolbodo:ledenlijst">
+						{ header }
 					</mdl.HeaderRow>
 				</mdl.Header>
 				<mdl.Drawer>
@@ -142,7 +65,7 @@ class App extends React.Component {
 					</header>
 
 					<mdl.Navigation>
-						{this.state.loggedIn ? [
+						{auth.loggedIn() ? [
 							(<Link key="leden" to="/">Ledenlijst</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
 						 	(<Link key="nieuw" to="/nieuw">Nieuw lid</Link>),
@@ -165,12 +88,12 @@ class App extends React.Component {
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
-			<IndexRoute components={{main: MembersList}} />
+			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
 
-			<Route path="wijzig" components={{main: MemberEdit}} />
-			<Route path="nieuw" components={{main: MemberCreate}} />
+			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="nieuw" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
-			<Route path="logout" components={{main: Logout}} />
+			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
 		</Route>
 	</Router>,
 	document.getElementById('app')

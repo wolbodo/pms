@@ -17,7 +17,6 @@ export default class MembersList extends React.Component {
 			{name: "city", label:"Plaats"},
 			{name: "mobile", label:"Mobiel"},
 			{name: "email", label:"Email"}
-
 		];
 
 
