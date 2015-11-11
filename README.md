@@ -11,7 +11,6 @@ npm install
 gulp
 ```
 
-
 # Backend
 
 install rustlang
@@ -39,3 +38,20 @@ location /api/ {
         proxy_set_header Proxy-Connection "Keep-Alive";
 }
 ```
+
+# Api
+
+## Login 
+* POST /api/login                   ; create token
+    - :username, :password 
+    - :token
+    -> returns the current user.
+
+## Members
+* GET  /api/members                 ; returns a list of all members.
+* POST /api/member                  ; creates a new member
+* PUT  /api/member/:memberid        ; updates a member
+
+## Fields
+* GET  /api/fields                  ; returns all fields available for current user.
+* PUT  /api/fields                  ; updates fields 
