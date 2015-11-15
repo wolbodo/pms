@@ -107,7 +107,16 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
-    println!("Testing...");
+    let db = req.db_conn();
+    let stmt = db.prepare("SELECT * FROM members;").unwrap();
+    let rows = stmt.query(&[]).unwrap();
+
+    for row in rows {
+        let id: i32 = row.get("id");
+        let email: String = row.get("email");
+        println!("{}", email);
+    }
+
     Ok(Response::with((status::Ok)))
     // Err(Response::with((status::Ok)));
 }
@@ -154,6 +163,7 @@ fn main() {
     let mut chain = Chain::new(router);
 
     println!("Connecting to database.");
+    // for unix domain sockets use: %2Frun%2Fpostgresql%2F9.4-main.pid
     let pg_middleware = PostgresMiddleware::new("postgres://mms@127.0.0.1/mms");
     println!("Connected.");
 
