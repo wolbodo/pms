@@ -1,14 +1,18 @@
 [package]
 name = "backend"
 version = "0.1.0"
-authors = ["dexter <dexter@dexterlabs.nl>", "benjamin <bwb@bwblabs.com>"]
+authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.com>"]
 
 [dependencies]
 iron = "*"
 router = "*"
 rust-crypto = "^0.2"
 persistent = "*"
-rustc-serialize = "*"
+#rustc-serialize = "*"
+#serialize = "*"
+serde = "0.6.1"
+serde_json = "*"
+#serde_macros = "*"
 bodyparser = "*"
 rand = "*"
 time = "*"

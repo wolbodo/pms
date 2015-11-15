@@ -1,7 +1,10 @@
 extern crate iron;
 extern crate bodyparser;
 extern crate persistent;
-extern crate rustc_serialize;
+//extern crate rustc_serialize;
+//extern crate serialize;
+extern crate serde;
+extern crate serde_json;
 extern crate crypto;
 extern crate router;
 // extern crate rand;
@@ -13,8 +16,11 @@ use persistent::Read;
 use iron::status;
 use iron::prelude::*;
 use router::{Router};
-use rustc_serialize::json;
-// use postgres::{Connection, SslMode};
+//use rustc_serialize::json;
+use std::collections::BTreeMap;
+use serde_json::*;
+//use postgres::{Connection, SslMode};
+//use postgres::{Connection, SslMode};
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
 // use crypto::digest::Digest;
@@ -38,11 +44,11 @@ macro_rules! router {
     });
 }
 
-#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
+/*#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 struct Login {
     user: String,
     password: String,
-}
+}*/
 
 // #[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 // struct Auth {
@@ -55,11 +61,11 @@ struct Login {
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
-    let login = match req.get::<bodyparser::Struct<Login>>() {
+    /*let login = match req.get::<bodyparser::Struct<Login>>() {
         Ok(Some(x)) => x,//println!("Parsed body:\n{:?}", login),
         Ok(None) => return Ok(Response::with((status::BadRequest))),//println!("No postdata"),
         Err(_err) => return Ok(Response::with((status::BadRequest)))//println!("Error: {:?}", err)
-    };
+    };*/
 
 /*
 
@@ -93,28 +99,30 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 */
 
 
-    if login.user == "invalid" {
-        let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
-        let payload = json::encode(&peanut).unwrap();
+    /*if login.user == "invalid" {
+   //     let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
+        let payload = "";//json::encode(&peanut).unwrap();
 
         Ok(Response::with((status::ImATeapot, payload)))
     } else {
-
+*/
         Ok(Response::with((status::Ok)))
-    }
+  /*  }*/
 }
 
 fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
     let db = req.db_conn();
-    let stmt = db.prepare("SELECT * FROM members;").unwrap();
+    let stmt = db.prepare("SELECT id, email, data::TEXT FROM members;").unwrap();
     let rows = stmt.query(&[]).unwrap();
 
     for row in rows {
         let id: i32 = row.get("id");
         let email: String = row.get("email");
         println!("{}", email);
+        let data: String = row.get("data");
+        let json:BTreeMap<String, String> = serde_json::from_str(&data).unwrap();
     }
 
     Ok(Response::with((status::Ok)))
@@ -168,6 +176,6 @@ fn main() {
     println!("Connected.");
 
     chain.link_before(pg_middleware);
-    chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
+    //chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("127.0.0.1:4242").unwrap();
 }
