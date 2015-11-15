@@ -4,8 +4,8 @@ extern crate persistent;
 extern crate rustc_serialize;
 extern crate crypto;
 extern crate router;
-extern crate rand;
-extern crate time;
+// extern crate rand;
+// extern crate time;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
 
@@ -14,20 +14,20 @@ use iron::status;
 use iron::prelude::*;
 use router::{Router};
 use rustc_serialize::json;
-use postgres::{Connection, SslMode};
+// use postgres::{Connection, SslMode};
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+// use crypto::digest::Digest;
+// use crypto::sha2::Sha256;
 //use crypto::util::fixed_time_eq
-use crypto::hmac::Hmac;
+// use crypto::hmac::Hmac;
 //use rand::Rng;
 //use rand::os::OsRng;
 //use std::iter::repeat;
-use rustc_serialize::base64::{STANDARD, ToBase64};
-use crypto::mac::Mac;
-use rustc_serialize::hex::ToHex;
-use std::mem;
+// use rustc_serialize::base64::{STANDARD, ToBase64};
+// use crypto::mac::Mac;
+// use rustc_serialize::hex::ToHex;
+// use std::mem;
 
 // Iron router macro ?why
 macro_rules! router {
@@ -44,12 +44,12 @@ struct Login {
     password: String,
 }
 
-#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
-struct Auth {
-    timestamp: i64,
-    user_id: u32,
-    signature: [u8; 32]
-}
+// #[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
+// struct Auth {
+//     timestamp: i64,
+//     user_id: u32,
+//     signature: [u8; 32]
+// }
 
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
@@ -61,39 +61,7 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
         Err(_err) => return Ok(Response::with((status::BadRequest)))//println!("Error: {:?}", err)
     };
 
-    if login.user == "invalid" {
-        let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
-        let payload = json::encode(&peanut).unwrap();
-
-        Ok(Response::with((status::ImATeapot, payload)))
-    } else {
-
-        Ok(Response::with((status::Ok)))
-    }
-}
-
-fn handle_members(req: &mut Request) -> IronResult<Response> {
-    // Returns a list of members, might be using filters. 
-
-    Ok(Response::with((status::Ok)))
-    // Err(Response::with((status::Ok)));
-}
-
-fn handle_edit(req: &mut Request) -> IronResult<Response> {
-    // Update an existing member.
-
-    Ok(Response::with((status::Ok)))
-}
-
-fn handle_create(req: &mut Request) -> IronResult<Response> {
-    // Create a new member. 
-
-    Ok(Response::with((status::Ok)))
-}
-
-// `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
-// and check out the printed json in your terminal.
-fn main() {
+/*
 
         //$msg = array('timestamp' => time(), 'id' => 42);
         //response(array('message' => $msg, 'signature' => hash_hmac('sha256', json_encode($msg), $secretKey)));
@@ -122,9 +90,48 @@ fn main() {
         unsafe { println!("base64 {}", mem::transmute::<Auth, [u8; 48]>(auth).to_base64(STANDARD));}
         println!("HMAC digest: {}", hmac.result().code().to_hex());
 
+*/
+
+
+    if login.user == "invalid" {
+        let peanut = Login {user: "Peanut".to_string(), password: "Yes, you are".to_string()};
+        let payload = json::encode(&peanut).unwrap();
+
+        Ok(Response::with((status::ImATeapot, payload)))
+    } else {
+
+        Ok(Response::with((status::Ok)))
+    }
+}
+
+fn handle_members(req: &mut Request) -> IronResult<Response> {
+    // Returns a list of members, might be using filters. 
+
+    println!("Testing...");
+    Ok(Response::with((status::Ok)))
+    // Err(Response::with((status::Ok)));
+}
+
+fn handle_edit(req: &mut Request) -> IronResult<Response> {
+    // Update an existing member.
+
+    Ok(Response::with((status::Ok)))
+}
+
+fn handle_create(req: &mut Request) -> IronResult<Response> {
+    // Create a new member. 
+
+    Ok(Response::with((status::Ok)))
+}
+
+// `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
+// and check out the printed json in your terminal.
+fn main() {
+
 
     let router = router!(
         post "/login" => handle_login,
+        get "/login" => handle_login,
         get "/members" => handle_members,
         put "/member/:id" => handle_edit,
         post "/member/new" => handle_create
@@ -132,9 +139,11 @@ fn main() {
 
     let mut chain = Chain::new(router);
 
-    let pg_middleware = PostgresMiddleware::new("postgres://postgres@localhost/mms");
+    println!("Connecting to database.");
+    let pg_middleware = PostgresMiddleware::new("postgres://postgres:postgres@127.0.0.1/mms");
+    println!("Connected.");
 
     chain.link_before(pg_middleware);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
-    Iron::new(chain).http("localhost:4242").unwrap();
+    Iron::new(chain).http("127.0.0.1:4242").unwrap();
 }

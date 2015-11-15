@@ -18,7 +18,11 @@ install rustlang
 ```
 ./autobuild.sh
 ``` 
+debug
 
+```
+set RUST_BACKTRACE=1
+```
 
 # Nginx configuration
 
