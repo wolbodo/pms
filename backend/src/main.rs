@@ -124,6 +124,18 @@ fn handle_create(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok)))
 }
 
+fn handle_fields(req: &mut Request) -> IronResult<Response> {
+    // Return fields. 
+
+    Ok(Response::with((status::Ok)))
+}
+
+fn handle_fields_edit(req: &mut Request) -> IronResult<Response> {
+    // Update fields, admin only. 
+
+    Ok(Response::with((status::Ok)))
+}
+
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
@@ -134,13 +146,15 @@ fn main() {
         get "/login" => handle_login,
         get "/members" => handle_members,
         put "/member/:id" => handle_edit,
+        get "/fields" => handle_fields,
+        put "/fields" => handle_fields_edit,
         post "/member/new" => handle_create
     );
 
     let mut chain = Chain::new(router);
 
     println!("Connecting to database.");
-    let pg_middleware = PostgresMiddleware::new("postgres://postgres:postgres@127.0.0.1/mms");
+    let pg_middleware = PostgresMiddleware::new("postgres://mms@127.0.0.1/mms");
     println!("Connected.");
 
     chain.link_before(pg_middleware);
