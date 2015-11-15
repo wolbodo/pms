@@ -29,7 +29,7 @@ CREATE TABLE "roles"
     "gid"               SERIAL,
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
-    "name"              VARCHAR(255) NOT NULL
+    "name"              VARCHAR(255) NOT NULL,
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
     "created"           TIMESTAMPTZ DEFAULT NOW() NOT NULL
