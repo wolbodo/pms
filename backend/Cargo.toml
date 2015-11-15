@@ -10,13 +10,13 @@ rust-crypto = "^0.2"
 persistent = "*"
 #rustc-serialize = "*"
 #serialize = "*"
-serde = "0.6.1"
+postgres = { version = "*", features = ["serde_json"]}
+serde = "0.6"
 serde_json = "*"
 #serde_macros = "*"
 bodyparser = "*"
 rand = "*"
 time = "*"
-postgres = "*"
 
 [dependencies.iron-postgres-middleware]
 git = "https://github.com/martinsp/iron-postgres-middleware.git"

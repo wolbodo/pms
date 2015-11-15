@@ -114,18 +114,20 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
     let db = req.db_conn();
-    let stmt = db.prepare("SELECT id, email, data::TEXT FROM members;").unwrap();
+    let stmt = db.prepare("SELECT id, email, data FROM members;").unwrap();
     let rows = stmt.query(&[]).unwrap();
+
+    let mut members: Vec<Value> = Vec::new();
 
     for row in rows {
         let id: i32 = row.get("id");
         let email: String = row.get("email");
         println!("{}", email);
-        let data: String = row.get("data");
-        let json:BTreeMap<String, String> = serde_json::from_str(&data).unwrap();
+        let data: Value = row.get("data");
+        members.push(data);
     }
 
-    Ok(Response::with((status::Ok)))
+    Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
     // Err(Response::with((status::Ok)));
 }
 
