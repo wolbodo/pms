@@ -8,8 +8,6 @@ iron = "*"
 router = "*"
 rust-crypto = "^0.2"
 persistent = "*"
-#rustc-serialize = "*"
-#serialize = "*"
 postgres = { version = "*", features = ["serde_json"]}
 serde = "0.6"
 serde_json = "*"

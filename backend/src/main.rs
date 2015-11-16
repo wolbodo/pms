@@ -1,12 +1,10 @@
 extern crate iron;
 extern crate bodyparser;
 extern crate persistent;
-//extern crate rustc_serialize;
-//extern crate serialize;
 extern crate serde;
 extern crate serde_json;
 extern crate crypto;
-extern crate router;
+#[macro_use(router)] extern crate router;
 // extern crate rand;
 // extern crate time;
 extern crate postgres;
@@ -16,10 +14,8 @@ use persistent::Read;
 use iron::status;
 use iron::prelude::*;
 use router::{Router};
-//use rustc_serialize::json;
 use std::collections::BTreeMap;
 use serde_json::*;
-//use postgres::{Connection, SslMode};
 //use postgres::{Connection, SslMode};
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
@@ -32,17 +28,7 @@ use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 //use std::iter::repeat;
 // use rustc_serialize::base64::{STANDARD, ToBase64};
 // use crypto::mac::Mac;
-// use rustc_serialize::hex::ToHex;
 // use std::mem;
-
-// Iron router macro ?why
-macro_rules! router {
-    ($($method:ident $glob:expr => $handler:expr),+ $(,)*) => ({
-        let mut router = Router::new();
-        $(router.$method($glob, $handler);)*
-        router
-    });
-}
 
 /*#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 struct Login {
