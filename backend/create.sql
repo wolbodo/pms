@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS "roles" CASCADE;
 CREATE TABLE "roles"
 (
     "gid"               SERIAL,
+    "id"                SERIAL,
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
     "name"              VARCHAR(255) NOT NULL,
@@ -92,5 +93,7 @@ WITH (
     OIDS=FALSE
 );
 CREATE TRIGGER "fields_roles_modified" BEFORE UPDATE ON "fields_roles" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
+
+--FIXME: PLEASE ADD INDEXING
 
 COMMIT;
