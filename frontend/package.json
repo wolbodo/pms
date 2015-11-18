@@ -21,6 +21,7 @@
     "img": "./app/img/*"
   },
   "dependencies": {
+    "axios": "^0.7.0",
     "history": "^1.13.0",
     "lodash": "^3.10.1",
     "material-design-icons": "^2.0.0",

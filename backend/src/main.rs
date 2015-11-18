@@ -100,16 +100,40 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
     let db = req.db_conn();
-    let stmt = db.prepare("SELECT id, email, data FROM members;").unwrap();
-    let rows = stmt.query(&[]).unwrap();
+    let stmt = db.prepare("WITH readfields (key, selfid) AS (
+                                SELECT DISTINCT fields.name, CASE WHEN roles.name = 'self' THEN members.id END FROM
+                                    fields JOIN fields_roles ON fields_roles.fields_id = fields.id AND fields_roles.valid_till IS NULL AND fields.valid_till IS NULL
+                                           JOIN roles ON roles.id = fields_roles.roles_id AND roles.valid_till IS NULL
+                                           JOIN members_roles ON (members_roles.roles_id = roles.id OR roles.name = 'self') AND members_roles.valid_till IS NULL
+                                           JOIN members ON members_roles.members_id = members.id AND members.valid_till IS NULL
+                                    WHERE read AND members.id = $1
+                            )
+                            SELECT (
+                                SELECT ('{' || STRING_AGG('\"' || key || '\":' || TO_JSON(value), ',') || '}')::JSONB
+                                FROM (SELECT * FROM JSONB_EACH(data) UNION
+                                    VALUES
+                                        ('gid'::TEXT, TO_JSON(gid)::JSONB),
+                                        ('id', TO_JSON(id)::JSONB),
+                                        ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
+                                        ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
+                                        ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
+                                        ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
+                                        ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
+                                        ('modified_by', TO_JSON(modified_by)::JSONB),
+                                        ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
+                                        ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
+                                    ) alias
+                                    WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR members.id = selfid))  
+                                FROM members WHERE valid_till IS NULL;").unwrap();
+    let rows = stmt.query(&[&3]).unwrap();
 
     let mut members: Vec<Value> = Vec::new();
 
     for row in rows {
-        let id: i32 = row.get("id");
-        let email: String = row.get("email");
-        println!("{}", email);
-        let data: Value = row.get("data");
+
+        let data: Value = row.get("jsonb");
+        println!("{:?}", data);
+
         members.push(data);
     }
 

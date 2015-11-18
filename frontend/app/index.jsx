@@ -7,12 +7,12 @@ import mdl from 'react-mdl';
 import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
 
-import members from './members';
 import {auth, Login, Logout} from './auth';
 
 import MembersList from './membersList';
 import MemberEdit from './memberEdit';
 import MemberCreate from './memberCreate';
+
 
 class HeaderBar extends React.Component {
 	render() {
@@ -26,8 +26,6 @@ class App extends React.Component {
 
 	constructor(props) {
 		super(props);
-
-		var member = members[0];
 
 		this.state = {
 			currentPage: 0
