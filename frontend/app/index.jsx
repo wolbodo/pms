@@ -87,12 +87,11 @@ ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
 			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
-
 			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="nieuw" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
-		</Route>
+		</Route> 
 	</Router>,
 	document.getElementById('app')
 );

@@ -22,24 +22,35 @@ export default class MembersList extends React.Component {
 				members: resp.data
 			});
 		 }.bind(this));
-
 	}
 
+    componentDidMount() {
+        componentHandler.upgradeElement(ReactDOM.findDOMNode(this));
+    }
+
+    componentWillUnmount() {
+        componentHandler.downgradeElements(ReactDOM.findDOMNode(this));
+    }
 
     _getCellClass(column) {
-        return !column.numeric ? 'mdl-data-table__cell--non-numeric' : '';
+    	var classes = [];
+
+    	if (!column.numeric)  classes.push('mdl-data-table__cell--non-numeric');
+    	// if (column.icon) classes.push('material-icons');
+
+        return classes.join(' ');
     }
 
 
 	render() {
 		var columns = [
-			{name: "edit", icon: "mode edit"},
 			{name: "nickname", label: "Bijnaam"},
 			{name: "firstname", label: "Naam"},
 			{name: "lastname", label: "Achternaam"},
 			{name: "city", label:"Plaats"},
 			{name: "mobile", label:"Mobiel"},
-			{name: "email", label:"Email"}
+			{name: "email", label:"Email"},
+			{name: "edit", icon: "edit"}
 		];
 
 		return (
@@ -60,7 +71,7 @@ export default class MembersList extends React.Component {
 									{columns.map((column) => (
 										<td key={column.name} className={this._getCellClass(column)}>
 											{ column.icon ? 
-												(<i className='material-icons'>{column.icon}</i>) :
+												(<i className='icon'>{column.icon}</i>) :
 												e[column.name]
 											}
 										</td>
@@ -70,7 +81,6 @@ export default class MembersList extends React.Component {
 						})}
 					</tbody>
 				</table>
-				
 			</mdl.Cell>
 		</mdl.Grid>
 		);
