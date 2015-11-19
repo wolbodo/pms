@@ -38,34 +38,34 @@ export default class RolesEdit extends React.Component {
 
 		var {roles, fields} = this.props;
 		
-		<mdl.Grid className='main-content'>
-			<mdl.Cell col={12} className='mdl-color--white mdl-shadow--2dp'>
-				<table className='mdl-data-table mdl-js-data-table'>
-					<thead>
-						<tr>
-							{roles.map((role) => {
-								return <th key={role}>{role}</th>;
-							})}
-						</tr>
-					</thead>
-					<tbody>
-						{fields.map((field, i) => {
-							return (
-								<tr key={field.key ? field.key : i}>
-									<th>{field.label}</th>
-									{roles.map((role) => (
-										<td key={role}>
-											{ role }
-										</td>
-									))}
+		return (<mdl.Grid className='main-content'>
+					<mdl.Cell col={12} className='mdl-color--white mdl-shadow--2dp'>
+						<table className='mdl-data-table mdl-js-data-table'>
+							<thead>
+								<tr>
+									{roles.map((role) => {
+										return <th key={role}>{role}</th>;
+									})}
 								</tr>
-							);
-						})}
-					</tbody>
-				</table>
-				
-			</mdl.Cell>
-		</mdl.Grid>
+							</thead>
+							<tbody>
+								{fields.map((field, i) => {
+									return (
+										<tr key={field.key ? field.key : i}>
+											<th>{field.label}</th>
+											{roles.map((role) => (
+												<td key={role}>
+													{ role }
+												</td>
+											))}
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+						
+					</mdl.Cell>
+				</mdl.Grid>)
 		
 	}
 

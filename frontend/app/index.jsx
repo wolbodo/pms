@@ -12,6 +12,7 @@ import {auth, Login, Logout} from './auth';
 import MembersList from './membersList';
 import MemberEdit from './memberEdit';
 import MemberCreate from './memberCreate';
+import RolesEdit from './rolesEdit';
 
 
 class HeaderBar extends React.Component {
@@ -49,7 +50,7 @@ class App extends React.Component {
 	}
 
 	render() {
-		var {main, header} = this.props.children || {};
+		var {main, header} = this.props || {};
 		return (
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
@@ -67,6 +68,7 @@ class App extends React.Component {
 							(<Link key="leden" to="/">Ledenlijst</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
 						 	(<Link key="nieuw" to="/nieuw">Nieuw lid</Link>),
+						 	(<Link key="rollen" to="/rollen">Rollen</Link>),
 			              	(<Link key="logout" to="/logout">Log out</Link>)
 			            ] : (
 			              	<Link to="/login">Sign in</Link>
@@ -89,6 +91,7 @@ ReactDOM.render(
 			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
 			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="nieuw" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="rollen" components={{main: RolesEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
 		</Route> 
