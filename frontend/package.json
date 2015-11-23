@@ -14,7 +14,7 @@
     "vendor": "build/vendor"
   },
   "paths": {
-    "jsx": "./app/*.jsx",
+    "jsx": "./app/**/*.jsx",
     "html": "./app/*.html",
     "less": "./app/*.less",
     "json": "./app/*.json",

@@ -98,7 +98,7 @@ gulp.task('index', ['jsx', 'less', 'img', 'appcache', 'fonts'], function () {
   return gulp.src(package.paths.html)
     .pipe(inject(series(vendor, app), {
         ignorePath: package.dest.dist,
-        addRootSlash: false
+        addRootSlash: true
     }))
     .pipe(gulp.dest(package.dest.dist));
 });

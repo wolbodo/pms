@@ -27,10 +27,6 @@ set RUST_BACKTRACE=1
 # Nginx configuration
 
 ```
-location / {
-        try_files $uri /index.html; 
-}
-
 location /api/ {
         proxy_pass       http://localhost:4242/;
 
@@ -41,6 +37,11 @@ location /api/ {
         proxy_set_header Connection "Keep-Alive";
         proxy_set_header Proxy-Connection "Keep-Alive";
 }
+
+location / {
+        try_files $uri /index.html; 
+}
+
 ```
 
 # Postgresql Database

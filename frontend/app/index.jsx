@@ -13,12 +13,27 @@ import MembersList from './membersList';
 import MemberEdit from './memberEdit';
 import MemberCreate from './memberCreate';
 import RolesEdit from './rolesEdit';
+import EditPopup from './editPopup';
 
+import ListView from './components/listView';
 
 class HeaderBar extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.handleChange = this.handleChange.bind(this);
+	}
+
+	handleChange(change) {
+		// debugger;
+	} 
+
 	render() {
+
+
+		debugger;
 		return (
-			<mdl.Button primary raised colored>Opslaan</mdl.Button>
+			<h3></h3>
 		);
 	}
 }
@@ -60,18 +75,19 @@ class App extends React.Component {
 				</mdl.Header>
 				<mdl.Drawer>
 					<header>
-						<img src='logo.svg' />
+						<img src='/logo.svg' />
 					</header>
 
 					<mdl.Navigation>
 						{auth.loggedIn() ? [
-							(<Link key="leden" to="/">Ledenlijst</Link>),
+							(<Link key="leden" to="/">Leden</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
-						 	(<Link key="nieuw" to="/nieuw">Nieuw lid</Link>),
-						 	(<Link key="rollen" to="/rollen">Rollen</Link>),
-			              	(<Link key="logout" to="/logout">Log out</Link>)
+						 	(<Link key="velden" to="/velden">Velden</Link>),
+						 	(<Link key="groepen" to="/groepen">Groepen</Link>),
+						 	(<Link key="permissies" to="/permissies">Permissies</Link>),
+			              	(<Link key="logout" to="/logout">Log uit</Link>)
 			            ] : (
-			              	<Link to="/login">Sign in</Link>
+			              	<Link to="/login">Log in</Link>
 			            )}
 					</mdl.Navigation>
 				</mdl.Drawer>
@@ -84,14 +100,16 @@ class App extends React.Component {
 	}
 }
 
-
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
 			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
-			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="nieuw" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="rollen" components={{main: RolesEdit, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="wijzig" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="velden" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="groepen" components={{main: GroupView, header: HeaderBar}} onEnter={auth.require}>
+				<Route path="/:group_name" components={{main: GroupEdit, header: HeaderBar}} onEnter={auth.require} />
+			</Route>
+			<Route path="permissies" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
 		</Route> 
