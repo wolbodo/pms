@@ -9,16 +9,11 @@ import { createHistory } from 'history';
 
 import {auth, Login, Logout} from './auth';
 
-import MembersList from './membersList';
-// import MemberEdit from './memberEdit';
-import MemberCreate from './memberCreate';
-// import RolesEdit from './rolesEdit';
-// import EditPopup from './editPopup';
-
-
-// import ListView from './components/listView';
 import GroupView from './group/view';
 import GroupEdit from './group/edit';
+
+import MemberView from './member/view';
+import MemberEdit from './member/edit';
 
 class HeaderBar extends React.Component {
 	constructor(props) {
@@ -123,12 +118,13 @@ class App extends React.Component {
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
-			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
-			<Route path="wijzig" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="velden" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
+			<IndexRoute components={{main: MemberView}} onEnter={auth.require}/>
+			<Route path="edit/:naam" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="velden" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="groepen" components={{main: GroupView, header: HeaderBar}} onEnter={auth.require}> </Route>
 			<Route path="groepen/:groep" components={{main: GroupEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="permissies" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="permissies" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
 		</Route> 

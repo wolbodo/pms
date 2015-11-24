@@ -2,11 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import memberForm from './form';
-
 import _ from 'lodash';
 
-export default class FormField extends React.Component {
+export default class Field extends React.Component {
 	constructor(props) {
 		super(props);
 

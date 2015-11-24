@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import { Link } from 'react-router'
+import { Link } from 'react-router';
 
 import _ from 'lodash';
 
@@ -70,7 +70,7 @@ export class Row extends React.Component {
 		const {item, fields, editLink} = this.props;
 
 		return (
-		<tr key={item.name ? item.name : i}>
+		<tr key={item.name}>
 			{fields.map(field => (
 				<td key={field} className='mdl-data-table__cell--non-numeric'>
 					{ item[field] }

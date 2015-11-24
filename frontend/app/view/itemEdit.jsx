@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import FormField from '../formField';
+import Field from './field';
 
 import _ from 'lodash';
 
@@ -13,7 +13,7 @@ export default class ItemEdit extends React.Component {
 		this.handleChange = this.handleChange.bind(this);
 
 		this.state = {
-			model: this.props.item
+			model: this.props.item || {}
 		};
 	}
 	handleChange(value, key) {
@@ -43,7 +43,7 @@ export default class ItemEdit extends React.Component {
 								: [fields]
 							).map(
 								(field, key) => (
-									<FormField 
+									<Field 
 										key={key} 
 										field={field}
 										onChange={this.handleChange}
