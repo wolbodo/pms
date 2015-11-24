@@ -1,30 +1,29 @@
+import _ from 'lodash';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import mdl from 'react-mdl';
 
-class GroupEdit extends React.Component {
+import ItemEdit from '../view/itemEdit';
 
+import schema from './schema';
+import stub from './stub';
+
+
+export default class GroupEdit extends React.Component {
+	constructor(props) {
+		super(props);
+	}
 	render() {
-		return (
-			<ListView 
-				fields={
-					['name', 'description']
-				} 
-				schema={{
-					permissions: {},
-					fields: {
-						name: {
-							label: "Naam"
-						},
-						description: {
-							label: "Omschrijving"
-						}
-					}
-				}}
-				data={[
-					{name: "Bestuur", description: "Alle bestuursleden"},
-					{name: "Leden", description: "Alle leden"}
-				]}>
 
-				
-			</ListView>
+		const {groep} = this.props.params;
+
+
+		var data = _.find(stub, group => group.id === groep);
+
+		return (
+			<ItemEdit
+				schema={schema}
+				item={data}/>
 		);
 	}
 }

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "bestuur",
+    "name": "Bestuur",
+    "description": "Alle bestuursleden"
+  },
+  {
+    "id": "leden",
+    "name": "Leden",
+    "description": "Alle leden"
+  }
+]

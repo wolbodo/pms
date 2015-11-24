@@ -26,6 +26,28 @@ body {
 
 	.mdl-layout__header {
 		.dark-primary-color;
+
+		.mdl-layout__header-row {
+			flex-direction: row-reverse;
+			align-items: center;
+
+			.breadcrumbs {
+				a {
+					display: inline-flex;
+					align-items: center;
+					color: white;
+					text-decoration: none;
+
+					&:after {
+						content: 'keyboard_arrow_right';
+						.icon;
+					}
+					&:last-child:after {
+						content: '';
+					}
+				}
+			}
+		}
 	}
 
 	.mdl-layout__drawer {

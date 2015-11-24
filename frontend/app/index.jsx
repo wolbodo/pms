@@ -10,12 +10,15 @@ import { createHistory } from 'history';
 import {auth, Login, Logout} from './auth';
 
 import MembersList from './membersList';
-import MemberEdit from './memberEdit';
+// import MemberEdit from './memberEdit';
 import MemberCreate from './memberCreate';
-import RolesEdit from './rolesEdit';
-import EditPopup from './editPopup';
+// import RolesEdit from './rolesEdit';
+// import EditPopup from './editPopup';
 
-import ListView from './components/listView';
+
+// import ListView from './components/listView';
+import GroupView from './group/view';
+import GroupEdit from './group/edit';
 
 class HeaderBar extends React.Component {
 	constructor(props) {
@@ -30,10 +33,27 @@ class HeaderBar extends React.Component {
 
 	render() {
 
+		var {location} = this.props;
 
-		debugger;
+		var mem = '';
+		var url_parts = _(location.pathname.split('/'))
+		 .slice(1)
+		 .map(function (part) {
+		 	mem = `${mem}/${part}`;
+
+		 	return {
+		 		name: part,
+		 		path: mem
+		 	};
+		 })
+		 .value();
+
 		return (
-			<h3></h3>
+			<div className='breadcrumbs'>
+			{ url_parts.map((part, i) => (
+				<Link key={part.name} to={part.path}>{_.startCase(part.name)}</Link>
+			))}
+			</div>
 		);
 	}
 }
@@ -69,7 +89,7 @@ class App extends React.Component {
 		return (
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
-					<mdl.HeaderRow title="Wolbodo:ledenlijst">
+					<mdl.HeaderRow>
 						{ header }
 					</mdl.HeaderRow>
 				</mdl.Header>
@@ -106,9 +126,8 @@ ReactDOM.render(
 			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
 			<Route path="wijzig" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="velden" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="groepen" components={{main: GroupView, header: HeaderBar}} onEnter={auth.require}>
-				<Route path="/:group_name" components={{main: GroupEdit, header: HeaderBar}} onEnter={auth.require} />
-			</Route>
+			<Route path="groepen" components={{main: GroupView, header: HeaderBar}} onEnter={auth.require}> </Route>
+			<Route path="groepen/:groep" components={{main: GroupEdit, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="permissies" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
