@@ -5,7 +5,7 @@ import mdl from 'react-mdl';
 
 import ItemEdit from '../view/itemEdit';
 
-import schema from './schema';
+import schema from './schema.json';
 import API from '../api';
 
 export default class MemberEdit extends React.Component {

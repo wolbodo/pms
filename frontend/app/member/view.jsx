@@ -2,7 +2,7 @@
 import React from 'react';
 
 import {List, Head, Row} from '../view/list';
-import schema from './schema';
+import schema from './schema.json';
 import API from '../api';
 
 

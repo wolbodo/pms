@@ -2,8 +2,8 @@
 import React from 'react';
 
 import {List, Head, Row} from '../view/list';
-import schema from './schema';
-import stub from './stub';
+import schema from './schema.json';
+import stub from './stub.json';
 
 
 export default class GroupView extends React.Component {

@@ -7,13 +7,24 @@ import mdl from 'react-mdl';
 import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
 
-import {auth, Login, Logout} from './auth';
+import Auth from 'auth';
 
-import GroupView from './group/view';
-import GroupEdit from './group/edit';
+import GroupView from 'group/view';
+import GroupEdit from 'group/edit';
 
-import MemberView from './member/view';
-import MemberEdit from './member/edit';
+import MemberView from 'member/view';
+import MemberEdit from 'member/edit';
+
+
+// Reference static files so they are loaded with webpack.
+import 'app.less';
+import 'material';
+import 'material.css';
+import logo from 'img/logo.svg';
+
+// var myfont = require('fonts/muli');
+// console.log(myfont); // { name: "Proxima Nova", files: [...] }
+
 
 class HeaderBar extends React.Component {
 	constructor(props) {
@@ -90,11 +101,11 @@ class App extends React.Component {
 				</mdl.Header>
 				<mdl.Drawer>
 					<header>
-						<img src='/logo.svg' />
+						<img src={logo} />
 					</header>
 
 					<mdl.Navigation>
-						{auth.loggedIn() ? [
+						{Auth.auth.loggedIn() ? [
 							(<Link key="leden" to="/">Leden</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
 						 	(<Link key="velden" to="/velden">Velden</Link>),
@@ -118,15 +129,15 @@ class App extends React.Component {
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
-			<IndexRoute components={{main: MemberView}} onEnter={auth.require}/>
-			<Route path="edit/:naam" components={{main: MemberEdit}} onEnter={auth.require} />
-			<Route path="wijzig" components={{main: MemberEdit}} onEnter={auth.require} />
-			<Route path="velden" components={{main: MemberEdit}} onEnter={auth.require} />
-			<Route path="groepen" components={{main: GroupView}} onEnter={auth.require}> </Route>
-			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={auth.require} />
-			<Route path="permissies" components={{main: MemberEdit}} onEnter={auth.require} />
-			<Route path="login" components={{main: Login}} />
-			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
+			<IndexRoute components={{main: MemberView}} onEnter={Auth.auth.require}/>
+			<Route path="edit/:naam" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="wijzig" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="velden" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="groepen" components={{main: GroupView}} onEnter={Auth.auth.require}> </Route>
+			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={Auth.auth.require} />
+			<Route path="permissies" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="login" components={{main: Auth.Login}} />
+			<Route path="logout" components={{main: Auth.Logout}} onEnter={Auth.auth.require} />
 		</Route> 
 	</Router>,
 	document.getElementById('app')

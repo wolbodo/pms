@@ -5,8 +5,8 @@ import mdl from 'react-mdl';
 
 import ItemEdit from '../view/itemEdit';
 
-import schema from './schema';
-import stub from './stub';
+import schema from './schema.json';
+import stub from './stub.json';
 
 
 export default class GroupEdit extends React.Component {
