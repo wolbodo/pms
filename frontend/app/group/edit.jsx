@@ -23,7 +23,7 @@ export default class GroupEdit extends React.Component {
 		return (
 			<ItemEdit
 				schema={schema}
-				item={data}/>
+				item={data} />
 		);
 	}
 }

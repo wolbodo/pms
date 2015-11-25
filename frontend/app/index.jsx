@@ -119,12 +119,12 @@ ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
 			<IndexRoute components={{main: MemberView}} onEnter={auth.require}/>
-			<Route path="edit/:naam" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="velden" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="groepen" components={{main: GroupView, header: HeaderBar}} onEnter={auth.require}> </Route>
-			<Route path="groepen/:groep" components={{main: GroupEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="permissies" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
+			<Route path="edit/:naam" components={{main: MemberEdit}} onEnter={auth.require} />
+			<Route path="wijzig" components={{main: MemberEdit}} onEnter={auth.require} />
+			<Route path="velden" components={{main: MemberEdit}} onEnter={auth.require} />
+			<Route path="groepen" components={{main: GroupView}} onEnter={auth.require}> </Route>
+			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={auth.require} />
+			<Route path="permissies" components={{main: MemberEdit}} onEnter={auth.require} />
 			<Route path="login" components={{main: Login}} />
 			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
 		</Route> 

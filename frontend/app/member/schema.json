@@ -1,6 +1,24 @@
 {
   "title": "Wijzig lid",
-  "permissions": {},
+  "permissions": {
+    "readonly": [
+      "infix",
+      "gender",
+      "birthdate",
+      "street",
+      "housenumber",
+      "city",
+      "mobile",
+      "phone",
+      "emergencyinfo",
+      "membertype",
+      "functions",
+      "notes",
+      "wantscontact",
+      "keycode",
+      "coasters"
+    ]
+  },
   "fields": {
     "nickname": {
       "type": "string",
@@ -73,7 +91,7 @@
       "label": "IBAN"
     },
     "directdebit": {
-      "type": "string",
+      "type": "array",
       "name": "directdebit",
       "label": "Overboeking"
     },
@@ -113,7 +131,7 @@
       "label": "Lid tot"
     },
     "functions": {
-      "type": "string",
+      "type": "array",
       "name": "functions",
       "label": "Functies"
     },

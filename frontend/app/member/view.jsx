@@ -3,8 +3,8 @@ import React from 'react';
 
 import {List, Head, Row} from '../view/list';
 import schema from './schema';
+import API from '../api';
 
-import axios from 'axios';
 
 export default class MemberView extends React.Component {
 
@@ -15,12 +15,9 @@ export default class MemberView extends React.Component {
 			members: []
 		};
 
-		axios.get('/api/members')
-		 .then(function (resp) {
-			this.setState({
-				members: resp.data
-			});
-		 }.bind(this));
+		API.get_members()
+			.then(members => this.setState({members: members}));
+
 	}
 
 	render() {

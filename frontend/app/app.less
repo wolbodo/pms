@@ -38,13 +38,13 @@ body {
 					color: white;
 					text-decoration: none;
 
-					&:after {
-						content: 'keyboard_arrow_right';
-						.icon;
-					}
-					&:last-child:after {
-						content: '';
-					}
+				// 	&:after {
+				// 		content: 'keyboard_arrow_right';
+				// 		.icon;
+				// 	}
+				// 	&:last-child:after {
+				// 		content: '';
+				// 	}
 				}
 			}
 		}
@@ -85,6 +85,10 @@ body {
 				display: flex;
 				flex-direction: column;
 				padding-left: 3rem;
+
+				input[disabled] {
+					border: none;
+				}
 
 				.mdl-card__formset {
 					display: flex;

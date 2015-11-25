@@ -13,7 +13,7 @@ export default class ItemEdit extends React.Component {
 		this.handleChange = this.handleChange.bind(this);
 
 		this.state = {
-			model: this.props.item || {}
+			model: {}
 		};
 	}
 	handleChange(value, key) {
@@ -24,10 +24,21 @@ export default class ItemEdit extends React.Component {
 			model: model
 		});
 	}
+	componentWillReceiveProps(props) {
+		if (props.item !== this.props.item) {
+			this.setState({
+				model: props.item
+			});
+		}
+	}
 	render() {
 		const {schema, item} = this.props;
 
-		var data = this.state.model;
+		// var model = item;
+
+		var {model} = this.state;
+
+
 
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
@@ -46,8 +57,9 @@ export default class ItemEdit extends React.Component {
 									<Field 
 										key={key} 
 										field={field}
+										disabled={!_.contains(schema.permissions.readonly, field.name)}
 										onChange={this.handleChange}
-										value={data[field.name]} />
+										value={model[field.name]} />
 								)
 							)}
 						</div>
