@@ -7,17 +7,59 @@ import mdl from 'react-mdl';
 import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
 
-import {auth, Login, Logout} from './auth';
+import Auth from 'auth';
 
-import MembersList from './membersList';
-import MemberEdit from './memberEdit';
-import MemberCreate from './memberCreate';
+import GroupView from 'group/view';
+import GroupEdit from 'group/edit';
+
+import MemberView from 'member/view';
+import MemberEdit from 'member/edit';
+
+
+// Reference static files so they are loaded with webpack.
+import 'app.less';
+import 'material';
+import 'material.css';
+import logo from 'img/logo.svg';
+
+// var myfont = require('fonts/muli');
+// console.log(myfont); // { name: "Proxima Nova", files: [...] }
 
 
 class HeaderBar extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.handleChange = this.handleChange.bind(this);
+	}
+
+	handleChange(change) {
+		// debugger;
+	} 
+
 	render() {
+
+		var {location} = this.props;
+
+		var mem = '';
+		var url_parts = _(location.pathname.split('/'))
+		 .slice(1)
+		 .map(function (part) {
+		 	mem = `${mem}/${part}`;
+
+		 	return {
+		 		name: part,
+		 		path: mem
+		 	};
+		 })
+		 .value();
+
 		return (
-			<mdl.Button primary raised colored>Opslaan</mdl.Button>
+			<div className='breadcrumbs'>
+			{ url_parts.map((part, i) => (
+				<Link key={part.name} to={part.path}>{_.startCase(part.name)}</Link>
+			))}
+			</div>
 		);
 	}
 }
@@ -49,27 +91,29 @@ class App extends React.Component {
 	}
 
 	render() {
-		var {main, header} = this.props.children || {};
+		var {main, header} = this.props || {};
 		return (
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
-					<mdl.HeaderRow title="Wolbodo:ledenlijst">
+					<mdl.HeaderRow>
 						{ header }
 					</mdl.HeaderRow>
 				</mdl.Header>
 				<mdl.Drawer>
 					<header>
-						<img src='logo.svg' />
+						<img src={logo} />
 					</header>
 
 					<mdl.Navigation>
-						{auth.loggedIn() ? [
-							(<Link key="leden" to="/">Ledenlijst</Link>),
+						{Auth.auth.loggedIn() ? [
+							(<Link key="leden" to="/">Leden</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
-						 	(<Link key="nieuw" to="/nieuw">Nieuw lid</Link>),
-			              	(<Link key="logout" to="/logout">Log out</Link>)
+						 	(<Link key="velden" to="/velden">Velden</Link>),
+						 	(<Link key="groepen" to="/groepen">Groepen</Link>),
+						 	(<Link key="permissies" to="/permissies">Permissies</Link>),
+			              	(<Link key="logout" to="/logout">Log uit</Link>)
 			            ] : (
-			              	<Link to="/login">Sign in</Link>
+			              	<Link to="/login">Log in</Link>
 			            )}
 					</mdl.Navigation>
 				</mdl.Drawer>
@@ -82,17 +126,19 @@ class App extends React.Component {
 	}
 }
 
-
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
-			<IndexRoute components={{main: MembersList}} onEnter={auth.require}/>
-
-			<Route path="wijzig" components={{main: MemberEdit, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="nieuw" components={{main: MemberCreate, header: HeaderBar}} onEnter={auth.require} />
-			<Route path="login" components={{main: Login}} />
-			<Route path="logout" components={{main: Logout}} onEnter={auth.require} />
-		</Route>
+			<IndexRoute components={{main: MemberView}} onEnter={Auth.auth.require}/>
+			<Route path="edit/:naam" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="wijzig" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="velden" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="groepen" components={{main: GroupView}} onEnter={Auth.auth.require}> </Route>
+			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={Auth.auth.require} />
+			<Route path="permissies" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="login" components={{main: Auth.Login}} />
+			<Route path="logout" components={{main: Auth.Logout}} onEnter={Auth.auth.require} />
+		</Route> 
 	</Router>,
 	document.getElementById('app')
 );

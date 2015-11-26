@@ -1,0 +1,16 @@
+{
+  "title": "Wijzig groep",
+  "permissions": {},
+  "fields": {
+    "name": {
+     "name": "name",
+     "type": "string",
+      "label": "Naam"
+    },
+    "description": {
+     "name": "description",
+     "type": "string",
+      "label": "Omschrijving"
+    }
+  }
+}

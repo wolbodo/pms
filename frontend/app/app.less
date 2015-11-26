@@ -26,6 +26,28 @@ body {
 
 	.mdl-layout__header {
 		.dark-primary-color;
+
+		.mdl-layout__header-row {
+			flex-direction: row-reverse;
+			align-items: center;
+
+			.breadcrumbs {
+				a {
+					display: inline-flex;
+					align-items: center;
+					color: white;
+					text-decoration: none;
+
+				// 	&:after {
+				// 		content: 'keyboard_arrow_right';
+				// 		.icon;
+				// 	}
+				// 	&:last-child:after {
+				// 		content: '';
+				// 	}
+				}
+			}
+		}
 	}
 
 	.mdl-layout__drawer {
@@ -40,10 +62,7 @@ body {
 		.secondary-text-color;
 	}
 
-
-
 	.content {
-
 		display: flex;
 		flex-wrap: wrap;
 		padding: 0.5rem;
@@ -67,6 +86,10 @@ body {
 				flex-direction: column;
 				padding-left: 3rem;
 
+				input[disabled] {
+					border: none;
+				}
+
 				.mdl-card__formset {
 					display: flex;
 				}
@@ -83,6 +106,20 @@ body {
 		}
 	}
 
+	main {
+		position: relative;
+
+		.popup {
+			background-color: rgba(0, 0, 0, 0.2);
+			position: absolute;
+			top: 0;left: 0;right: 0;bottom: 0;
+
+			.mdl-card {
+				margin-left:5rem;
+				margin-top:5rem;
+			}
+		}
+	}
 
 	.mdl-navigation {
 		.light-primary-color;
@@ -103,23 +140,48 @@ body {
 		}
 	}
 
+	.mdl-data-table {
+	    table-layout: fixed;
+		overflow: hidden;
+		border: none;
 
-	
+		th, td {
+			width: auto;
+			position: relative;
+
+			z-index: 1;
+
+			.icon {
+				font-size: 1rem;
+				padding-left:6px;
+			}
+		}
+
+		th:hover {
+			text-decoration: underline;
+			cursor: pointer;
+		}
+
+		// tr:hover {
+		  // background-color: #ffa;
+		// }
+
+		td:last-child {
+			width: 30px;
+		}
+	}
 }
-
-
-
 
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/MaterialIcons-Regular.eot); /* For IE6-8 */
+  src: url('~fonts/icons/MaterialIcons-Regular.eot'); /* For IE6-8 */
   src: local('Material Icons'),
        local('MaterialIcons-Regular'),
-       url(/fonts/MaterialIcons-Regular.woff2) format('woff2'),
-       url(/fonts/MaterialIcons-Regular.woff) format('woff'),
-       url(/fonts/MaterialIcons-Regular.ttf) format('truetype');
+       url('~fonts/icons/MaterialIcons-Regular.woff2') format('woff2'),
+       url('~fonts/icons/MaterialIcons-Regular.woff') format('woff'),
+       url('~fonts/icons/MaterialIcons-Regular.ttf') format('truetype');
 }
 
 .icon, .material-icons {
@@ -138,35 +200,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-
-
 @font-face {
     font-family: 'Muli';
-    src: url('/fonts/muli-light-webfont.eot');
-    src: url('/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/muli-light-webfont.woff2') format('woff2'),
-         url('/fonts/muli-light-webfont.woff') format('woff'),
-         url('/fonts/muli-light-webfont.ttf') format('truetype'),
-         url('/fonts/muli-light-webfont.svg#mulilight') format('svg');
+    src: url('~fonts/muli/muli-light-webfont.eot');
+    src: url('~fonts/muli/muli-light-webfont.eot?#iefix') format('embedded-opentype'),
+         url('~fonts/muli/muli-light-webfont.woff2') format('woff2'),
+         url('~fonts/muli/muli-light-webfont.woff') format('woff'),
+         url('~fonts/muli/muli-light-webfont.ttf') format('truetype');
 	font-weight: 300;
     font-style: normal;
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
-
 }
 
 @font-face {
     font-family: 'Muli';
-    src: url('/fonts/muli-regular-webfont.eot');
-    src: url('/fonts/muli-regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/muli-regular-webfont.woff2') format('woff2'),
-         url('/fonts/muli-regular-webfont.woff') format('woff'),
-         url('/fonts/muli-regular-webfont.ttf') format('truetype'),
-         url('/fonts/muli-regular-webfont.svg#muliregular') format('svg');
+    src: url('~fonts/muli/muli-regular-webfont.eot');
+    src: url('~fonts/muli/muli-regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('~fonts/muli/muli-regular-webfont.woff2') format('woff2'),
+         url('~fonts/muli/muli-regular-webfont.woff') format('woff'),
+         url('~fonts/muli/muli-regular-webfont.ttf') format('truetype');
 	font-weight: 400;
     font-style: normal;
-
-
 }
 
 * {
