@@ -6,19 +6,91 @@
       "gender",
       "birthdate",
       "street",
-      "housenumber",
       "city",
       "mobile",
       "phone",
       "emergencyinfo",
       "membertype",
       "functions",
-      "notes",
       "wantscontact",
       "keycode",
       "coasters"
     ]
   },
+  "form": [
+    {
+      "title": "Persoon",
+      "fields": [
+        "nickname",
+        [
+          "firstname",
+          "infix",
+          "lastname"
+        ],
+        "gender",
+        [
+          "birthdate",
+          "deathdate"
+        ]
+      ]
+    },
+    {
+      "title": "Adres",
+      "fields": [
+        [
+          "street",
+          "housenumber"
+        ],
+        [
+          "zipcode",
+          "city"
+        ],
+        "country"
+      ]
+    },
+    {
+      "title": "Bank",
+      "fields": [
+        "iban",
+        "directdebit",
+        "email",
+        "mobile",
+        "phone",
+        "emergencyinfo"
+      ]
+    },
+    {
+      "title": "Status",
+      "fields": [
+        "membertype",
+        [
+          "membersince",
+          "membertill"
+        ],
+        "functions",
+        "notes",
+        "wantscontact"
+      ]
+    },
+    {
+      "title": "Sleutel",
+      "fields": [
+        "keycode",
+        "coasters",
+        "cashregister",
+        "frontdoor",
+        "isadmin"
+      ]
+    },
+    {
+      "title": "System",
+      "fields": [
+        "passwordhash",
+        "modified",
+        "created"
+      ]
+    }
+  ],
   "fields": {
     "nickname": {
       "type": "string",

@@ -78,7 +78,9 @@ export class Row extends React.Component {
 			))}
 
 			<td>
-				<Link to={editLink}><i className='icon'>edit</i></Link>
+				{ editLink && (
+					<Link to={editLink}><i className='icon'>edit</i></Link>
+				)}
 			</td>
 		</tr>);
 	}

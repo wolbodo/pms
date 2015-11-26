@@ -30,7 +30,7 @@ export default class MemberView extends React.Component {
 			<List>
 				<Head schema={schema} fields={fields}/>
 				{members.map((row, i) => (
-					<Row key={i} item={row} fields={fields} editLink={`/edit/${row.id}`}/>
+					<Row key={i} item={row} fields={fields} editLink={row.id && `/lid-${row.id}` }/>
 				))}
 			</List>
 		);

@@ -55,7 +55,7 @@ module.exports = {
     plugins: [
         new webpack.optimize.CommonsChunkPlugin('common', 'common.js'),
         new HtmlWebpackPlugin({
-            inject: true,
+            inject: 'head',
             template: 'app/index.html'
         }),
         new webpack.NoErrorsPlugin(),

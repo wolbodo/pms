@@ -16,14 +16,12 @@ export default class MemberEdit extends React.Component {
 			member: {}
 		};
 
-		API.get_member(3)
+		API.get_member(parseInt(props.params.id))
 		 .then(function (member) {
 			this.setState({
 				member: member
 			});
 		 }.bind(this));
-
-
 	}
 	render() {
 

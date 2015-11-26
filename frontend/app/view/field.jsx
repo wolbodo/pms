@@ -15,6 +15,9 @@ export default class Field extends React.Component {
 		};
 	}
 	handleChange(value) {
+		if (this.props.field.type === 'array') {
+			value = _.map(value.split(','), _.trim);
+		}
 		this.setState({
 			value: value
 		});
@@ -26,7 +29,6 @@ export default class Field extends React.Component {
     }
 
 	componentWillReceiveProps(props){ 
-		console.log("Hey");
 		if (props.value !== this.props.value) {
 			this.setState({
 				value: props.value
@@ -35,6 +37,8 @@ export default class Field extends React.Component {
 	}
 	render () {
 		var {field, disabled} = this.props;
+
+		var {value} = this.state;
 		switch(field.type) {
 			case "string": 
 				return (
@@ -42,7 +46,7 @@ export default class Field extends React.Component {
 						className={['field-' + field.name, (this.state.value !== undefined) ? 'is-dirty' : ''].join(' ')}
 						label={field.label}
 						name={field.name}
-						value={this.state.value}
+						value={value}
 						disabled={disabled}
 						onChange={this.handleChange}
 						floatingLabel/>
@@ -51,7 +55,7 @@ export default class Field extends React.Component {
 				return (
 					<mdl.RadioGroup
 						name={field.name}
-						value={this.state.value || ''}
+						value={value || ''}
 						onChange={this.handleChange}>
 						{
 							_.map(field.options, 
@@ -72,12 +76,25 @@ export default class Field extends React.Component {
 			case "boolean": 
 				return (
 					<mdl.Checkbox
-						checked={this.state.value || false}
+						checked={value || false}
 						label={field.label}
 						disabled={disabled}
 						onChange={this.handleChange}>
 					</mdl.Checkbox>
 				)
+			case "array":
+				// Shows an array of strings for now.
+				value = value || [];
+				return (
+					<mdl.Textfield
+						className={['field-' + field.name, (this.state.value !== undefined) ? 'is-dirty' : ''].join(' ')}
+						label={field.label}
+						name={field.name}
+						value={value.join(', ')}
+						disabled={disabled}
+						onChange={this.handleChange}
+						floatingLabel/>
+				);
 			default:
 				console.warn("Unknown type on formfield: " + field.type);
 				return (

@@ -1,6 +1,12 @@
 {
   "title": "Wijzig groep",
   "permissions": {},
+  "form": [{
+    "title": "Gegevens",
+    "fields": [
+      "name", "description"
+    ]
+  }],
   "fields": {
     "name": {
      "name": "name",

@@ -130,7 +130,7 @@ ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
 			<IndexRoute components={{main: MemberView}} onEnter={Auth.auth.require}/>
-			<Route path="edit/:naam" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="lid-:id" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
 			<Route path="wijzig" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
 			<Route path="velden" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
 			<Route path="groepen" components={{main: GroupView}} onEnter={Auth.auth.require}> </Route>

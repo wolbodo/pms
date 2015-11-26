@@ -42,30 +42,36 @@ export default class ItemEdit extends React.Component {
 
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
-			<mdl.Card className='mdl-color--white mdl-shadow--2dp'>
-				<mdl.CardTitle>
-					{schema.title}
-				</mdl.CardTitle>
-				<div className="mdl-card__form">
-					{_.map(schema.fields, (fields, key) => (
-						<div key={key} className="mdl-card__formset">
-							{(_.isArray(fields) 
-								? fields
-								: [fields]
-							).map(
-								(field, key) => (
-									<Field 
-										key={key} 
-										field={field}
-										disabled={!_.contains(schema.permissions.readonly, field.name)}
-										onChange={this.handleChange}
-										value={model[field.name]} />
-								)
-							)}
-						</div>
-					))}
-				</div>
-			</mdl.Card>
+			{_.map(schema.form, fieldset => (
+				<mdl.Card className='mdl-color--white mdl-shadow--2dp'>
+					<mdl.CardTitle>
+						{fieldset.title}
+					</mdl.CardTitle>
+					<div className="mdl-card__form">
+						{_.map(fieldset.fields, (fields, key) => (
+							<div key={key} className="mdl-card__formset">
+								{(_.isArray(fields) 
+									? fields
+									: [fields]
+								).map(
+									(fieldname, key) => (
+										<Field 
+											key={key} 
+											field={schema.fields[fieldname]}
+											disabled={schema.permissions.readonly && !_.contains(
+												schema.permissions.readonly, 
+												schema.fields[fieldname].name
+											)}
+											onChange={this.handleChange}
+											value={model[schema.fields[fieldname].name]} />
+									)
+								)}
+							</div>
+						))}
+					</div>
+				</mdl.Card>
+
+			))}
 		</form>
 
 		)
