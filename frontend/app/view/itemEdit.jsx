@@ -13,7 +13,7 @@ export default class ItemEdit extends React.Component {
 		this.handleChange = this.handleChange.bind(this);
 
 		this.state = {
-			model: {}
+			model: this.props.item || {}
 		};
 	}
 	handleChange(value, key) {
@@ -36,14 +36,16 @@ export default class ItemEdit extends React.Component {
 
 		// var model = item;
 
+		var permissions = schema.permissions || {};
+
 		var {model} = this.state;
 
 
 
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
-			{_.map(schema.form, fieldset => (
-				<mdl.Card className='mdl-color--white mdl-shadow--2dp'>
+			{_.map(schema.form, (fieldset, i) => (
+				<mdl.Card key={i} className='mdl-color--white mdl-shadow--2dp'>
 					<mdl.CardTitle>
 						{fieldset.title}
 					</mdl.CardTitle>
@@ -58,8 +60,8 @@ export default class ItemEdit extends React.Component {
 										<Field 
 											key={key} 
 											field={schema.fields[fieldname]}
-											disabled={schema.permissions.readonly && !_.contains(
-												schema.permissions.readonly, 
+											disabled={permissions.readonly && _.contains(
+												permissions.readonly, 
 												schema.fields[fieldname].name
 											)}
 											onChange={this.handleChange}

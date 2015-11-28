@@ -2,13 +2,13 @@
 
 # Frontend
 
-install npm
+install npm/node
 
 ```
-npm install -g gulp 
-npm install 
+npm install
 
-gulp
+npm run dev
+npm run build
 ```
 
 # Backend

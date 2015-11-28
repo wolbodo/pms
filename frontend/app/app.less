@@ -37,14 +37,6 @@ body {
 					align-items: center;
 					color: white;
 					text-decoration: none;
-
-				// 	&:after {
-				// 		content: 'keyboard_arrow_right';
-				// 		.icon;
-				// 	}
-				// 	&:last-child:after {
-				// 		content: '';
-				// 	}
 				}
 			}
 		}
@@ -71,6 +63,9 @@ body {
 			flex-grow: 1;
 			width: 30rem;
 			margin: 0.5rem;
+			overflow:visible;
+			position:inherit;
+			z-index:inherit;
 
 			&.login {
 				flex-grow: 0;
@@ -93,6 +88,11 @@ body {
 
 				.mdl-card__formset {
 					display: flex;
+					padding-right:2rem;
+
+					> * {
+						flex: 1;
+					}
 				}
 
 				.mdl-textfield {
@@ -103,6 +103,7 @@ body {
 				.mdl-radio {
 					margin: 0 1rem 1rem 1rem;
 				}
+
 			}
 		}
 	}

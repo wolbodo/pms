@@ -1,5 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
+import DatePicker from 'material-ui/lib/date-picker/date-picker';
+import SelectField from 'material-ui/lib/select-field';
+
 import mdl from 'react-mdl';
 
 import _ from 'lodash';
@@ -16,14 +20,23 @@ export default class Field extends React.Component {
 	}
 	handleChange(value) {
 		if (this.props.field.type === 'array') {
+            const DropDownMenu = require('material-ui/lib/drop-down-menu');
 			value = _.map(value.split(','), _.trim);
 		}
 		this.setState({
 			value: value
 		});
 
+        this.props.onChange(value, this.props.field.name);
+    }
+    _handleEnumValueChange(ev ,i, option) {
+        let value = option.payload;
+        this.setState({
+            value: value
+        });
 		this.props.onChange(value, this.props.field.name);
-	}
+    }
+
     componentDidUpdate() {
         componentHandler.upgradeDom();
     }
@@ -73,6 +86,20 @@ export default class Field extends React.Component {
 						}
 					</mdl.RadioGroup>
 				);
+            case "enum": 
+                return (
+                    <SelectField
+                        className="selectfield"
+                        floatingLabelText={field.label} 
+                        hintText={field.label}
+                        value={value}
+                        onChange={this._handleEnumValueChange.bind(this)}
+                        disabled={disabled}
+                        menuItems={ _.map(field.options, (field, key) => ({
+                                    'payload': key, 
+                                    'text': field
+                                })) } />
+                );
 			case "boolean": 
 				return (
 					<mdl.Checkbox
@@ -94,6 +121,22 @@ export default class Field extends React.Component {
 						disabled={disabled}
 						onChange={this.handleChange}
 						floatingLabel/>
+				);
+			case "date": 
+				return (
+					<DatePicker 
+                        className = "datepicker"
+					    container="dialog"
+                        autoOk={true}
+                        disabled={disabled}
+                        floatingLabelText={field.label} 
+                        open={true} 
+                        style={{
+                            width: '125px'
+                        }} 
+                        textFieldStyle={{
+                            width: '125px'
+                        }} />
 				);
 			default:
 				console.warn("Unknown type on formfield: " + field.type);

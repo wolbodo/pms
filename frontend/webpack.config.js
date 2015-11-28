@@ -2,6 +2,7 @@
 
 var webpack = require('webpack'),  
     HtmlWebpackPlugin = require('html-webpack-plugin'),
+    ExtractTextPlugin = require('extract-text-webpack-plugin'),
     path = require('path'),
     srcPath = path.join(__dirname, 'app');
 
@@ -32,13 +33,10 @@ module.exports = {
                 loader: "json-loader"
             }, {
                 test: /\.less$/,
-                loaders: ['style', 
-                        // 'css?importLoaders=1',
-                        // 'font?format[]=truetype&format[]=woff&format[]=embedded-opentype',
-                        'css', 'less']
+                loader: ExtractTextPlugin.extract('css?sourceMap!' + 'less?sourceMap')
             }, {
                 test: /\.css$/,
-                loaders: ['style', 'css']
+                loader: ExtractTextPlugin.extract('css?sourceMap')
                 
             }, {
                 test: /\.jpe?g$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/, 
@@ -46,13 +44,14 @@ module.exports = {
             }, { 
                 test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
                 loader: "url-loader?limit=10000&mimetype=application/font-woff" 
-            }, { 
+            }, {
                 test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/, 
                 loader: "file-loader" 
             }
         ]
     },
     plugins: [
+        new ExtractTextPlugin('styles.css'),
         new webpack.optimize.CommonsChunkPlugin('common', 'common.js'),
         new HtmlWebpackPlugin({
             inject: 'head',

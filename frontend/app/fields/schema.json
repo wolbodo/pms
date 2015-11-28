@@ -1,0 +1,38 @@
+{
+  "title": "Wijzig veld",
+  "permissions": {
+  	"readonly": ["name"]
+  },
+  "form": [
+  	{
+  		"title": "Veld",
+  		"fields": [
+  		"name", "label", "type"]
+  	}
+  ],
+  "fields": {
+    "name": {
+      "name": "name",
+      "label": "Naam",
+      "type": "string"
+    },
+    "label": {
+      "name": "label",
+      "label": "Label",
+      "type": "string"
+    },
+    "type": {
+      "name": "type",
+      "label": "Type",
+      "type": "option",
+      "options": {
+      	"string": "Tekst",
+		"option": "Optie",
+		"enum": "Dropdown",
+		"date": "Datum",
+		"array": "Lijst",
+		"boolean": "Booleaan"
+      }
+    }
+  }
+}

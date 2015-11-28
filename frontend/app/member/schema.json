@@ -2,8 +2,6 @@
   "title": "Wijzig lid",
   "permissions": {
     "readonly": [
-      "infix",
-      "gender",
       "birthdate",
       "street",
       "city",
@@ -113,22 +111,23 @@
       "name": "lastname"
     },
     "gender": {
-      "type": "option",
+      "type": "enum",
       "label": "Geslacht",
       "name": "gender",
       "options": {
         "male": "Man",
         "female": "Vrouw",
+        "trans": "Trans",
         "other": "Anders"
       }
     },
     "birthdate": {
-      "type": "string",
+      "type": "date",
       "name": "birthdate",
       "label": "Geboortedatum"
     },
     "deathdate": {
-      "type": "string",
+      "type": "date",
       "name": "deathdate",
       "label": "Sterfdatum"
     },

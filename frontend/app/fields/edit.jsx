@@ -6,36 +6,30 @@ import mdl from 'react-mdl';
 import ItemEdit from '../view/itemEdit';
 
 import schema from './schema.json';
-import API from '../api';
+import member_schema from '../member/schema.json';
 
-export default class MemberEdit extends React.Component {
+export default class FieldsEdit extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			member: {}
+			field: member_schema.fields[this.props.params.veld] || {}
 		};
 
-		API.get_member(parseInt(props.params.id || 3))
-		 .then(function (member) {
-			this.setState({
-				member: member
-			});
-		 }.bind(this));
 	}
 	render() {
 
 		const {params} = this.props;
 
-		var {member} = this.state;
+		var {field} = this.state;
 
 
 		// var data = _.find(stub, group => group.id === params.groep);
 
-		return member ?(
+		return field ?(
 			<ItemEdit
 				schema={schema}
-				item={member}/>
+				item={field}/>
 		) : (
 			<p>-</p>
 		);
