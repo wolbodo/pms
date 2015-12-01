@@ -13,7 +13,7 @@ export default class GroupView extends React.Component {
 			data = stub;
 			
 		return (
-			<List>
+			<List title="Groepen">
 				<Head schema={schema} fields={fields}/>
 				{data.map(row => (
 					<Row key={row.name} item={row} fields={fields} editLink={`/groepen/${row.id}`}/>

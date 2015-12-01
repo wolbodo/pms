@@ -7,6 +7,12 @@ import mdl from 'react-mdl';
 import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
 
+// Reference static files so they are loaded with webpack.
+import 'app.less';
+import 'material';
+import 'material.css';
+import logo from 'img/logo.svg';
+
 import injectTapEventPlugin from "react-tap-event-plugin";
 
 //Needed for onTouchTap
@@ -27,12 +33,8 @@ import MemberEdit from 'member/edit';
 import FieldsView from 'fields/view';
 import FieldsEdit from 'fields/edit';
 
+import PermissionView from 'permissions/table';
 
-// Reference static files so they are loaded with webpack.
-import 'app.less';
-import 'material';
-import 'material.css';
-import logo from 'img/logo.svg';
 
 // var myfont = require('fonts/muli');
 // console.log(myfont); // { name: "Proxima Nova", files: [...] }
@@ -148,7 +150,7 @@ ReactDOM.render(
 			<Route path="velden/:veld" components={{main: FieldsEdit}} onEnter={Auth.auth.require} />
 			<Route path="groepen" components={{main: GroupView}} onEnter={Auth.auth.require}> </Route>
 			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={Auth.auth.require} />
-			<Route path="permissies" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
+			<Route path="permissies" components={{main: PermissionView}} onEnter={Auth.auth.require} />
 			<Route path="login" components={{main: Auth.Login}} />
 			<Route path="logout" components={{main: Auth.Logout}} onEnter={Auth.auth.require} />
 		</Route> 

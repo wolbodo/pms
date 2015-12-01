@@ -29,25 +29,28 @@ export class List extends React.Component {
 
 
     render() {
-    	const {fields, schema, data} = this.props;
+    	const {fields, schema, data, title} = this.props;
 
     	const {heads, rows} = _.groupBy(_.flatten(this.props.children), function (child) {
     		return (child.type.name === "Head") ? "heads" : "rows";
     	})
 
 		return (
-		<mdl.Grid className='main-content'>
-			<mdl.Cell col={12} className='mdl-color--white mdl-shadow--2dp'>
-				<table className='mdl-data-table mdl-js-data-table'>
-					<thead>
-						{heads}
-					</thead>
-					<tbody>
-						{rows}
-					</tbody>
-				</table>
-			</mdl.Cell>
-		</mdl.Grid>
+			<mdl.Card className='content mdl-color--white mdl-shadow--2dp'>
+				<mdl.CardTitle>
+					{title || "Lijst"}
+				</mdl.CardTitle>
+				<mdl.CardText>
+					<table className='mdl-data-table mdl-js-data-table'>
+						<thead>
+							{heads}
+						</thead>
+						<tbody>
+							{rows}
+						</tbody>
+					</table>
+				</mdl.CardText>
+			</mdl.Card>
 		);
     }
 }

@@ -91,7 +91,6 @@ export default class Field extends React.Component {
                     <SelectField
                         className="selectfield"
                         floatingLabelText={field.label} 
-                        hintText={field.label}
                         value={value}
                         onChange={this._handleEnumValueChange.bind(this)}
                         disabled={disabled}

@@ -55,11 +55,20 @@ body {
 	}
 
 	.content {
+		flex:1;
+
 		display: flex;
 		flex-wrap: wrap;
 		padding: 0.5rem;
 
-		.mdl-card {
+		&.mdl-card {
+			max-width: 1080px;
+		}
+
+		.mdl-cell {
+			padding: 1rem;
+		}
+		&.mdl-card, .mdl-card {
 			flex-grow: 1;
 			width: 30rem;
 			margin: 0.5rem;
@@ -105,11 +114,73 @@ body {
 				}
 
 			}
+			.mdl-card__supporting-text {
+				overflow-x: auto;
+			}
+		}
+	}
+
+	.permissions {
+
+		.permission {
+			padding: 0.3rem;
+
+			&:hover {
+				.accent-color;
+			}
+			.icon {
+				line-height: 1rem;
+				&.dimmed {
+					color: #d9d9d9;
+				}
+			}
+			
+		}
+	}
+
+	.fieldsview {
+		.mdl-card__supporting-text {
+			display: flex;
+			flex-direction:column;
+		}
+		.group {
+			display: flex;
+			flex-direction:column;
+			width: 400px;
+		    padding: 0.2rem;
+			border: thin solid black;
+
+			&.hover {
+			    border-color: red;
+			}
+
+
+			.fieldset {
+				display: flex;
+				flex-direction:row;
+				padding-left: 1rem;
+
+				&.hover {
+					border: thin solid red;
+					padding: 1rem;
+				}
+
+				.field {
+					border: thin solid black;
+				    padding: 0.2rem;
+				}
+
+			}
+
+			border: thin solid black;
 		}
 	}
 
 	main {
+		display: flex;
+		align-items: flex-start;
 		position: relative;
+		padding:1rem;
 
 		.popup {
 			background-color: rgba(0, 0, 0, 0.2);
@@ -134,22 +205,24 @@ body {
 		}
 	}
 
-	.main-content {
-		max-width: 1080px;
-
-		.mdl-cell {
-			padding: 1rem;
-		}
-	}
-
 	.mdl-data-table {
 	    table-layout: fixed;
 		overflow: hidden;
 		border: none;
 
+		tr {
+			height: 28px;
+		}
+
 		th, td {
+			color: black;
 			width: auto;
 			position: relative;
+			height: 28px;
+			padding-bottom: 0;
+			padding-top: 0;
+			vertical-align: middle;
+
 
 			z-index: 1;
 
@@ -157,6 +230,10 @@ body {
 				font-size: 1rem;
 				padding-left:6px;
 			}
+		}
+
+		td.button {
+			padding: 0.5rem;
 		}
 
 		th:hover {

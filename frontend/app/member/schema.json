@@ -19,13 +19,13 @@
     {
       "title": "Persoon",
       "fields": [
-        "nickname",
+        ["nickname"],
         [
           "firstname",
           "infix",
           "lastname"
         ],
-        "gender",
+        ["gender"],
         [
           "birthdate",
           "deathdate"
@@ -43,49 +43,49 @@
           "zipcode",
           "city"
         ],
-        "country"
+        ["country"]
       ]
     },
     {
       "title": "Bank",
       "fields": [
-        "iban",
-        "directdebit",
-        "email",
-        "mobile",
-        "phone",
-        "emergencyinfo"
+        ["iban"],
+        ["directdebit"],
+        ["email"],
+        ["mobile"],
+        ["phone"],
+        ["emergencyinfo"]
       ]
     },
     {
       "title": "Status",
       "fields": [
-        "membertype",
+        ["membertype"],
         [
           "membersince",
           "membertill"
         ],
-        "functions",
-        "notes",
-        "wantscontact"
+        ["functions"],
+        ["notes"],
+        ["wantscontact"]
       ]
     },
     {
       "title": "Sleutel",
       "fields": [
-        "keycode",
-        "coasters",
-        "cashregister",
-        "frontdoor",
-        "isadmin"
+        ["keycode"],
+        ["coasters"],
+        ["cashregister"],
+        ["frontdoor"],
+        ["isadmin"]
       ]
     },
     {
       "title": "System",
       "fields": [
-        "passwordhash",
-        "modified",
-        "created"
+        ["passwordhash"],
+        ["modified"],
+        ["created"]
       ]
     }
   ],

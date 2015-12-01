@@ -27,7 +27,7 @@ export default class MemberView extends React.Component {
 
 
 		return (
-			<List>
+			<List title="Leden">
 				<Head schema={schema} fields={fields}/>
 				{members.map((row, i) => (
 					<Row key={i} item={row} fields={fields} editLink={row.id && `/lid-${row.id}` }/>

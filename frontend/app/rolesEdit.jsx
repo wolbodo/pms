@@ -94,7 +94,7 @@ export default class RolesEdit extends React.Component {
 
 		var {roles, fields, popup} = this.props;
 		
-		return (<mdl.Grid className='main-content'>
+		return (<mdl.Grid className='content'>
 					<mdl.Cell col={12} className='mdl-color--white mdl-shadow--2dp'>
 						<table className='mdl-data-table mdl-js-data-table'>
 							<thead>
