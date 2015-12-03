@@ -15,13 +15,43 @@ import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
 import Backend from 'react-dnd-html5-backend';
 
-
-
-
 const ItemTypes = {
   FIELD: Symbol('field'),
   GROUP: Symbol('group')
 };
+
+
+function getDragDirection(component, monitor) {
+
+    // Determine rectangle on screen
+    const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
+
+    // Get vertical middle
+    const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+    // Determine mouse position
+    const clientOffset = monitor.getClientOffset();
+
+    // Get pixels to the top
+    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
+    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+    // Only perform the move when the mouse has crossed half of the items height
+    // When dragging downwards, only move when the cursor is below 50%
+    // When dragging upwards, only move when the cursor is above 50%
+    return {
+      up:    hoverClientY < hoverMiddleY,
+      down:  hoverClientY > hoverMiddleY,
+      left:  hoverClientX < hoverMiddleX,
+      right: hoverClientX > hoverMiddleX
+    };
+}
+// Index depths
+const FIELD = 2,
+      SET   = 1,
+      GROUP = 0;
+
 
 /**
  * Implements the drag source contract.
@@ -34,74 +64,50 @@ const fieldSource = {
       field: props.field,
       moveField: props.moveField
     };
-  },
-
-  // endDrag: function (props, monitor, component) {
-  // 	debugger;
-  //   if (!monitor.didDrop()) {
-  //   	console.log("Not dropped");
-  //     return;
-  //   }
-
-  //   // When dropped on a compatible target, do something
-  //   var item = monitor.getItem();
-  //   var dropResult = monitor.getDropResult();
-  //   debugger;
-  //   // CardActions.moveCardToList(item.id, dropResult.listId);
-  // }
+  }
 };
-
 const fieldTarget = {
 
   hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
+    var item = monitor.getItem();
+    const dragIndex = item.index;
     const hoverIndex = props.index;
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
+    // If wer're dragging betweend fieldsets, dont handle this.
+    if (!_.isEqual(dragIndex.slice(0, 2), hoverIndex.slice(0, 2))) {
       return;
     }
 
-    // Determine rectangle on screen
-    const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
+    // Don't replace items with themselves
+    if (dragIndex[2] === hoverIndex[2]) {
+      return;
+    }
 
-    // Get vertical middle
-    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-    const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
-
-    // Determine mouse position
-    const clientOffset = monitor.getClientOffset();
-
-    // Get pixels to the top
-    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
-
-    // Only perform the move when the mouse has crossed half of the items height
-    // When dragging downwards, only move when the cursor is below 50%
-    // When dragging upwards, only move when the cursor is above 50%
+    const direction = getDragDirection(component, monitor);
+    console.log("Dragging:", direction.left ? 'left' : (direction.right ? 'right' : '---'), 'of hover field');
 
     // dropping on field, so 2nd item in indexes.
     let hFieldIndex = hoverIndex[2],
         dFieldIndex = dragIndex[2];
 
     // Dragging downwards
-    if (dFieldIndex < hFieldIndex && hoverClientX < hoverMiddleX) {
+    if (dFieldIndex < hFieldIndex && direction.left) {
       return;
     }
 
     // Dragging upwards
-    if (dFieldIndex > hFieldIndex && hoverClientX > hoverMiddleX) {
+    if (dFieldIndex > hFieldIndex && direction.right) {
       return;
     }
 
     // Time to actually perform the action
-    props.moveField(hFieldIndex, dFieldIndex);
+    props.moveField(dFieldIndex, hFieldIndex);
 
     // Note: we're mutating the monitor item here!
     // Generally it's better to avoid mutations,
     // but it's good here for the sake of performance
     // to avoid expensive index searches.
-    monitor.getItem().index = hoverIndex;
+    item.index = hoverIndex;
   },
 }
 
@@ -118,90 +124,65 @@ const fieldTarget = {
 const fieldSetTarget = {
 
   hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
+    var item = monitor.getItem();
+    const dragIndex = item.index;
     const hoverIndex = props.index;
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
+
+    if (!component.props.isOver) {
       return;
     }
-    console.log("move fieldset:", dragIndex, hoverIndex);
+
+    const direction = getDragDirection(component, monitor);
+    console.log("Dragging:", direction.up ? 'up' : (direction.down ? 'down' : '---'), 'of hover fieldset');
+
+
+    // dragging over fieldset, so 1st item in indexes.
+    let hFieldIndex = hoverIndex[1],
+        dFieldIndex = dragIndex[1];
+
+    // Dragging downwards
+    if (dFieldIndex < hFieldIndex && direction.down) {
+      return;
+    }
+
+    // Dragging upwards
+    if (dFieldIndex > hFieldIndex && direction.up) {
+      return;
+    }
+
+    // Time to actually perform the action
+    // add the new field into the first element of the new fieldset
+    // var hIndex = hoverIndex.concat(0);
+    // props.moveField(dragIndex, hIndex);
+
+    // item.index = hIndex
+
+
   }
 }
 
 
 const groupTarget = {
 
-  hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
-    const hoverIndex = props.index;
+  // hover(props, monitor, component) {
+  //   const dragIndex = monitor.getItem().index;
+  //   const hoverIndex = props.index;
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
-      return;
-    }
-    console.log("move group:", dragIndex, hoverIndex);
+  //   // Don't replace items with themselves
+  //   if (dragIndex === hoverIndex) {
+  //     return;
+  //   }
+  //   // console.log("move group:", dragIndex, hoverIndex);
 
-  }
+  // }
 };
 
-
-//   //   const dragIndex = monitor.getItem().index;
-//   //   const hoverIndex = props.index;
-
-//   //   console.log("movecard:", dragIndex, hoverIndex);
-//   //   // Don't replace items with themselves
-//   //   if (dragIndex === hoverIndex) {
-//   //     return;
-//   //   }
-
-//   //   // Determine rectangle on screen
-//   //   const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
-
-//   //   // Get vertical middle
-//   //   const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-//   //   // Determine mouse position
-//   //   const clientOffset = monitor.getClientOffset();
-
-//   //   // Get pixels to the top
-//   //   const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-//   //   // Only perform the move when the mouse has crossed half of the items height
-//   //   // When dragging downwards, only move when the cursor is below 50%
-//   //   // When dragging upwards, only move when the cursor is above 50%
-
-
-
-//   //   // Dragging downwards
-//   //   if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-//   //     return;
-//   //   }
-
-//   //   // Dragging upwards
-//   //   if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-//   //     return;
-//   //   }
-
-//   //   // Time to actually perform the action
-//   //   // props.moveCard(dragIndex, hoverIndex);
-
-//   //   // Note: we're mutating the monitor item here!
-//   //   // Generally it's better to avoid mutations,
-//   //   // but it's good here for the sake of performance
-//   //   // to avoid expensive index searches.
-//   //   // monitor.getItem().index = hoverIndex;
-//   // },
-// 	drop(props, monitor, component) {
-//     console.log("Group:Drop: ", monitor.getItemType(), monitor.getItem(), monitor.didDrop())
-// 		// return props;
-// 	}
-// }
 
 function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver()
+    isOver: monitor.isOver({shallow: true})
   };
 }
 function sourceCollect(connect, monitor) {
@@ -210,6 +191,9 @@ function sourceCollect(connect, monitor) {
 	  isDragging: monitor.isDragging()
   };
 }
+
+
+
 
 class Field extends React.Component{
   static propTypes = {
@@ -220,10 +204,10 @@ class Field extends React.Component{
   };
 
   render() {
-    const { isDragging, connectDragSource, connectDropTarget, field, offset } = this.props;
+    const { isDragging, connectDragSource, connectDropTarget, field, offset, isOver } = this.props;
    
     return connectDragSource(connectDropTarget(
-      <div className='field' style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <div className={classnames('field', {'hover': isOver})} style={{ opacity: isDragging ? 0.5 : 1 }}>
         {field.label}
       </div>
     ));
@@ -244,18 +228,20 @@ class FieldSet extends React.Component {
     }
   }
   moveField(dragIndex, hoverIndex) {
+
     
-    const { fields } = this.state;
-    const { index } = this.props;
-    const dragField = fields[dragIndex];
+    
+    // const { fields } = this.state;
+    // const dragField = fields[dragIndex];
+    // const { index } = this.props;
 
-    console.log("move field:", dragIndex, hoverIndex, fields, dragField);
+    // this.props.moveField(index.concat(dragIndex), index.concat(hoverIndex));
 
-    this.props.moveField(this.index, dragIndex, hoverIndex, dragField);
+
   }
 
   componentWillReceiveProps(props) {
-    if (_.isEqual(props.fields, this.props.fields)) {
+    if (!_.isEqual(props.fields, this.props.fields)) {
       this.setState({
         fields: props.fields
       });
@@ -268,7 +254,11 @@ class FieldSet extends React.Component {
     return connectDropTarget(
       <div className={classnames('fieldset', {'hover': isOver})} >
       { _.map(fields, (field, i) =>
-        <Field key={i} index={index.concat(i)} field={member_schema.fields[field]} moveField={this.moveField.bind(this)}/>
+        <Field 
+          key={i} 
+          index={index.concat(i)} 
+          field={member_schema.fields[field]} 
+          moveField={this.moveField.bind(this)}/>
       )}
       </div>
     );
@@ -287,28 +277,19 @@ class Group extends React.Component {
     }
   }
   componentWillReceiveProps(props) {
-    if (_.isEqual(props.fieldsets, this.props.fieldsets)) {
+    if (!_.isEqual(props.fieldsets, this.props.fieldsets)) {
       this.setState({
         fieldsets: props.fieldsets
       });
     }
   }
-  moveField(fieldsetIndex, itemIndex, newIndex, field) {
+  moveField(dragIndex, hoverIndex) {
 
-    this.setState(update(this.state, {
-      fieldsets : {
-        [fieldsetIndex]: {
-          $splice: [
-            [dragIndex, 1],
-            [hoverIndex, 0, dragField]
-          ]
-        }
-      }
-    }));
+    this.props.moveField(dragIndex, hoverIndex);
   }
 	render() {
-	    const { isDragging, isOver, connectDragSource, 
-        connectDropTarget, title, offset, index} = this.props;
+    const { isDragging, isOver, connectDragSource, 
+      connectDropTarget, title, offset, index} = this.props;
     const { fieldsets } = this.state;
 		
 		return connectDropTarget(
@@ -316,7 +297,11 @@ class Group extends React.Component {
         { title }
 
         { _.map(fieldsets, (fieldset, i) => 
-          <FieldSet fields={fieldset} key={i} index={[index, i]} />
+          <FieldSet 
+            fields={fieldset} 
+            moveField={this.moveField.bind(this)} 
+            key={i} 
+            index={[index, i]} />
         )}
       </div>);
 	}
@@ -325,7 +310,92 @@ class Group extends React.Component {
 Group = DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)(Group);
 
 
+function createStateUpdate(dragIndex, hoverIndex, field) {
+  // creates a update compatible object for moving the field from dragIndex to hoverIndex
 
+  // first remove the dragged Element from it's dragindex.
+  // then add it to the hoverindex.
+
+  var diff = {};
+  var drag_diff = diff,
+      hover_diff = diff;
+
+  var [g_id_drag, fs_id_drag, f_id_drag] = dragIndex,
+      [g_id_hover, fs_id_hover, f_id_hover] = hoverIndex;
+
+  // find where the indexes differ, there should be 1 place.
+  var moveDepth;
+  for (let i=0; i<3; i++) {
+
+    if (dragIndex[i] !== hoverIndex[i]) {
+      // if (moveDepth) {
+        // throw "Unexpected, moves in 2 places";
+      // }
+
+      moveDepth = i;
+    }
+  }
+
+  if (moveDepth === 0) {
+    // moved from group
+    return {
+      groups: {
+        [dragIndex[0]]: {
+          fields: {
+            [dragIndex[1]]: {
+              $splice: [
+                [dragIndex[2], 1]
+              ]
+            }
+          }
+        },
+        [hoverIndex[0]]: {
+          fields: {
+            [hoverIndex[1]]: {
+              $splice: [
+                [hoverIndex[2], 0, field]
+              ]
+            }
+          }
+        }
+      }
+    };
+  } else if (moveDepth === 1) {
+    return {
+      groups: {
+        [dragIndex[0]]: {
+          fields: {
+            [dragIndex[1]]: {
+              $splice: [
+                [dragIndex[2], 1]
+              ]
+            }, 
+            [hoverIndex[1]]: {
+              $splice: [
+                [hoverIndex[2], 0, field]
+              ]
+            }
+          }
+        }
+      }
+    };
+  } else if (moveDepth === 2) {
+    return {
+      groups: {
+        [dragIndex[0]]: {
+          fields: {
+            [dragIndex[1]]: {
+              $splice: [
+                [dragIndex[2], 1],
+                [hoverIndex[2], 0, field]
+              ]
+            }
+          }
+        }
+      }
+    };
+  }
+}
 
 class FieldsView extends React.Component {
 	constructor(props) {
@@ -336,23 +406,15 @@ class FieldsView extends React.Component {
     }
 	}
 
-  moveField(groupIndex, fieldsetIndex, itemIndex, newIndex, field) {
+  moveField(dragIndex, hoverIndex) {
+    const field = _.get(this.state.groups, [dragIndex[0], 'fields', dragIndex[1], dragIndex[2]]);
 
-    this.setState(update(this.state, {
-      groups: {
-        [groupIndex]: {
-          [fieldsetIndex]: {
-            $splice: [
-              [dragIndex, 1],
-              [hoverIndex, 0, dragField]
-            ]
-          }
-        }
-      }
-    }));
+    console.log("Dragging field", field, "fromto", dragIndex, hoverIndex);
+
+    this.setState(update(this.state, createStateUpdate(dragIndex, hoverIndex, field)));
   }
   componentWillReceiveProps(props) {
-    if (_.isEqual(props.groups, this.props.groups)) {
+    if (!_.isEqual(props.groups, this.props.groups)) {
       this.setState({
         groups: props.groups
       });
@@ -370,7 +432,12 @@ class FieldsView extends React.Component {
 				<mdl.CardTitle>Alle velden</mdl.CardTitle>
 				<mdl.CardText>
 					{ _.map(groups, (group, i) => 
-						<Group key={i} index={i} title={group.title} fieldsets={group.fields} />
+						<Group 
+              key={i} 
+              index={i} 
+              moveField={this.moveField.bind(this)} 
+              title={group.title} 
+              fieldsets={group.fields} />
 					)}
 				</mdl.CardText>
 			</mdl.Card>

@@ -158,16 +158,20 @@ body {
 			.fieldset {
 				display: flex;
 				flex-direction:row;
+				padding: 0.3rem;
 				padding-left: 1rem;
 
 				&.hover {
 					border: thin solid red;
-					padding: 1rem;
 				}
 
 				.field {
 					border: thin solid black;
 				    padding: 0.2rem;
+
+				    &.hover {
+				    	border-color: red;
+				    }
 				}
 
 			}
