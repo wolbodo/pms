@@ -53,6 +53,7 @@ const FIELD = 2,
       GROUP = 0;
 
 
+
 /**
  * Implements the drag source contract.
  */
@@ -62,103 +63,105 @@ const fieldSource = {
     return {
       index: props.index,
       field: props.field,
-      moveField: props.moveField
+      moveField: props.moveField,
+      addSet: props.addSet
     };
   }
 };
 const fieldTarget = {
 
   hover(props, monitor, component) {
-    var item = monitor.getItem();
-    const dragIndex = item.index;
-    const hoverIndex = props.index;
-
-    // If wer're dragging betweend fieldsets, dont handle this.
-    if (!_.isEqual(dragIndex.slice(0, 2), hoverIndex.slice(0, 2))) {
-      return;
-    }
-
-    // Don't replace items with themselves
-    if (dragIndex[2] === hoverIndex[2]) {
-      return;
-    }
-
+    const item = monitor.getItem();
     const direction = getDragDirection(component, monitor);
-    console.log("Dragging:", direction.left ? 'left' : (direction.right ? 'right' : '---'), 'of hover field');
 
-    // dropping on field, so 2nd item in indexes.
-    let hFieldIndex = hoverIndex[2],
-        dFieldIndex = dragIndex[2];
+    if ( // were working on the same fieldset
+          (item.index[GROUP] === props.index[GROUP])
+           &&
+          (item.index[SET] === props.index[SET])
+           &&
+          (
+            // if items are being dropped on the same spot
+            (_.isEqual(item.index, props.index)) 
+            ||
+            // if items will return on the same spot.
+            (item.index[FIELD] + (direction.left ? 1 : -1)  === props.index[FIELD])
+          )
+        ) {
 
-    // Dragging downwards
-    if (dFieldIndex < hFieldIndex && direction.left) {
+      component.setState({
+        direction: undefined
+      });
       return;
     }
 
-    // Dragging upwards
-    if (dFieldIndex > hFieldIndex && direction.right) {
-      return;
-    }
 
-    // Time to actually perform the action
-    props.moveField(dFieldIndex, hFieldIndex);
 
-    // Note: we're mutating the monitor item here!
-    // Generally it's better to avoid mutations,
-    // but it's good here for the sake of performance
-    // to avoid expensive index searches.
-    item.index = hoverIndex;
+
+    component.setState({
+      direction: direction
+    });
   },
-}
+  drop(props, monitor, component) {
+    const item = monitor.getItem();
+    const direction = getDragDirection(component, monitor);
+    var toIndex = props.index;
 
-// const groupSource = {
-//   beginDrag(props) {
-//     console.log("returning dragged group item", props);
-//     return {
-//       index: props.index,
-//       field: props.field
-//     };
-//   }
-// };
+    if ( // were working on the same fieldset
+          (item.index[GROUP] === props.index[GROUP])
+           &&
+          (item.index[SET] === props.index[SET])
+           &&
+          (
+            // if items are being dropped on the same spot
+            (_.isEqual(item.index, props.index)) 
+            ||
+            // if items will return on the same spot.
+            (item.index[FIELD] + (direction.left ? 1 : -1)  === props.index[FIELD])
+          )
+        ) {
+
+      component.setState({
+        direction: undefined
+      });
+      return;
+    }
+
+    if (direction.right) {
+      // we should be adding behind the target
+      toIndex[FIELD] += 1;
+    }
+
+    props.moveField(item.index, toIndex);
+  }
+}
 
 const fieldSetTarget = {
 
   hover(props, monitor, component) {
-    var item = monitor.getItem();
-    const dragIndex = item.index;
-    const hoverIndex = props.index;
-
-
-    if (!component.props.isOver) {
-      return;
-    }
 
     const direction = getDragDirection(component, monitor);
-    console.log("Dragging:", direction.up ? 'up' : (direction.down ? 'down' : '---'), 'of hover fieldset');
 
+    component.setState({
+      direction: direction
+    });
+  },
+  drop(props, monitor, component) {
+    const item = monitor.getItem();
 
-    // dragging over fieldset, so 1st item in indexes.
-    let hFieldIndex = hoverIndex[1],
-        dFieldIndex = dragIndex[1];
-
-    // Dragging downwards
-    if (dFieldIndex < hFieldIndex && direction.down) {
+    if (!monitor.isOver({shallow:true})) {
+      // its being handle by fields
       return;
     }
 
-    // Dragging upwards
-    if (dFieldIndex > hFieldIndex && direction.up) {
-      return;
+    const direction = component.state.direction;
+    var toIndex = props.index;
+
+    if (direction.down) {
+      // we should be adding behind the target
+      toIndex[SET] += 1;
     }
 
-    // Time to actually perform the action
-    // add the new field into the first element of the new fieldset
-    // var hIndex = hoverIndex.concat(0);
-    // props.moveField(dragIndex, hIndex);
-
-    // item.index = hIndex
-
-
+    props.addSet(item.index, toIndex);
   }
 }
 
@@ -192,9 +195,6 @@ function sourceCollect(connect, monitor) {
   };
 }
 
-
-
-
 class Field extends React.Component{
   static propTypes = {
     // Injected by React DnD:
@@ -203,11 +203,39 @@ class Field extends React.Component{
     isDragging: PropTypes.bool.isRequired
   };
 
+  constructor(props) {
+    super(props);
+
+    this.mouseOver = this.mouseOver.bind(this);
+    this.mouseOut = this.mouseOut.bind(this);
+
+    this.state = {};
+  }
+
+  mouseOver() {
+      this.setState({hover: true});
+  }
+
+  mouseOut() {
+      this.setState({hover: false});
+  }
+
+
   render() {
-    const { isDragging, connectDragSource, connectDropTarget, field, offset, isOver } = this.props;
-   
+    const { isDragging, connectDragSource, connectDropTarget, 
+            field, offset, isOver } = this.props;
+    const { direction } = this.props;
+    const {hover} = this.state;
+
     return connectDragSource(connectDropTarget(
-      <div className={classnames('field', {'hover': isOver})} style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <div 
+        onMouseOver={this.mouseOver}
+        onMouseOut={this.mouseOut}
+        className={classnames('field', isOver && direction)} 
+        style={{ opacity: isDragging ? 0.5 : 1 }}>
+        { hover ? (
+          <i className='icon'>edit</i>
+          ) : null}
         {field.label}
       </div>
     ));
@@ -222,43 +250,22 @@ Field = DropTarget(ItemTypes.FIELD, fieldTarget, targetCollect)(Field);
 class FieldSet extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      fields: this.props.fields
-    }
-  }
-  moveField(dragIndex, hoverIndex) {
-
-    
-    
-    // const { fields } = this.state;
-    // const dragField = fields[dragIndex];
-    // const { index } = this.props;
-
-    // this.props.moveField(index.concat(dragIndex), index.concat(hoverIndex));
-
-
+    this.state = {};
   }
 
-  componentWillReceiveProps(props) {
-    if (!_.isEqual(props.fields, this.props.fields)) {
-      this.setState({
-        fields: props.fields
-      });
-    }
-  }
   render () {
-    const { isOver, connectDropTarget, index} = this.props;
-    const {fields } = this.state;
+    const { isOver, connectDropTarget, index, fields, moveField, addSet} = this.props;
+    const {direction} = this.state;
 
     return connectDropTarget(
-      <div className={classnames('fieldset', {'hover': isOver})} >
+      <div className={classnames('fieldset', isOver && direction) } >
       { _.map(fields, (field, i) =>
         <Field 
           key={i} 
           index={index.concat(i)} 
           field={member_schema.fields[field]} 
-          moveField={this.moveField.bind(this)}/>
+          moveField={moveField}
+          addSet={addSet} />
       )}
       </div>
     );
@@ -283,13 +290,11 @@ class Group extends React.Component {
       });
     }
   }
-  moveField(dragIndex, hoverIndex) {
 
-    this.props.moveField(dragIndex, hoverIndex);
-  }
 	render() {
     const { isDragging, isOver, connectDragSource, 
-      connectDropTarget, title, offset, index} = this.props;
+      connectDropTarget, title, offset, index, 
+      moveField, addSet } = this.props;
     const { fieldsets } = this.state;
 		
 		return connectDropTarget(
@@ -299,7 +304,8 @@ class Group extends React.Component {
         { _.map(fieldsets, (fieldset, i) => 
           <FieldSet 
             fields={fieldset} 
-            moveField={this.moveField.bind(this)} 
+            moveField={moveField} 
+            addSet={addSet} 
             key={i} 
             index={[index, i]} />
         )}
@@ -310,93 +316,6 @@ class Group extends React.Component {
 Group = DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)(Group);
 
 
-function createStateUpdate(dragIndex, hoverIndex, field) {
-  // creates a update compatible object for moving the field from dragIndex to hoverIndex
-
-  // first remove the dragged Element from it's dragindex.
-  // then add it to the hoverindex.
-
-  var diff = {};
-  var drag_diff = diff,
-      hover_diff = diff;
-
-  var [g_id_drag, fs_id_drag, f_id_drag] = dragIndex,
-      [g_id_hover, fs_id_hover, f_id_hover] = hoverIndex;
-
-  // find where the indexes differ, there should be 1 place.
-  var moveDepth;
-  for (let i=0; i<3; i++) {
-
-    if (dragIndex[i] !== hoverIndex[i]) {
-      // if (moveDepth) {
-        // throw "Unexpected, moves in 2 places";
-      // }
-
-      moveDepth = i;
-    }
-  }
-
-  if (moveDepth === 0) {
-    // moved from group
-    return {
-      groups: {
-        [dragIndex[0]]: {
-          fields: {
-            [dragIndex[1]]: {
-              $splice: [
-                [dragIndex[2], 1]
-              ]
-            }
-          }
-        },
-        [hoverIndex[0]]: {
-          fields: {
-            [hoverIndex[1]]: {
-              $splice: [
-                [hoverIndex[2], 0, field]
-              ]
-            }
-          }
-        }
-      }
-    };
-  } else if (moveDepth === 1) {
-    return {
-      groups: {
-        [dragIndex[0]]: {
-          fields: {
-            [dragIndex[1]]: {
-              $splice: [
-                [dragIndex[2], 1]
-              ]
-            }, 
-            [hoverIndex[1]]: {
-              $splice: [
-                [hoverIndex[2], 0, field]
-              ]
-            }
-          }
-        }
-      }
-    };
-  } else if (moveDepth === 2) {
-    return {
-      groups: {
-        [dragIndex[0]]: {
-          fields: {
-            [dragIndex[1]]: {
-              $splice: [
-                [dragIndex[2], 1],
-                [hoverIndex[2], 0, field]
-              ]
-            }
-          }
-        }
-      }
-    };
-  }
-}
-
 class FieldsView extends React.Component {
 	constructor(props) {
 		super(props);
@@ -404,38 +323,97 @@ class FieldsView extends React.Component {
     this.state = {
       groups: member_schema.form
     }
+
+    this.moveField = this.moveField.bind(this);
+    this.addSet = this.addSet.bind(this);
 	}
 
-  moveField(dragIndex, hoverIndex) {
-    const field = _.get(this.state.groups, [dragIndex[0], 'fields', dragIndex[1], dragIndex[2]]);
+  moveField(fromIndex, toIndex) {
+    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
 
-    console.log("Dragging field", field, "fromto", dragIndex, hoverIndex);
+    console.log("Dragging field", field, "fromto", fromIndex, toIndex);
 
-    this.setState(update(this.state, createStateUpdate(dragIndex, hoverIndex, field)));
-  }
-  componentWillReceiveProps(props) {
-    if (!_.isEqual(props.groups, this.props.groups)) {
-      this.setState({
-        groups: props.groups
-      });
+
+    let fromFieldset = member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]],
+        toFieldset = member_schema.form[toIndex[GROUP]].fields[toIndex[SET]];
+
+    // mind the order, 
+    if (fromIndex[FIELD] > toIndex[FIELD]) {
+      // remove the field first, then add
+
+      fromFieldset.splice(fromIndex[FIELD], 1);
+      toFieldset.splice(toIndex[FIELD], 0, field);
+    } else {
+      // other way around
+      toFieldset.splice(toIndex[FIELD], 0, field);
+      fromFieldset.splice(fromIndex[FIELD], 1);
     }
+
+    // remove old fieldset if it was empty
+    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
+      fieldsets.splice(fromIndex[SET], 1);
+    }
+
+    this.setState({
+      groups: member_schema.form
+    })
+
+    // var diff = {
+    //   [toIndex[GROUP]]: {
+    //     fields: {
+    //       [toIndex[SET]]: {
+    //         $splice: [
+    //           [toIndex[FIELD], 0, field]
+    //         ]
+            
+    //       }
+    //     }
+    //   }
+    // };
+    // member_schema = update(member_schema.form, diff);
+  }
+
+  addSet(fromIndex, toIndex) {
+
+    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
+
+    console.log("adding set", field, "fromto", fromIndex, toIndex);
+
+    // remove from old place.
+    member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]].splice(fromIndex[FIELD], 1);
+    // add in the new place.
+    member_schema.form[toIndex[GROUP]].fields.splice(toIndex[SET], 0, [field]);
+
+    // remove old fieldset if it was empty
+    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
+      fieldsets.splice(fromIndex[SET], 1);
+    }
+
+
+    this.setState({
+      groups: member_schema.form
+    })
+
+
   }
 
 	render() {
 		var fields = member_schema.fields;
-		var form = member_schema.form;
     const {groups} = this.state;
 
-		return (
+				// <mdl.CardTitle>Alle velden</mdl.CardTitle>
+    return (
 
-			<mdl.Card className='content fieldsview mdl-color--white mdl-shadow--2dp'>
-				<mdl.CardTitle>Alle velden</mdl.CardTitle>
+      <mdl.Card className='content fieldsview mdl-color--white mdl-shadow--2dp'>
 				<mdl.CardText>
 					{ _.map(groups, (group, i) => 
 						<Group 
               key={i} 
               index={i} 
-              moveField={this.moveField.bind(this)} 
+              moveField={this.moveField} 
+              addSet={this.addSet} 
               title={group.title} 
               fieldsets={group.fields} />
 					)}
