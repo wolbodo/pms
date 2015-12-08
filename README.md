@@ -1,4 +1,4 @@
-# mms
+# pms
 
 # Frontend
 
@@ -47,9 +47,9 @@ location / {
 # Postgresql Database
 ```
 sudo -u postgres psql
-CREATE USER mms;
-CREATE DATABASE mms WITH OWNER mms;
-\password mms
+CREATE USER pms;
+CREATE DATABASE pms WITH OWNER pms;
+\password pms
 ***
 ***
 ```
