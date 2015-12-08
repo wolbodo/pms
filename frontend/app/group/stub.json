@@ -8,5 +8,10 @@
     "id": "leden",
     "name": "Leden",
     "description": "Alle leden"
+  },
+  {
+    "id": "oudleden",
+    "name": "Oud Leden",
+    "description": "Alle oud leden"
   }
 ]

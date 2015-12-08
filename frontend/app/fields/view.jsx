@@ -15,13 +15,44 @@ import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
 import Backend from 'react-dnd-html5-backend';
 
-
-
-
 const ItemTypes = {
   FIELD: Symbol('field'),
   GROUP: Symbol('group')
 };
+
+
+function getDragDirection(component, monitor) {
+
+    // Determine rectangle on screen
+    const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
+
+    // Get vertical middle
+    const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+    // Determine mouse position
+    const clientOffset = monitor.getClientOffset();
+
+    // Get pixels to the top
+    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
+    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+    // Only perform the move when the mouse has crossed half of the items height
+    // When dragging downwards, only move when the cursor is below 50%
+    // When dragging upwards, only move when the cursor is above 50%
+    return {
+      up:    hoverClientY < hoverMiddleY,
+      down:  hoverClientY > hoverMiddleY,
+      left:  hoverClientX < hoverMiddleX,
+      right: hoverClientX > hoverMiddleX
+    };
+}
+// Index depths
+const FIELD = 2,
+      SET   = 1,
+      GROUP = 0;
+
+
 
 /**
  * Implements the drag source contract.
@@ -32,176 +63,129 @@ const fieldSource = {
     return {
       index: props.index,
       field: props.field,
-      moveField: props.moveField
+      moveField: props.moveField,
+      addSet: props.addSet
     };
-  },
-
-  // endDrag: function (props, monitor, component) {
-  // 	debugger;
-  //   if (!monitor.didDrop()) {
-  //   	console.log("Not dropped");
-  //     return;
-  //   }
-
-  //   // When dropped on a compatible target, do something
-  //   var item = monitor.getItem();
-  //   var dropResult = monitor.getDropResult();
-  //   debugger;
-  //   // CardActions.moveCardToList(item.id, dropResult.listId);
-  // }
+  }
 };
-
 const fieldTarget = {
 
   hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
-    const hoverIndex = props.index;
+    const item = monitor.getItem();
+    const direction = getDragDirection(component, monitor);
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
+    if ( // were working on the same fieldset
+          (item.index[GROUP] === props.index[GROUP])
+           &&
+          (item.index[SET] === props.index[SET])
+           &&
+          (
+            // if items are being dropped on the same spot
+            (_.isEqual(item.index, props.index)) 
+            ||
+            // if items will return on the same spot.
+            (item.index[FIELD] + (direction.left ? 1 : -1)  === props.index[FIELD])
+          )
+        ) {
+
+      component.setState({
+        direction: undefined
+      });
       return;
     }
 
-    // Determine rectangle on screen
-    const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
 
-    // Get vertical middle
-    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-    const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
 
-    // Determine mouse position
-    const clientOffset = monitor.getClientOffset();
 
-    // Get pixels to the top
-    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-    const hoverClientX = clientOffset.x - hoverBoundingRect.left;
-
-    // Only perform the move when the mouse has crossed half of the items height
-    // When dragging downwards, only move when the cursor is below 50%
-    // When dragging upwards, only move when the cursor is above 50%
-
-    // dropping on field, so 2nd item in indexes.
-    let hFieldIndex = hoverIndex[2],
-        dFieldIndex = dragIndex[2];
-
-    // Dragging downwards
-    if (dFieldIndex < hFieldIndex && hoverClientX < hoverMiddleX) {
-      return;
-    }
-
-    // Dragging upwards
-    if (dFieldIndex > hFieldIndex && hoverClientX > hoverMiddleX) {
-      return;
-    }
-
-    // Time to actually perform the action
-    props.moveField(hFieldIndex, dFieldIndex);
-
-    // Note: we're mutating the monitor item here!
-    // Generally it's better to avoid mutations,
-    // but it's good here for the sake of performance
-    // to avoid expensive index searches.
-    monitor.getItem().index = hoverIndex;
+    component.setState({
+      direction: direction
+    });
   },
-}
+  drop(props, monitor, component) {
+    const item = monitor.getItem();
+    const direction = getDragDirection(component, monitor);
+    var toIndex = props.index;
 
-// const groupSource = {
-//   beginDrag(props) {
-//     console.log("returning dragged group item", props);
-//     return {
-//       index: props.index,
-//       field: props.field
-//     };
-//   }
-// };
+    if ( // were working on the same fieldset
+          (item.index[GROUP] === props.index[GROUP])
+           &&
+          (item.index[SET] === props.index[SET])
+           &&
+          (
+            // if items are being dropped on the same spot
+            (_.isEqual(item.index, props.index)) 
+            ||
+            // if items will return on the same spot.
+            (item.index[FIELD] + (direction.left ? 1 : -1)  === props.index[FIELD])
+          )
+        ) {
+
+      component.setState({
+        direction: undefined
+      });
+      return;
+    }
+
+    if (direction.right) {
+      // we should be adding behind the target
+      toIndex[FIELD] += 1;
+    }
+
+    props.moveField(item.index, toIndex);
+  }
+}
 
 const fieldSetTarget = {
 
   hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
-    const hoverIndex = props.index;
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
+    const direction = getDragDirection(component, monitor);
+
+    component.setState({
+      direction: direction
+    });
+  },
+  drop(props, monitor, component) {
+    const item = monitor.getItem();
+
+    if (!monitor.isOver({shallow:true})) {
+      // its being handle by fields
       return;
     }
-    console.log("move fieldset:", dragIndex, hoverIndex);
+
+    const direction = component.state.direction;
+    var toIndex = props.index;
+
+    if (direction.down) {
+      // we should be adding behind the target
+      toIndex[SET] += 1;
+    }
+
+    props.addSet(item.index, toIndex);
   }
 }
 
 
 const groupTarget = {
 
-  hover(props, monitor, component) {
-    const dragIndex = monitor.getItem().index;
-    const hoverIndex = props.index;
+  // hover(props, monitor, component) {
+  //   const dragIndex = monitor.getItem().index;
+  //   const hoverIndex = props.index;
 
-    // Don't replace items with themselves
-    if (dragIndex === hoverIndex) {
-      return;
-    }
-    console.log("move group:", dragIndex, hoverIndex);
+  //   // Don't replace items with themselves
+  //   if (dragIndex === hoverIndex) {
+  //     return;
+  //   }
+  //   // console.log("move group:", dragIndex, hoverIndex);
 
-  }
+  // }
 };
 
-
-//   //   const dragIndex = monitor.getItem().index;
-//   //   const hoverIndex = props.index;
-
-//   //   console.log("movecard:", dragIndex, hoverIndex);
-//   //   // Don't replace items with themselves
-//   //   if (dragIndex === hoverIndex) {
-//   //     return;
-//   //   }
-
-//   //   // Determine rectangle on screen
-//   //   const hoverBoundingRect = ReactDOM.findDOMNode(component).getBoundingClientRect();
-
-//   //   // Get vertical middle
-//   //   const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-//   //   // Determine mouse position
-//   //   const clientOffset = monitor.getClientOffset();
-
-//   //   // Get pixels to the top
-//   //   const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-//   //   // Only perform the move when the mouse has crossed half of the items height
-//   //   // When dragging downwards, only move when the cursor is below 50%
-//   //   // When dragging upwards, only move when the cursor is above 50%
-
-
-
-//   //   // Dragging downwards
-//   //   if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-//   //     return;
-//   //   }
-
-//   //   // Dragging upwards
-//   //   if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-//   //     return;
-//   //   }
-
-//   //   // Time to actually perform the action
-//   //   // props.moveCard(dragIndex, hoverIndex);
-
-//   //   // Note: we're mutating the monitor item here!
-//   //   // Generally it's better to avoid mutations,
-//   //   // but it's good here for the sake of performance
-//   //   // to avoid expensive index searches.
-//   //   // monitor.getItem().index = hoverIndex;
-//   // },
-// 	drop(props, monitor, component) {
-//     console.log("Group:Drop: ", monitor.getItemType(), monitor.getItem(), monitor.didDrop())
-// 		// return props;
-// 	}
-// }
 
 function targetCollect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver()
+    isOver: monitor.isOver({shallow: true})
   };
 }
 function sourceCollect(connect, monitor) {
@@ -219,11 +203,39 @@ class Field extends React.Component{
     isDragging: PropTypes.bool.isRequired
   };
 
+  constructor(props) {
+    super(props);
+
+    this.mouseOver = this.mouseOver.bind(this);
+    this.mouseOut = this.mouseOut.bind(this);
+
+    this.state = {};
+  }
+
+  mouseOver() {
+      this.setState({hover: true});
+  }
+
+  mouseOut() {
+      this.setState({hover: false});
+  }
+
+
   render() {
-    const { isDragging, connectDragSource, connectDropTarget, field, offset } = this.props;
-   
+    const { isDragging, connectDragSource, connectDropTarget, 
+            field, offset, isOver } = this.props;
+    const { direction } = this.props;
+    const {hover} = this.state;
+
     return connectDragSource(connectDropTarget(
-      <div className='field' style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <div 
+        onMouseOver={this.mouseOver}
+        onMouseOut={this.mouseOut}
+        className={classnames('field', isOver && direction)} 
+        style={{ opacity: isDragging ? 0.5 : 1 }}>
+        { hover ? (
+          <i className='icon'>edit</i>
+          ) : null}
         {field.label}
       </div>
     ));
@@ -238,37 +250,22 @@ Field = DropTarget(ItemTypes.FIELD, fieldTarget, targetCollect)(Field);
 class FieldSet extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      fields: this.props.fields
-    }
-  }
-  moveField(dragIndex, hoverIndex) {
-    
-    const { fields } = this.state;
-    const { index } = this.props;
-    const dragField = fields[dragIndex];
-
-    console.log("move field:", dragIndex, hoverIndex, fields, dragField);
-
-    this.props.moveField(this.index, dragIndex, hoverIndex, dragField);
+    this.state = {};
   }
 
-  componentWillReceiveProps(props) {
-    if (_.isEqual(props.fields, this.props.fields)) {
-      this.setState({
-        fields: props.fields
-      });
-    }
-  }
   render () {
-    const { isOver, connectDropTarget, index} = this.props;
-    const {fields } = this.state;
+    const { isOver, connectDropTarget, index, fields, moveField, addSet} = this.props;
+    const {direction} = this.state;
 
     return connectDropTarget(
-      <div className={classnames('fieldset', {'hover': isOver})} >
+      <div className={classnames('fieldset', isOver && direction) } >
       { _.map(fields, (field, i) =>
-        <Field key={i} index={index.concat(i)} field={member_schema.fields[field]} moveField={this.moveField.bind(this)}/>
+        <Field 
+          key={i} 
+          index={index.concat(i)} 
+          field={member_schema.fields[field]} 
+          moveField={moveField}
+          addSet={addSet} />
       )}
       </div>
     );
@@ -287,28 +284,17 @@ class Group extends React.Component {
     }
   }
   componentWillReceiveProps(props) {
-    if (_.isEqual(props.fieldsets, this.props.fieldsets)) {
+    if (!_.isEqual(props.fieldsets, this.props.fieldsets)) {
       this.setState({
         fieldsets: props.fieldsets
       });
     }
   }
-  moveField(fieldsetIndex, itemIndex, newIndex, field) {
 
-    this.setState(update(this.state, {
-      fieldsets : {
-        [fieldsetIndex]: {
-          $splice: [
-            [dragIndex, 1],
-            [hoverIndex, 0, dragField]
-          ]
-        }
-      }
-    }));
-  }
 	render() {
-	    const { isDragging, isOver, connectDragSource, 
-        connectDropTarget, title, offset, index} = this.props;
+    const { isDragging, isOver, connectDragSource, 
+      connectDropTarget, title, offset, index, 
+      moveField, addSet } = this.props;
     const { fieldsets } = this.state;
 		
 		return connectDropTarget(
@@ -316,15 +302,18 @@ class Group extends React.Component {
         { title }
 
         { _.map(fieldsets, (fieldset, i) => 
-          <FieldSet fields={fieldset} key={i} index={[index, i]} />
+          <FieldSet 
+            fields={fieldset} 
+            moveField={moveField} 
+            addSet={addSet} 
+            key={i} 
+            index={[index, i]} />
         )}
       </div>);
 	}
 }
 // Group = DragSource(ItemTypes.GROUP, groupSource, sourceCollect)(Group);
 Group = DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)(Group);
-
-
 
 
 class FieldsView extends React.Component {
@@ -334,43 +323,99 @@ class FieldsView extends React.Component {
     this.state = {
       groups: member_schema.form
     }
+
+    this.moveField = this.moveField.bind(this);
+    this.addSet = this.addSet.bind(this);
 	}
 
-  moveField(groupIndex, fieldsetIndex, itemIndex, newIndex, field) {
+  moveField(fromIndex, toIndex) {
+    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
 
-    this.setState(update(this.state, {
-      groups: {
-        [groupIndex]: {
-          [fieldsetIndex]: {
-            $splice: [
-              [dragIndex, 1],
-              [hoverIndex, 0, dragField]
-            ]
-          }
-        }
-      }
-    }));
-  }
-  componentWillReceiveProps(props) {
-    if (_.isEqual(props.groups, this.props.groups)) {
-      this.setState({
-        groups: props.groups
-      });
+    console.log("Dragging field", field, "fromto", fromIndex, toIndex);
+
+
+    let fromFieldset = member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]],
+        toFieldset = member_schema.form[toIndex[GROUP]].fields[toIndex[SET]];
+
+    // mind the order, 
+    if (fromIndex[FIELD] > toIndex[FIELD]) {
+      // remove the field first, then add
+
+      fromFieldset.splice(fromIndex[FIELD], 1);
+      toFieldset.splice(toIndex[FIELD], 0, field);
+    } else {
+      // other way around
+      toFieldset.splice(toIndex[FIELD], 0, field);
+      fromFieldset.splice(fromIndex[FIELD], 1);
     }
+
+    // remove old fieldset if it was empty
+    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
+      fieldsets.splice(fromIndex[SET], 1);
+    }
+
+    this.setState({
+      groups: member_schema.form
+    })
+
+    // var diff = {
+    //   [toIndex[GROUP]]: {
+    //     fields: {
+    //       [toIndex[SET]]: {
+    //         $splice: [
+    //           [toIndex[FIELD], 0, field]
+    //         ]
+            
+    //       }
+    //     }
+    //   }
+    // };
+    // member_schema = update(member_schema.form, diff);
+  }
+
+  addSet(fromIndex, toIndex) {
+
+    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
+
+    console.log("adding set", field, "fromto", fromIndex, toIndex);
+
+    // remove from old place.
+    member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]].splice(fromIndex[FIELD], 1);
+    // add in the new place.
+    member_schema.form[toIndex[GROUP]].fields.splice(toIndex[SET], 0, [field]);
+
+    // remove old fieldset if it was empty
+    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
+      fieldsets.splice(fromIndex[SET], 1);
+    }
+
+
+    this.setState({
+      groups: member_schema.form
+    })
+
+
   }
 
 	render() {
 		var fields = member_schema.fields;
-		var form = member_schema.form;
     const {groups} = this.state;
 
-		return (
+				// <mdl.CardTitle>Alle velden</mdl.CardTitle>
+    return (
 
-			<mdl.Card className='content fieldsview mdl-color--white mdl-shadow--2dp'>
-				<mdl.CardTitle>Alle velden</mdl.CardTitle>
+      <mdl.Card className='content fieldsview mdl-color--white mdl-shadow--2dp'>
 				<mdl.CardText>
 					{ _.map(groups, (group, i) => 
-						<Group key={i} index={i} title={group.title} fieldsets={group.fields} />
+						<Group 
+              key={i} 
+              index={i} 
+              moveField={this.moveField} 
+              addSet={this.addSet} 
+              title={group.title} 
+              fieldsets={group.fields} />
 					)}
 				</mdl.CardText>
 			</mdl.Card>

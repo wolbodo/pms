@@ -69,6 +69,11 @@ var permissions = {
 			"notes",
 			"wantscontact",
 		]
+	},
+	oudleden: {
+		read: [
+			"frontdoor"
+		]
 	}
 };
 

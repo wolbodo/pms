@@ -158,16 +158,39 @@ body {
 			.fieldset {
 				display: flex;
 				flex-direction:row;
+				padding: 0.3rem;
 				padding-left: 1rem;
 
-				&.hover {
-					border: thin solid red;
-					padding: 1rem;
-				}
+				// border: thin solid black;
+
+				// &.left, .left {
+				// 	border-left: green solid 1rem; 
+				// }
+				// &.right, .right {
+				// 	border-right: green solid 1rem; 
+				// }
+				// &.down, .down {
+				// 	border-bottom: green solid 1rem; 
+				// }
+				// &.up, .up {
+				// 	border-top: green solid 1rem; 
+				// }
+
+
+				&.down {border-bottom: green solid 1rem; }
+				&.up {border-top: green solid 1rem; }
 
 				.field {
-					border: thin solid black;
+					// border: thin solid black;
 				    padding: 0.2rem;
+				// border: thin solid black;
+
+					&.left {border-left: green solid 1rem; }
+					&.right {border-right: green solid 1rem; }
+
+					&:last-child {
+						flex: 1;
+					}
 				}
 
 			}
