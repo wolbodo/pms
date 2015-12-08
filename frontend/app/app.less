@@ -14,10 +14,15 @@
 
 body {
 	display: flex;
+	overflow: hidden; // Since plugins might fuck up the flow (LastPass f.i.)
 }
 #app {
 	display: flex;
 	flex: 1;
+
+	a {
+		color: inherit;
+	}
 
 	.mdl-button {
 		.accent-color;
@@ -104,10 +109,27 @@ body {
 					}
 				}
 
-				.mdl-textfield {
-				    width: 400px;
+				.textfield {
+					position: relative;
+					flex: initial;
+
 					margin-right: 1rem;
 
+					.auto-size {
+					    padding: 20px 0;
+					    height: 30px;
+					    min-width: 5rem;
+					    white-space: pre;
+
+					    visibility: hidden;
+					}
+
+					.mdl-textfield {
+					    position: absolute;
+					    width:100%;
+					    top: 0; left: 0; right: 0; bottom: 0;
+
+					}
 				}
 				.mdl-radio {
 					margin: 0 1rem 1rem 1rem;
@@ -146,9 +168,8 @@ body {
 		.group {
 			display: flex;
 			flex-direction:column;
-			width: 400px;
+			width: 23rem;
 		    padding: 0.2rem;
-			border: thin solid black;
 
 			&.hover {
 			    border-color: red;
@@ -161,32 +182,26 @@ body {
 				padding: 0.3rem;
 				padding-left: 1rem;
 
-				// border: thin solid black;
-
-				// &.left, .left {
-				// 	border-left: green solid 1rem; 
-				// }
-				// &.right, .right {
-				// 	border-right: green solid 1rem; 
-				// }
-				// &.down, .down {
-				// 	border-bottom: green solid 1rem; 
-				// }
-				// &.up, .up {
-				// 	border-top: green solid 1rem; 
-				// }
-
-
-				&.down {border-bottom: green solid 1rem; }
-				&.up {border-top: green solid 1rem; }
+				&.down {
+					box-shadow: inset 0px -4px 2px -3px rgba(0, 0, 0, 0.3),
+									  0px 2px 2px -1px rgba(0, 0, 0, 0.30);
+				}
+				&.up {
+					box-shadow: inset 0px 4px 2px -3px rgba(0, 0, 0, 0.3),
+									  0px -2px 2px -1px rgba(0, 0, 0, 0.30);
+				}
 
 				.field {
-					// border: thin solid black;
 				    padding: 0.2rem;
-				// border: thin solid black;
 
-					&.left {border-left: green solid 1rem; }
-					&.right {border-right: green solid 1rem; }
+					&.left {
+						box-shadow: inset 4px 0px 2px -3px rgba(0, 0, 0, 0.3),
+										  -2px 0px 2px -1px rgba(0, 0, 0, 0.30);
+					}
+					&.right {
+						box-shadow: inset -4px 0px 2px -3px rgba(0, 0, 0, 0.3),
+										  2px 0px 2px -1px rgba(0, 0, 0, 0.30);
+					}
 
 					&:last-child {
 						flex: 1;
@@ -195,7 +210,6 @@ body {
 
 			}
 
-			border: thin solid black;
 		}
 	}
 

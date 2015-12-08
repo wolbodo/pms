@@ -57,12 +57,20 @@ export class List extends React.Component {
 
 export class Head extends React.Component {
 	render() {
-		const {schema, fields} = this.props;
+		const {schema, fields, fieldLink} = this.props;
 		return (
 			<tr>
-				{fields.map(field => (
-					<th key={field} className='mdl-data-table__cell--non-numeric'>{schema.fields[field].label}</th>
-					))}
+				{fields
+					.map(fieldname => schema.fields[fieldname]) // get fields from the fieldname
+					.map(field => (
+					<th key={field.name} className='mdl-data-table__cell--non-numeric'>
+					{
+						fieldLink ? (
+							<Link to={`${fieldLink}/${field.name}`}>{field.label}</Link>
+						) : field.label
+					}
+					</th>
+				))}
 			</tr>);
 	}
 }
