@@ -3,6 +3,7 @@ import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
+import update from 'react/lib/update';
 
 import {Router, Route, Link, IndexRoute, PropTypes } from 'react-router';
 import { createHistory } from 'history';
@@ -36,6 +37,18 @@ import FieldsEdit from 'fields/edit';
 import PermissionView from 'permissions/table';
 
 
+
+import registerServiceWorker from "serviceworker!./service-worker.js";
+
+registerServiceWorker({ scope: '/' }).then(function(reg) {
+	console.log('◕‿◕', reg);
+}, function(err) {
+	console.log('ಠ_ಠ', err);
+});
+
+
+
+
 // var myfont = require('fonts/muli');
 // console.log(myfont); // { name: "Proxima Nova", files: [...] }
 
@@ -44,35 +57,14 @@ class HeaderBar extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.handleChange = this.handleChange.bind(this);
 	}
 
-	handleChange(change) {
-		// debugger;
-	} 
+	componentDidMount() {
+	}
 
 	render() {
-
-		var {location} = this.props;
-
-		var mem = '';
-		var url_parts = _(location.pathname.split('/'))
-		 .slice(1)
-		 .map(function (part) {
-		 	mem = `${mem}/${part}`;
-
-		 	return {
-		 		name: part,
-		 		path: mem
-		 	};
-		 })
-		 .value();
-
 		return (
 			<div className='breadcrumbs'>
-			{ url_parts.map((part, i) => (
-				<Link key={part.name} to={part.path}>{_.startCase(part.name)}</Link>
-			))}
 			</div>
 		);
 	}
@@ -110,7 +102,7 @@ class App extends React.Component {
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
 					<mdl.HeaderRow>
-						{ header }
+						{header}
 					</mdl.HeaderRow>
 				</mdl.Header>
 				<mdl.Drawer>
@@ -143,16 +135,16 @@ class App extends React.Component {
 ReactDOM.render(
 	<Router history={createHistory()}>
 		<Route path="/" component={App}>
-			<IndexRoute components={{main: MemberView}} onEnter={Auth.auth.require}/>
-			<Route path="lid-:id" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
-			<Route path="wijzig" components={{main: MemberEdit}} onEnter={Auth.auth.require} />
-			<Route path="velden" components={{main: FieldsView}} onEnter={Auth.auth.require} />
-			<Route path="velden/:veld" components={{main: FieldsEdit}} onEnter={Auth.auth.require} />
-			<Route path="groepen" components={{main: GroupView}} onEnter={Auth.auth.require}> </Route>
-			<Route path="groepen/:groep" components={{main: GroupEdit}} onEnter={Auth.auth.require} />
-			<Route path="permissies" components={{main: PermissionView}} onEnter={Auth.auth.require} />
-			<Route path="login" components={{main: Auth.Login}} />
-			<Route path="logout" components={{main: Auth.Logout}} onEnter={Auth.auth.require} />
+			<IndexRoute name='Lijst'      components={{main: MemberView, header: HeaderBar}} onEnter={Auth.auth.require}/>
+			<Route      name="Lid"        path="lid-:id"        components={{main: MemberEdit, header: HeaderBar}}     onEnter={Auth.auth.require} />
+			<Route      name="Wijzig"     path="wijzig"         components={{main: MemberEdit, header: HeaderBar}}     onEnter={Auth.auth.require} />
+			<Route      name="Velden"     path="velden"         components={{main: FieldsView, header: HeaderBar}}     onEnter={Auth.auth.require} />
+			<Route      name="Veld"       path="velden/:veld"   components={{main: FieldsEdit, header: HeaderBar}}     onEnter={Auth.auth.require} />
+			<Route      name="Groepen"    path="groepen"        components={{main: GroupView, header: HeaderBar}}      onEnter={Auth.auth.require} />
+			<Route      name="Groep"      path="groepen/:groep" components={{main: GroupEdit, header: HeaderBar}}      onEnter={Auth.auth.require} />
+			<Route      name="Permissies" path="permissies"     components={{main: PermissionView, header: HeaderBar}} onEnter={Auth.auth.require} />
+			<Route      name="Login"      path="login"          components={{main: Auth.Login, header: HeaderBar}}     />
+			<Route      name="Logout"     path="logout"         components={{main: Auth.Logout, header: HeaderBar}}    onEnter={Auth.auth.require} />
 		</Route> 
 		<Route path="/test" component={MemberEdit}/>
 	</Router>,

@@ -59,6 +59,7 @@ module.exports = {
             favicon: 'app/favicon.png'
         }),
         new webpack.NoErrorsPlugin(),
+        // new webpack.IgnorePlugin(/service-worker\.js/),
         new webpack.HotModuleReplacementPlugin()
     ],
     resolve: {
@@ -74,9 +75,9 @@ module.exports = {
     },
 
     debug: true,
-devtool: 'source-map',
-  devServer: {
-    contentBase: './build',
-    historyApiFallback: true
-  }
+    devtool: 'source-map',
+    devServer: {
+        contentBase: './build',
+        historyApiFallback: true
+    }
 }

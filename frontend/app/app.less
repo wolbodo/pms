@@ -59,6 +59,10 @@ body {
 		.secondary-text-color;
 	}
 
+	.click {
+		cursor: pointer;
+	}
+
 	.content {
 		flex:1;
 
@@ -118,7 +122,7 @@ body {
 					.auto-size {
 					    padding: 20px 0;
 					    height: 30px;
-					    min-width: 5rem;
+					    min-width: 6rem;
 					    white-space: pre;
 
 					    visibility: hidden;
@@ -138,6 +142,7 @@ body {
 			}
 			.mdl-card__supporting-text {
 				overflow-x: auto;
+				width: auto;
 			}
 		}
 	}
@@ -246,6 +251,7 @@ body {
 	    table-layout: fixed;
 		overflow: hidden;
 		border: none;
+		width: 100%;
 
 		tr {
 			height: 28px;
@@ -267,6 +273,17 @@ body {
 				font-size: 1rem;
 				padding-left:6px;
 			}
+
+			&.edit {
+				width: 2rem;
+			}
+		}
+
+		td {
+		  white-space: nowrap;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+			
 		}
 
 		td.button {

@@ -78,22 +78,16 @@ export class Head extends React.Component {
 
 export class Row extends React.Component {
 	render() {
-		const {item, fields, editLink} = this.props;
+		const {className, item, fields, edit} = this.props;
 
 		return (
-		<tr key={item.name}>
+		<tr className={className} key={item.name} onClick={edit}>
 			{fields.map(field => (
 				<td key={field} className='mdl-data-table__cell--non-numeric'>
 					{ item[field] }
 				</td>
 			))}
 
-			<td>
-				{ editLink && (
-					<Link to={editLink}><i className='icon'>edit</i></Link>
-				)}
-			</td>
 		</tr>);
 	}
 }
-
