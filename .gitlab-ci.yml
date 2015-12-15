@@ -1,14 +1,21 @@
 types:
+    - setup
     - build
     - deploy
 
 # before_script:
 
+frontend:
+    type: setup
+    script:
+        - cd frontend
+        - npm install 
+        - npm run build
+
+
 build: 
     type: build
     script:
-        - npm install 
-        - npm run build
         - docker-compose build
 
 deploy:
