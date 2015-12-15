@@ -59,7 +59,6 @@ module.exports = {
             favicon: 'app/favicon.png'
         }),
         new webpack.NoErrorsPlugin(),
-        // new webpack.IgnorePlugin(/service-worker\.js/),
         new webpack.HotModuleReplacementPlugin()
     ],
     resolve: {

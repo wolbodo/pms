@@ -79,11 +79,11 @@ export class Head extends React.Component {
 export class Row extends React.Component {
 	render() {
 		const {className, item, fields, edit} = this.props;
-
+		debugger;
 		return (
 		<tr className={className} key={item.name} onClick={edit}>
-			{fields.map(field => (
-				<td key={field} className='mdl-data-table__cell--non-numeric'>
+			{fields.map((field, i) => (
+				<td key={i} className='mdl-data-table__cell--non-numeric'>
 					{ item[field] }
 				</td>
 			))}

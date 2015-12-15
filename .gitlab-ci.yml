@@ -1,0 +1,17 @@
+types:
+    - build
+    - deploy
+
+# before_script:
+
+build: 
+    type: build
+    script:
+        - npm install 
+        - npm run build
+        - docker-compose build
+
+deploy:
+    type: deploy
+    script:
+        - docker-compose up -d

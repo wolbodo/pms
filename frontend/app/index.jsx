@@ -37,22 +37,6 @@ import FieldsEdit from 'fields/edit';
 import PermissionView from 'permissions/table';
 
 
-
-import registerServiceWorker from "serviceworker!./service-worker.js";
-
-registerServiceWorker({ scope: '/' }).then(function(reg) {
-	console.log('◕‿◕', reg);
-}, function(err) {
-	console.log('ಠ_ಠ', err);
-});
-
-
-
-
-// var myfont = require('fonts/muli');
-// console.log(myfont); // { name: "Proxima Nova", files: [...] }
-
-
 class HeaderBar extends React.Component {
 	constructor(props) {
 		super(props);

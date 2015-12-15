@@ -25,9 +25,7 @@
   },
   "dependencies": {
     "axios": "^0.7.0",
-    "belle": "^2.0.0-rc2",
     "classnames": "^2.2.1",
-    "history": "^1.13.0",
     "lodash": "^3.10.1",
     "material-design-icons": "^2.0.0",
     "material-design-lite": "^1.0.5",
