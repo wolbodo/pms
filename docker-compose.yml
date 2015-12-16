@@ -11,6 +11,7 @@ frontend:
 backend:
     build: backend
     ports: 
-        - "80"
+        - "4242"
     environment: 
         - VIRTUAL_HOST=pmsapi.dxlb
+        - VIRTUAL_PORT=4242
