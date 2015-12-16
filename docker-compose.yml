@@ -2,15 +2,15 @@
 
 
 frontend: 
-	build: frontend
-	ports:
-		- "80"
-	environment:
-		- VIRTUAL_HOST=pms.dxlb.nl
+    build: frontend
+    ports:
+        - "80"
+    environment:
+        - VIRTUAL_HOST=pms.dxlb.nl
 
 backend:
-	build: backend
-	ports: 
-		- "80"
-	environment: 
-		- VIRTUAL_HOST=pmsapi.dxlb
+    build: backend
+    ports: 
+        - "80"
+    environment: 
+        - VIRTUAL_HOST=pmsapi.dxlb
