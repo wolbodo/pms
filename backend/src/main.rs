@@ -99,7 +99,6 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 fn handle_members(req: &mut Request) -> IronResult<Response> {
     // // Returns a list of members, might be using filters. 
 
-    Ok(Response::with((status::Ok)))
     // let db = req.db_conn();
     // let stmt = db.prepare("
     //     WITH readfields (key, selfid) AS (
@@ -132,7 +131,7 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
 
     // let rows = stmt.query(&[&3]).unwrap();
 
-    // let mut members: Vec<Value> = Vec::new();
+    let mut members: Vec<Value> = Vec::new();
 
     // for row in rows {
 
@@ -142,7 +141,7 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
     //     members.push(data);
     // }
 
-    // Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
+    Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
     // // Err(Response::with((status::Ok)));
 }
 

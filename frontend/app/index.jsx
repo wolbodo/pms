@@ -12,6 +12,7 @@ import { createHistory } from 'history';
 import 'app.less';
 import 'material';
 import 'material.css';
+import 'favicon.png';
 import logo from 'img/logo.svg';
 
 import injectTapEventPlugin from "react-tap-event-plugin";
