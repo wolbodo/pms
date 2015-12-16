@@ -6,7 +6,7 @@ build:
     type: build
     script:
         - cd frontend
-        - npm install 
+        - npm-cache install 
         - npm run build
         - cd ..
         - docker-compose build

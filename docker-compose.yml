@@ -7,6 +7,7 @@ frontend:
         - "80"
     environment:
         - VIRTUAL_HOST=pms.dxlb.nl
+        - CERT_NAME=dxlb.nl
 
 backend:
     build: backend
@@ -15,3 +16,4 @@ backend:
     environment: 
         - VIRTUAL_HOST=pmsapi.dxlb
         - VIRTUAL_PORT=4242
+        - CERT_NAME=dxlb.nl
