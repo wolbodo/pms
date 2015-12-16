@@ -194,5 +194,5 @@ fn main() {
 
     // chain.link_before(pg_middleware);
     //chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
-    Iron::new(chain).http("127.0.0.1:4242").unwrap();
+    Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }
