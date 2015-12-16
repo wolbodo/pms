@@ -1,5 +1,7 @@
 
 
+postgres:
+    image: postgres
 
 frontend: 
     build: frontend
@@ -17,3 +19,5 @@ backend:
         - VIRTUAL_HOST=pmsapi.dxlb
         - VIRTUAL_PORT=4242
         - CERT_NAME=dxlb.nl
+    links:
+        - postgres
