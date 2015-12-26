@@ -3,7 +3,7 @@ import update from 'react/lib/update';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 import classnames from 'classnames';
-
+import {Link} from 'react-router';
 import _ from 'lodash';
 
 import {List, Head, Row} from '../view/list';
@@ -62,7 +62,6 @@ const fieldSource = {
     console.log("returning dragged field item", props);
     return {
       index: props.index,
-      field: props.field,
       moveField: props.moveField,
       addSet: props.addSet
     };
@@ -165,20 +164,12 @@ const fieldSetTarget = {
   }
 }
 
-
+const groupSource = {
+  beginDrag(props) {
+    index: props.index
+  }
+}
 const groupTarget = {
-
-  // hover(props, monitor, component) {
-  //   const dragIndex = monitor.getItem().index;
-  //   const hoverIndex = props.index;
-
-  //   // Don't replace items with themselves
-  //   if (dragIndex === hoverIndex) {
-  //     return;
-  //   }
-  //   // console.log("move group:", dragIndex, hoverIndex);
-
-  // }
 };
 
 
@@ -233,10 +224,9 @@ class Field extends React.Component{
         onMouseOut={this.mouseOut}
         className={classnames('field', isOver && direction)} 
         style={{ opacity: isDragging ? 0.5 : 1 }}>
-        { hover ? (
-          <i className='icon'>edit</i>
-          ) : null}
+        <Link to={`/velden/${field.name}`}>
         {field.label}
+        </Link>
       </div>
     ));
   }
@@ -298,18 +288,23 @@ class Group extends React.Component {
     const { fieldsets } = this.state;
 		
 		return connectDropTarget(
-      <div className={classnames('group', {hover: isOver})} style={{ opacity: isDragging ? 0.5 : 1 }}>
-        { title }
-
-        { _.map(fieldsets, (fieldset, i) => 
-          <FieldSet 
-            fields={fieldset} 
-            moveField={moveField} 
-            addSet={addSet} 
-            key={i} 
-            index={[index, i]} />
-        )}
-      </div>);
+        <div>
+            <mdl.Card className={classnames('group', 'mdl-color--white', 'mdl-shadow--2dp', {hover: isOver})}>
+              <mdl.CardTitle>
+                { title }
+              </mdl.CardTitle>
+              <mdl.CardText>
+                { _.map(fieldsets, (fieldset, i) => 
+                  <FieldSet 
+                    fields={fieldset} 
+                    moveField={moveField} 
+                    addSet={addSet} 
+                    key={i} 
+                    index={[index, i]} />
+                )}
+              </mdl.CardText>
+            </mdl.Card>
+          </div>);
 	}
 }
 // Group = DragSource(ItemTypes.GROUP, groupSource, sourceCollect)(Group);
@@ -405,21 +400,17 @@ class FieldsView extends React.Component {
 
 				// <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
-
-      <mdl.Card className='content fieldsview mdl-color--white mdl-shadow--2dp'>
-				<mdl.CardText>
-					{ _.map(groups, (group, i) => 
-						<Group 
-              key={i} 
-              index={i} 
-              moveField={this.moveField} 
-              addSet={this.addSet} 
-              title={group.title} 
-              fieldsets={group.fields} />
-					)}
-				</mdl.CardText>
-			</mdl.Card>
-
+      <div className='content fieldsview'>
+				{ _.map(groups, (group, i) => 
+					<Group 
+            key={i} 
+            index={i} 
+            moveField={this.moveField} 
+            addSet={this.addSet} 
+            title={group.title} 
+            fieldsets={group.fields} />
+				)}
+      </div>
 		);
 	}	
 }

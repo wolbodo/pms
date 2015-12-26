@@ -4,9 +4,11 @@ import React from 'react';
 import {List, Head, Row} from '../view/list';
 import schema from './schema.json';
 import API from '../api';
+import { Link } from 'react-router';
 
+import { Navigation } from 'react-router'
 
-export default class MemberView extends React.Component {
+class MemberView extends React.Component {
 
 	constructor(props) {
 		super(props);
@@ -17,22 +19,29 @@ export default class MemberView extends React.Component {
 
 		API.get_members()
 			.then(members => this.setState({members: members}));
-
 	}
 
 	render() {
-		var fields = ['nickname', 'firstname', 'lastname', 'city',
+		var fields = ['nickname', 'firstname', 'lastname', 'city', 'gender','city',
 						'mobile', 'email'];
-		var {members} = this.state;
 
+		const {history} = this.props;
+		const {members} = this.state;
 
 		return (
 			<List title="Leden">
-				<Head schema={schema} fields={fields}/>
+				<Head schema={schema} fields={fields} editLink/>
 				{members.map((row, i) => (
-					<Row key={i} item={row} fields={fields} editLink={row.id && `/lid-${row.id}` }/>
+					<Row 
+						className="click"
+						key={i} 
+						item={row} 
+						fields={fields} 
+						edit={() => history.push(`/lid-${row.id}`)} />
 				))}
 			</List>
 		);
 	}
-}
+};
+
+export default MemberView;

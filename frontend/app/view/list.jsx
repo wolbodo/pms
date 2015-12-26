@@ -57,12 +57,20 @@ export class List extends React.Component {
 
 export class Head extends React.Component {
 	render() {
-		const {schema, fields} = this.props;
+		const {schema, fields, fieldLink} = this.props;
 		return (
 			<tr>
-				{fields.map(field => (
-					<th key={field} className='mdl-data-table__cell--non-numeric'>{schema.fields[field].label}</th>
-					))}
+				{fields
+					.map(fieldname => schema.fields[fieldname]) // get fields from the fieldname
+					.map(field => (
+					<th key={field.name} className='mdl-data-table__cell--non-numeric'>
+					{
+						fieldLink ? (
+							<Link to={`${fieldLink}/${field.name}`}>{field.label}</Link>
+						) : field.label
+					}
+					</th>
+				))}
 			</tr>);
 	}
 }
@@ -70,22 +78,16 @@ export class Head extends React.Component {
 
 export class Row extends React.Component {
 	render() {
-		const {item, fields, editLink} = this.props;
-
+		const {className, item, fields, edit} = this.props;
+		debugger;
 		return (
-		<tr key={item.name}>
-			{fields.map(field => (
-				<td key={field} className='mdl-data-table__cell--non-numeric'>
+		<tr className={className} key={item.name} onClick={edit}>
+			{fields.map((field, i) => (
+				<td key={i} className='mdl-data-table__cell--non-numeric'>
 					{ item[field] }
 				</td>
 			))}
 
-			<td>
-				{ editLink && (
-					<Link to={editLink}><i className='icon'>edit</i></Link>
-				)}
-			</td>
 		</tr>);
 	}
 }
-

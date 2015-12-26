@@ -1,0 +1,17 @@
+types:
+    - build
+    - deploy
+
+build: 
+    type: build
+    script:
+        - cd frontend
+        - npm-cache install 
+        - npm run build
+        - cd ..
+        - docker-compose build
+
+deploy:
+    type: deploy
+    script:
+        - docker-compose up -d

@@ -55,6 +55,8 @@ export default class Field extends React.Component {
 		switch(field.type) {
 			case "string": 
 				return (
+					<div className='textfield'>
+					<div className='auto-size'>{value || field.label}</div>
 					<mdl.Textfield
 						className={['field-' + field.name, (this.state.value !== undefined) ? 'is-dirty' : ''].join(' ')}
 						label={field.label}
@@ -63,6 +65,7 @@ export default class Field extends React.Component {
 						disabled={disabled}
 						onChange={this.handleChange}
 						floatingLabel/>
+					</div>
 				);
 			case "option":
 				return (

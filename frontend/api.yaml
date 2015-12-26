@@ -26,19 +26,40 @@ paths:
           description: Valid login attempt
           schema: 
             $ref: '#/definitions/Token'
-  /self:
+
+  /members:
+  /members/fields:
+
+  /groups:
+  /groups/fields:
+
+  /permissions:
+
+  /fields/{fieldType}/{fieldId}:
     get:
-      description: Returns the user info
+      description: Returns the fields
       parameters:
-        - in: header
-          name: Authorization
-          description:  A base64 hash of the JSON encoded token.
+        - in: path
+          name: fieldType
+          description: The table the fields are on
           type: string
       responses:
         200:
-          description: The user info
+          description: the fieldset
           schema: 
             type: object
+    put:
+      description: Sets a field
+      parameters: 
+        - in: path
+          name: fieldId
+          type: string
+    post:
+      description: Creates a new field
+      parameters: 
+        - in: path
+          name: fieldId
+          type: string
 
 definitions:
   Credentials:

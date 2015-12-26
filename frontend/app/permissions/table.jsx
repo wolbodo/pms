@@ -10,6 +10,10 @@ import groups from '../group/stub.json';
 import schema from '../member/schema.json';
 
 
+import { Link } from 'react-router';
+
+
+
 var permissions = {
 	leden: {
 		read: ["nickname", 
@@ -152,7 +156,9 @@ export default class PermissionsView extends React.Component {
 								<th></th>
 								{groups.map(group => (
 									<th key={group.id} className='mdl-data-table__cell--non-numeric'>
-										{group.name}
+										<Link to={`/groepen/${group.id}`}>
+											{group.name}
+										</Link>
 									</th>
 								))}
 								<th></th>
@@ -162,7 +168,11 @@ export default class PermissionsView extends React.Component {
 						<tbody>
 							{_.map(schema.fields, (field, i) => 
 								(<tr key={i}>
-									<th>{field.label}</th>
+									<th>
+										<Link to={`/velden/${field.name}`}>
+											{field.label}
+										</Link>
+									</th>
 									{_.map(groups, (group, i) => 
 										(<td key={i}>
 											<span className='permission' onClick={this.show.bind(this, {group:group, field:field})}>

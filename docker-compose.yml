@@ -1,0 +1,23 @@
+
+
+postgres:
+    image: postgres
+
+frontend: 
+    build: frontend
+    ports:
+        - "80"
+    environment:
+        - VIRTUAL_HOST=pms.dxlb.nl
+        - CERT_NAME=dxlb.nl
+
+backend:
+    build: backend
+    ports: 
+        - "4242"
+    environment: 
+        - VIRTUAL_HOST=pmsapi.dxlb
+        - VIRTUAL_PORT=4242
+        - CERT_NAME=dxlb.nl
+    links:
+        - postgres

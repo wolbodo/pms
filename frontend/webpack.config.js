@@ -74,9 +74,9 @@ module.exports = {
     },
 
     debug: true,
-devtool: 'source-map',
-  devServer: {
-    contentBase: './build',
-    historyApiFallback: true
-  }
+    devtool: 'source-map',
+    devServer: {
+        contentBase: './build',
+        historyApiFallback: true
+    }
 }
