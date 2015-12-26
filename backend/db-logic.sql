@@ -47,35 +47,32 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION setperson(int, int, jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION exception(text) RETURNS varchar LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '%', $1; RETURN ''; END; $$;
+
+--FIXME LATER: Dexter case (update people as same people)
+CREATE OR REPLACE FUNCTION setperson(int, int, jsonb) RETURNS TABLE(json jsonb) AS $$
 DECLARE
     _self_id ALIAS FOR $1;
     _people_id ALIAS FOR $2;
     _data ALIAS FOR $3;
 BEGIN
-  BEGIN;
     UPDATE people SET valid_till = NOW() WHERE id = $2 AND valid_till IS NULL;
 
     INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, data)
     WITH readfields (key) AS (SELECT key FROM getpermissions('read'::permissions_type, 'people', _self_id, _people_id)),
          writefields (key) AS (SELECT key FROM getpermissions('write'::permissions_type, 'people', _self_id, _people_id))
-SELECT id, valid_till,
-    CASE WHEN NOT (DATA)::JSONB ? 'email' THEN email WHEN 'email' IN (SELECT * FROM readfields) AND email = (DATA)::JSONB->>'email' OR 'email' IN (SELECT * FROM writefields) THEN (DATA)::JSONB->>'email' ELSE '' || exception('writing "email" not allowed') END,
-    CASE WHEN NOT (DATA)::JSONB ? 'phone' THEN phone WHEN 'phone' IN (SELECT * FROM readfields) AND phone = (DATA)::JSONB->>'phone' OR 'phone' IN (SELECT * FROM writefields) THEN (DATA)::JSONB->>'phone' ELSE '' || exception('writing "phone" not allowed') END,
-    password_hash,
-    XXX,
-    (SELECT ('{' || STRING_AGG('"' ||
-        CASE WHEN t2.key IS NULL THEN t1.key WHEN t2.key IN (SELECT * FROM writefields) OR t2.key IN (SELECT * FROM readfields) AND t1.value = t2.value THEN t2.key ELSE '' || exception('writing "' || t2.key || '" not allowed') END
-            || '":' || TO_JSON(COALESCE(t2.value, t1.value)), ',') || '}')::JSONB
-        FROM JSONB_EACH(data) t1
-        FULL OUTER JOIN (SELECT * FROM JSONB_EACH(DATA) WHERE key NOT IN ('email','phone')) t2 USING (key))
-FROM people WHERE id = YYY ORDER BY valid_till DESC LIMIT 1;
-
-COMMIT;
-
-
-
-
+    SELECT id, valid_till,
+        CASE WHEN NOT _data ? 'email' THEN email WHEN 'email' IN (SELECT * FROM readfields) AND email = _data->>'email' OR 'email' IN (SELECT * FROM writefields) THEN _data->>'email' ELSE exception('writing "email" not allowed') END,
+        CASE WHEN NOT _data ? 'phone' THEN phone WHEN 'phone' IN (SELECT * FROM readfields) AND phone = _data->>'phone' OR 'phone' IN (SELECT * FROM writefields) THEN _data->>'phone' ELSE exception('writing "phone" not allowed') END,
+        password_hash,
+        _self_id,
+        (SELECT ('{' || STRING_AGG('"' ||
+            CASE WHEN t2.key IS NULL THEN t1.key WHEN t2.key IN (SELECT * FROM writefields) OR t2.key IN (SELECT * FROM readfields) AND t1.value = t2.value THEN t2.key ELSE exception('writing "' || t2.key || '" not allowed') END
+                || '":' || TO_JSON(COALESCE(t2.value, t1.value)), ',') || '}')::JSONB
+            FROM JSONB_EACH(data) t1
+            FULL OUTER JOIN (SELECT * FROM JSONB_EACH(DATA) WHERE key NOT IN ('email','phone')) t2 USING (key))
+    FROM people WHERE id = _people_id ORDER BY valid_till DESC LIMIT 1;
+    RETURN QUERY (SELECT * FROM getpeople(_self_id, people_id));
 END;
 $$ LANGUAGE plpgsql;
 
