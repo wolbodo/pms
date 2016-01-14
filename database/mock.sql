@@ -21,7 +21,7 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "deathdate": "2029-04-14",
          "emergencyinfo": "Niet reanimeren!",
          "membertype": "member",
-         "membersince": "1959-04-14",
+         "peoplesince": "1959-04-14",
          "functions": ["commissieX"],
          "notes": "Al 60 jaar stand-bye!",
          "favoritenumber": 42,
@@ -46,7 +46,7 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "gender": "trans",
          "iban": "NL12NOBANK123123123132",
          "birthdate": "1989-04-14",
-         "membersince": "2010-01-01",
+         "peoplesince": "2010-01-01",
          "functions": ["boardmember", "eettafel"],
          "keycode": "321321",
          "coasters": null,
@@ -112,7 +112,7 @@ VALUES
     ('people','deathdate', '{}', -1),
     ('people','emergencyinfo', '{}', -1),
     ('people','membertype', '{}', -1),
-    ('people','membersince', '{}', -1),
+    ('people','peoplesince', '{}', -1),
     ('people','functions', '{}', -1),
     ('people','notes', '{}', -1),
     ('people','boardnotes', '{}', -1),
@@ -135,11 +135,11 @@ INSERT INTO groups_permissions (groups_id, permissions_id, modified_by)
 SELECT DISTINCT groups.id, permissions.id, -1 FROM
     (VALUES
         (array['read'],          array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
-        (array['read'],          array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','membersince','favoritenumber','notes']),
+        (array['read'],          array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
         (array['read','write'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
         (array['write'],         array['self','admin'], array['password_hash']),
         (array['read', 'write'], array['self','board'], array['email','phone','mobile','street','housenumber','zipcode','city','state','country','iban','directdebit','gender','emergencyinfo','notes']),
-        (array['read', 'write'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','membersince','frontdoor','cashregister']),
+        (array['read', 'write'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','peoplesince','frontdoor','cashregister']),
         (array['read', 'write'], array['keymanager'],   array['keycode','frontdoor','cashregister']),
         (array['read'],          array['keyobserver'],  array['keycode','frontdoor','cashregister'])
     ) alias (types, groups_names, fields_names)

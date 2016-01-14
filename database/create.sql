@@ -27,8 +27,8 @@ WITH (
 );
 CREATE TRIGGER "people_modified" BEFORE UPDATE ON "people" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
 
-DROP TABLE IF EXISTS "groups" CASCADE;
-CREATE TABLE "groups"
+DROP TABLE IF EXISTS "roles" CASCADE;
+CREATE TABLE "roles"
 (
     "gid"               INT NOT NULL DEFAULT NEXTVAL('"gid_seq"'),
     "id"                SERIAL,
@@ -43,16 +43,16 @@ CREATE TABLE "groups"
 WITH (
     OIDS=FALSE
 );
-CREATE TRIGGER "groups_modified" BEFORE UPDATE ON "groups" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
+CREATE TRIGGER "roles_modified" BEFORE UPDATE ON "roles" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
 
-DROP TABLE IF EXISTS "people_groups" CASCADE;
-CREATE TABLE "people_groups"
+DROP TABLE IF EXISTS "people_roles" CASCADE;
+CREATE TABLE "people_roles"
 (
     "gid"               INT NOT NULL DEFAULT NEXTVAL('"gid_seq"'),
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
     "people_id"         INT NOT NULL,
-    "groups_id"         INT NOT NULL,
+    "roles_id"          INT NOT NULL,
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
     "created"           TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -60,7 +60,7 @@ CREATE TABLE "people_groups"
 WITH (
     OIDS=FALSE
 );
-CREATE TRIGGER "people_groups_modified" BEFORE UPDATE ON "people_groups" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
+CREATE TRIGGER "people_roles_modified" BEFORE UPDATE ON "people_roles" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
 
 DROP TABLE IF EXISTS "fields" CASCADE;
 CREATE TABLE "fields"
@@ -106,13 +106,13 @@ WITH (
 CREATE TRIGGER "permissions_modified" BEFORE UPDATE ON "permissions" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
 
 
-DROP TABLE IF EXISTS "groups_permissions" CASCADE;
-CREATE TABLE "groups_permissions"
+DROP TABLE IF EXISTS "roles_permissions" CASCADE;
+CREATE TABLE "roles_permissions"
 (
     "gid"               INT NOT NULL DEFAULT NEXTVAL('"gid_seq"'),
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
-    "groups_id"         INT NOT NULL,
+    "roles_id"          INT NOT NULL,
     "permissions_id"    INT NOT NULL,
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
@@ -121,8 +121,10 @@ CREATE TABLE "groups_permissions"
 WITH (
     OIDS=FALSE
 );
-CREATE TRIGGER "groups_permissions_modified" BEFORE UPDATE ON "groups_permissions" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
+CREATE TRIGGER "roles_permissions_modified" BEFORE UPDATE ON "roles_permissions" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
 
 --FIXME: PLEASE ADD INDEXING AND PRIMARY KEYS ;)
+--FIXME: change owner to PMS
+--FIXME: make pmsuser group, give only INSERT and UPDATE column valid_till rights
 
 COMMIT;

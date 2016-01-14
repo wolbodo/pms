@@ -1,21 +1,86 @@
 --Select all people with the fields for member id XXX
-CREATE OR REPLACE FUNCTION getpermissions(permissions_type, varchar, int, int DEFAULT -1) RETURNS TABLE(key varchar, self_id int) AS $$
+CREATE OR REPLACE FUNCTION getpermissions(permissions_type permissions, varchar, int, int DEFAULT -1) RETURNS TABLE(key varchar, self_id int) AS $$
 DECLARE
     _type ALIAS FOR $1;
     _ref_type ALIAS FOR $2;
     _self_id ALIAS FOR $3;
     _people_id ALIAS FOR $4;
 BEGIN
-  RETURN QUERY (SELECT DISTINCT fields.name AS key, CASE WHEN groups.name = 'self' THEN people.id END AS self_id
+  RETURN QUERY (SELECT DISTINCT fields.name AS key, CASE WHEN roles.name = 'self' THEN people.id END AS self_id
      FROM
         fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-               JOIN groups_permissions ON permissions.id = groups_permissions.permissions_id AND groups_permissions.valid_till IS NULL
-               JOIN groups ON groups.id = groups_permissions.groups_id AND groups.valid_till IS NULL
-               JOIN people_groups ON (people_groups.groups_id = groups.id OR groups.name = 'self') AND people_groups.valid_till IS NULL
-               JOIN people ON people_groups.people_id = people.id AND people.id = _self_id AND (groups.name != 'self' OR _people_id = -1 OR _people_id = _self_id) AND people.valid_till IS NULL
+               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
+               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
+               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
+               JOIN people ON people_roles.people_id = people.id AND people.id = _self_id AND (roles.name != 'self' OR _people_id = -1 OR _people_id = _self_id) AND people.valid_till IS NULL
       WHERE permissions.type = _type AND permissions.ref_type = _ref_type);
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION base64url2jsonb(json TEXT, info TEXT DEFAULT '') RETURNS JSONB AS $$
+DECLARE
+  debug1 TEXT;
+BEGIN
+    RETURN CONVERT_FROM(DECODE(TRANSLATE($1 || REPEAT('=', LENGTH($1) * 6 % 8 / 2), '-_',''), 'base64'), 'UTF-8')::JSONB;
+EXCEPTION
+    WHEN invalid_parameter_value THEN
+        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
+        RAISE EXCEPTION  'E: % %', info, debug1;
+        RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+
+YW55IGNhcm5hbCBwbGVhc3Vy
+(3-'YW55IGNhcm5hbCBwbGVhc3'.length%3)
+
+
+CREATE OR REPLACE FUNCTION parsejwt(token TEXT) RETURNS JSONB AS $$
+DECLARE
+  header JSONB;
+  payload JSONB;
+  match TEXT[];
+  debug1 TEXT;
+  debug2 TEXT;
+BEGIN
+    match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
+    header = CONVERT_FROM(TRANSLATE(DECODE(match[2], 'base64'), '-_',''), 'UTF-8')::JSONB;
+    payload = CONVERT_FROM(DECODE(match[3], 'base64'), 'UTF-8')::JSONB;
+    RETURN payload;
+EXCEPTION
+--    WHEN invalid_parameter_value THEN
+--        RAISE EXCEPTION '%', 'error';
+--        RETURN NULL;
+    WHEN OTHERS THEN
+        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT,
+                          debug3 = PG_EXCEPTION_CONTEXT;
+        RAISE EXCEPTION 'Error "%" (%).', debug1, debug2
+        RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION parsejwt(token TEXT) RETURNS JSONB AS $$
+DECLARE
+  header JSONB;
+  payload JSONB;
+  match TEXT[];
+BEGIN
+    match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
+    header = CONVERT_FROM(DECODE(match[2], 'base64'), 'UTF-8')::JSONB;
+    payload = CONVERT_FROM(DECODE(match[3], 'base64'), 'UTF-8')::JSONB;
+    payload = CONVERT_FROM(DECODE(, 'base64'), 'UTF-8')::JSONB;
+    IF match[3] != TRANSLATE(ENCODE(HMAC(match[0], 'secret', 'sha256'), 'base64'), '+/=', '-_')
+
+    IF payload->>exp < EXTRACT EPOCH FROM NOW() THEN
+      RAISE EXCEPTION
+
+    RETURN payload;
+END
+$$ LANGUAGE plpgsql;
+
+
 
 
 CREATE OR REPLACE FUNCTION getpeople(int, int DEFAULT -1) RETURNS TABLE(json jsonb) AS $$
@@ -102,13 +167,13 @@ SELECT ('{' || (
 
 
 CREATE OR REPLACE VIEW viewpermissions AS
-    SELECT DISTINCT fields.name AS key, CASE WHEN groups.name = 'self' THEN people.id END AS self_id
+    SELECT DISTINCT fields.name AS key, CASE WHEN roles.name = 'self' THEN people.id END AS self_id
      FROM
         fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-               JOIN groups_permissions ON permissions.id = groups_permissions.permissions_id AND groups_permissions.valid_till IS NULL
-               JOIN groups ON groups.id = groups_permissions.groups_id AND groups.valid_till IS NULL
-               JOIN people_groups ON (people_groups.groups_id = groups.id OR groups.name = 'self') AND people_groups.valid_till IS NULL
-               JOIN people ON people_groups.people_id = people.id AND people.valid_till IS NULL;
+               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
+               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
+               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
+               JOIN people ON people_roles.people_id = people.id AND people.valid_till IS NULL;
 
 
         --WHERE permissions.type = type AND permissions.ref_type = 'people' AND people.id = selfid
@@ -137,16 +202,16 @@ SELECT ('{' || (
 --Alternative for the current construction (with 1 id pass) is this less complex but longer construct (with 2 id passes)
 --WITH readfields (key, forall) AS (
 --    SELECT fields.name, TRUE FROM
---        fields JOIN fields_groups ON fields_groups.fields_id = fields.id AND fields_groups.valid_till IS NULL AND fields.valid_till IS NULL
---               JOIN groups ON groups.id = fields_groups.groups_id AND groups.valid_till IS NULL
---               JOIN people_groups ON people_groups.groups_id = groups.id AND people_groups.valid_till IS NULL
---               JOIN people ON people_groups.people_id = people.id AND people.valid_till IS NULL
+--        fields JOIN fields_roles ON fields_roles.fields_id = fields.id AND fields_roles.valid_till IS NULL AND fields.valid_till IS NULL
+--               JOIN roles ON roles.id = fields_roles.roles_id AND roles.valid_till IS NULL
+--               JOIN people_roles ON people_roles.roles_id = roles.id AND people_roles.valid_till IS NULL
+--               JOIN people ON people_roles.people_id = people.id AND people.valid_till IS NULL
 --        WHERE read AND people.id = XXX
 --    UNION
 --    SELECT fields.name, FALSE FROM
---        fields JOIN fields_groups ON fields_groups.fields_id = fields.id AND fields_groups.valid_till IS NULL AND fields.valid_till IS NULL
---               JOIN groups ON groups.id = fields_groups.groups_id AND groups.valid_till IS NULL
---        WHERE read AND groups.name = 'self'
+--        fields JOIN fields_roles ON fields_roles.fields_id = fields.id AND fields_roles.valid_till IS NULL AND fields.valid_till IS NULL
+--               JOIN roles ON roles.id = fields_roles.roles_id AND roles.valid_till IS NULL
+--        WHERE read AND roles.name = 'self'
 --)
 --...
 --        WHERE key IN (SELECT key FROM readfields WHERE forall OR people.id = XXX))  
@@ -166,18 +231,18 @@ INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, da
 WITH writefields (key) AS (
     SELECT DISTINCT fields.name FROM
         fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-               JOIN groups_permissions ON permissions.id = groups_permissions.permissions_id AND groups_permissions.valid_till IS NULL
-               JOIN groups ON groups.id = groups_permissions.groups_id AND groups.valid_till IS NULL
-               JOIN people_groups ON (people_groups.groups_id = groups.id OR groups.name = 'self') AND people_groups.valid_till IS NULL
-               JOIN people ON people_groups.people_id = people.id AND (groups.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
+               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
+               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
+               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
+               JOIN people ON people_roles.people_id = people.id AND (roles.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
         WHERE permissions.type = 'write' AND permissions.ref_type = 'people'
 ), readfields (key) AS (
     SELECT DISTINCT fields.name FROM
         fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-               JOIN groups_permissions ON permissions.id = groups_permissions.permissions_id AND groups_permissions.valid_till IS NULL
-               JOIN groups ON groups.id = groups_permissions.groups_id AND groups.valid_till IS NULL
-               JOIN people_groups ON (people_groups.groups_id = groups.id OR groups.name = 'self') AND people_groups.valid_till IS NULL
-               JOIN people ON people_groups.people_id = people.id AND (groups.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
+               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
+               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
+               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
+               JOIN people ON people_roles.people_id = people.id AND (roles.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
         WHERE permissions.type = 'read' AND permissions.ref_type = 'people'
 )
 SELECT id, valid_till,
