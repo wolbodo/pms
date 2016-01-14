@@ -31,12 +31,19 @@ EXCEPTION
 END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION public.jsonb2base64url(jsonbytes jsonb)
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN TRANSLATE(ENCODE(jsonbytes::TEXT::BYTEA, 'base64'), '+/=', '-_');
+END
+$function$;
 
-YW55IGNhcm5hbCBwbGVhc3Vy
-(3-'YW55IGNhcm5hbCBwbGVhc3'.length%3)
-
-
-CREATE OR REPLACE FUNCTION parsejwt(token TEXT) RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION public.parsejwt(token text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
   header JSONB;
   payload JSONB;
@@ -45,40 +52,55 @@ DECLARE
   debug2 TEXT;
 BEGIN
     match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
-    header = CONVERT_FROM(TRANSLATE(DECODE(match[2], 'base64'), '-_',''), 'UTF-8')::JSONB;
-    payload = CONVERT_FROM(DECODE(match[3], 'base64'), 'UTF-8')::JSONB;
+    header = base64url2jsonb(match[2]);
+    payload = base64url2jsonb(match[3]);
+    IF match[3] != TRANSLATE(ENCODE(HMAC(match[0], 'secret', 'sha256'), 'base64'), '+/=', '-_') THEN
+      RAISE EXCEPTION 'Invalid signature';
+      RETURN NULL;
+    END IF;
+    IF NOT payload ? 'exp' OR (payload->>'exp')::INT < FLOOR(EXTRACT(EPOCH FROM NOW())) THEN
+      RAISE EXCEPTION 'Expired';
+      RETURN NULL;
+    END IF;
     RETURN payload;
-EXCEPTION
---    WHEN invalid_parameter_value THEN
---        RAISE EXCEPTION '%', 'error';
+--EXCEPTION
+----    WHEN invalid_parameter_value THEN
+----        RAISE EXCEPTION '%', 'error';
+----        RETURN NULL;
+--    WHEN OTHERS THEN
+--        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT,
+--                          debug3 = PG_EXCEPTION_CONTEXT;
+--        RAISE EXCEPTION 'Error "%" (%).', debug1, debug2
 --        RETURN NULL;
-    WHEN OTHERS THEN
-        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT,
-                          debug3 = PG_EXCEPTION_CONTEXT;
-        RAISE EXCEPTION 'Error "%" (%).', debug1, debug2
-        RETURN NULL;
 END
-$$ LANGUAGE plpgsql;
+$function$;
 
-
-CREATE OR REPLACE FUNCTION parsejwt(token TEXT) RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION public.login(emailaddress text, password text)
+ RETURNS text
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
   header JSONB;
   payload JSONB;
-  match TEXT[];
+  content TEXT;
+  signature TEXT;
 BEGIN
-    match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
-    header = CONVERT_FROM(DECODE(match[2], 'base64'), 'UTF-8')::JSONB;
-    payload = CONVERT_FROM(DECODE(match[3], 'base64'), 'UTF-8')::JSONB;
-    payload = CONVERT_FROM(DECODE(, 'base64'), 'UTF-8')::JSONB;
-    IF match[3] != TRANSLATE(ENCODE(HMAC(match[0], 'secret', 'sha256'), 'base64'), '+/=', '-_')
-
-    IF payload->>exp < EXTRACT EPOCH FROM NOW() THEN
-      RAISE EXCEPTION
-
-    RETURN payload;
+  header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
+  SELECT ('{ "user":' || TO_JSON(id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + interval '31 days')) || '}')::JSONB INTO payload FROM people p WHERE p.valid_till IS NULL AND p.email = emailaddress AND crypt(password, p.password_hash) = p.password_hash;
+  content = jsonb2base64url(header) || '.' || jsonb2base64url(payload);
+  signature = TRANSLATE(ENCODE(HMAC(content, 'secret', 'sha256'), 'base64'), '+/=', '-_');
+  RETURN content || '.' || signature;
 END
-$$ LANGUAGE plpgsql;
+$function$;
+
+
+-------------------------------------- sample queries
+INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
+
+
+SELECT parsejwt(login(emailaddress := 'test@example.com', password := '1234'));
+
+-----------------------------------
 
 
 
