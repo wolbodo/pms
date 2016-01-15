@@ -11,6 +11,7 @@ extern crate iron_postgres_middleware as pg_middleware;
 
 use persistent::Read;
 use iron::status;
+use iron::{BeforeMiddleware};
 use iron::prelude::*;
 // use router::{Router};
 // use std::collections::BTreeMap;
@@ -168,6 +169,20 @@ fn handle_fields_edit(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok)))
 }
 
+struct Auth;
+impl BeforeMiddleware for Auth {
+    fn before(&self, _: &mut Request) -> IronResult<()> {
+        println!("before called");
+        Ok(())
+    }
+
+    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<()> {
+        println!("catch called");
+        Err(err)
+    }
+}
+
+
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
@@ -191,6 +206,8 @@ fn main() {
     println!("Connected.");
 
     chain.link_before(pg_middleware);
+    let auth = Auth;
+    chain.link_before(auth);
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }
