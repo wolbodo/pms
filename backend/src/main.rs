@@ -3,20 +3,19 @@ extern crate bodyparser;
 extern crate persistent;
 extern crate serde;
 extern crate serde_json;
-extern crate crypto;
 #[macro_use(router)] extern crate router;
 // extern crate rand;
 // extern crate time;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
 
-// use persistent::Read;
+use persistent::Read;
 use iron::status;
 use iron::prelude::*;
 // use router::{Router};
 // use std::collections::BTreeMap;
 use serde_json::*;
-//use postgres::{Connection, SslMode};
+use postgres::{Connection, SslMode};
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
 // use crypto::digest::Digest;
@@ -44,7 +43,7 @@ struct Login {
 // }
 
 
-// const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
+const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     /*let login = match req.get::<bodyparser::Struct<Login>>() {
@@ -133,13 +132,13 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
 
     let mut members: Vec<Value> = Vec::new();
 
-    for row in rows {
+    // for row in rows {
 
-        let data: Value = row.get("jsonb");
-        println!("{:?}", data);
+    //     let data: Value = row.get("jsonb");
+    //     println!("{:?}", data);
 
-        members.push(data);
-    }
+    //     members.push(data);
+    // }
 
     Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
     // // Err(Response::with((status::Ok)));
@@ -192,6 +191,6 @@ fn main() {
     println!("Connected.");
 
     chain.link_before(pg_middleware);
-    //chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
+    chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }

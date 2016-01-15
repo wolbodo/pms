@@ -10,6 +10,7 @@ build:
         - npm install 
         - npm run build
         - cd ..
+        - docker-compose pull
         - docker-compose build
 
 deploy:

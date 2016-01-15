@@ -15,6 +15,8 @@ npm run build
 
 install rustlang
 
+Somehow install libssl-dev or openssl-dev
+
 ```
 ./autobuild.sh
 ``` 
