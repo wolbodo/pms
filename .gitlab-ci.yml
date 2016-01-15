@@ -6,9 +6,11 @@ build:
     type: build
     script:
         - cd frontend
-        - npm-cache install 
+        - npm config set registry https://registry.npmjs.org/
+        - npm install 
         - npm run build
         - cd ..
+        - docker-compose pull
         - docker-compose build
 
 deploy:

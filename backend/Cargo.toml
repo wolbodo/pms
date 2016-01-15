@@ -6,10 +6,9 @@ authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.c
 [dependencies]
 iron = "*"
 router = "*"
-rust-crypto = "^0.2"
 persistent = "*"
 postgres = { version = "*", features = ["serde_json"]}
-serde = "0.6"
+serde = "*"
 serde_json = "*"
 #serde_macros = "*"
 bodyparser = "*"
@@ -17,4 +16,4 @@ rand = "*"
 time = "*"
 
 [dependencies.iron-postgres-middleware]
-git = "https://github.com/martinsp/iron-postgres-middleware.git"
+git = "https://github.com/neoel/iron-postgres-middleware.git"
