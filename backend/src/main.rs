@@ -49,12 +49,12 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
     let db = req.db_conn();
     let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
-    let rows = stmt.query(&[&"test@example.com", "1234"]).unwrap();
+    let rows = stmt.query(&[&"test@example.com", &"1234"]).unwrap();
 
-    let mut userContext = BTreeMap::new();
+    //let mut userContext = BTreeMap::new();
     //userContext
-
-    Ok(Response::with((status::Ok, rows.get("login"))))
+    let token: String = rows.get(0).get(0);
+    Ok(Response::with((status::Ok, token)))
 
     // todo: fail case ;)
 }
