@@ -30,11 +30,11 @@ use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 // use crypto::mac::Mac;
 // use std::mem;
 
-/*#[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
-struct Login {
-    user: String,
-    password: String,
-}*/
+// #[derive(Serialize, Deserialize, Debug)]
+// struct Login {
+//     user: String,
+//     password: String,
+// }
 
 // #[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
 // struct Auth {
@@ -46,12 +46,23 @@ struct Login {
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
-fn handle_login(req: &mut Request) -> IronResult<Response> {
 
-    println!("Loggin in");
+fn handle_login(req: &mut Request) -> IronResult<Response> {
     let db = req.db_conn();
+
+    let mut json;
+    match req.get::<bodyparser::Json>() {
+        Ok(Some(json_body)) => {json = json_body.as_object().unwrap()},
+        Ok(None) => println!("No body"),
+        Err(err) => println!("Error: {:?}", err)
+    };
+
+
     let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
-    let rows = stmt.query(&[&"test@example.com", &"1234"]).unwrap();
+    let rows = stmt.query(&[
+        &json.get("user").unwrap(), 
+        &json.get("password").unwrap()
+    ]).unwrap();
 
     //let mut userContext = BTreeMap::new();
     //userContext
@@ -149,12 +160,19 @@ fn main() {
 
     let mut chain = Chain::new(router);
 
-    println!("Connecting to database.");
     // for unix domain sockets use: %2Frun%2Fpostgresql%2F9.4-main.pid
-    let pg_middleware = PostgresMiddleware::new("postgres://postgres@postgres/pms").unwrap();
-    println!("Connected.");
 
-    chain.link_before(pg_middleware.unwrap());
+        println!("Connected to database.");
+    match PostgresMiddleware::new("postgres://pms@localhost/pms") {
+        Ok(pg_middleware) => {
+            chain.link_before(pg_middleware);
+            println!("Connected to database.");
+        },
+        Err(err) => {
+            panic!("Database connection error");
+        }
+    }
+
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }
