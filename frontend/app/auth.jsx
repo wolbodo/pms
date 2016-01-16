@@ -6,12 +6,11 @@ var localStorage = window.localStorage;
 
 var auth = {
   login(email, pass, callback) {
-
-    if (localStorage.token) {
-      if (callback) callback(true)
-      this.onChange(true)
-      return
-    }
+    // if (localStorage.token) {
+    //   if (callback) callback(true)
+    //   this.onChange(true)
+    //   return
+    // }
     pretendRequest(email, pass, (res) => {
       if (res.authenticated) {
         localStorage.token = res.token
@@ -86,6 +85,8 @@ class Login extends React.Component {
     const password = this.state.password
 
     auth.login(name, password, (loggedIn) => {
+
+      debugger;
       if (!loggedIn)
         return this.setState({ error: true })
 

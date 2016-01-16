@@ -1,5 +1,7 @@
 BEGIN;
 
+CREATE EXTENSION pgcrypto;
+
 CREATE OR REPLACE FUNCTION update_timestamp() RETURNS trigger AS
 $$ BEGIN NEW.modified = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;
 

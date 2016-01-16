@@ -48,6 +48,7 @@ const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
 
+    println!("Loggin in");
     let db = req.db_conn();
     let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
     let rows = stmt.query(&[&"test@example.com", &"1234"]).unwrap();
@@ -133,28 +134,12 @@ fn handle_fields_edit(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok)))
 }
 
-struct Auth;
-impl BeforeMiddleware for Auth {
-    fn before(&self, _: &mut Request) -> IronResult<()> {
-        println!("before called");
-        Ok(())
-    }
-
-    fn catch(&self, _: &mut Request, err: IronError) -> IronResult<()> {
-        println!("catch called");
-        Err(err)
-    }
-}
-
-
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
 
-
     let router = router!(
         post "/login" => handle_login,
-        get "/login" => handle_login,
         get "/members" => handle_members,
         put "/member/:id" => handle_edit,
         get "/fields" => handle_fields,
@@ -169,9 +154,7 @@ fn main() {
     let pg_middleware = PostgresMiddleware::new("postgres://postgres@postgres/pms");
     println!("Connected.");
 
-    chain.link_before(pg_middleware);
-    let auth = Auth;
-    chain.link_before(auth);
+    chain.link_before(pg_middleware.unwrap());
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }
