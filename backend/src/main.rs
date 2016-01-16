@@ -166,7 +166,7 @@ fn main() {
 
     println!("Connecting to database.");
     // for unix domain sockets use: %2Frun%2Fpostgresql%2F9.4-main.pid
-    let pg_middleware = PostgresMiddleware::new("postgres://postgres@postgres/pms");
+    let pg_middleware = PostgresMiddleware::new("postgres://postgres@postgres/pms").unwrap();
     println!("Connected.");
 
     chain.link_before(pg_middleware);
