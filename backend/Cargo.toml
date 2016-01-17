@@ -7,7 +7,7 @@ authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.c
 iron = "*"
 router = "*"
 persistent = "*"
-postgres = { version = "*", features = ["serde_json"]}
+postgres = { version = "*", features = ["serde_json", "unix_socket"]}
 serde = "*"
 serde_json = "*"
 #serde_macros = "*"

@@ -11,12 +11,11 @@ extern crate iron_postgres_middleware as pg_middleware;
 
 use persistent::Read;
 use iron::status;
-use iron::{BeforeMiddleware};
+//use iron::{BeforeMiddleware};
 use iron::prelude::*;
 // use router::{Router};
-use std::collections::BTreeMap;
+//use std::collections::BTreeMap;
 use serde_json::*;
-use postgres::{Connection, SslMode};
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
 // use crypto::digest::Digest;
@@ -50,18 +49,12 @@ const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     let db = req.db_conn();
 
-    let mut json;
-    match req.get::<bodyparser::Json>() {
-        Ok(Some(json_body)) => {json = json_body.as_object().unwrap()},
-        Ok(None) => println!("No body"),
-        Err(err) => println!("Error: {:?}", err)
-    };
-
+    let json = req.get::<bodyparser::Json>().unwrap().unwrap();
 
     let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
     let rows = stmt.query(&[
-        &json.get("user").unwrap(), 
-        &json.get("password").unwrap()
+        &json.find("user").unwrap().as_string(), 
+        &json.find("password").unwrap().as_string()
     ]).unwrap();
 
     //let mut userContext = BTreeMap::new();
@@ -72,74 +65,47 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     // todo: fail case ;)
 }
 
-fn handle_members(req: &mut Request) -> IronResult<Response> {
+fn handle_members(_: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
-    let db = req.db_conn();
-    let stmt = db.prepare("
-        WITH readfields (key, selfid) AS (
-            SELECT DISTINCT fields.name, CASE WHEN groups.name = 'self' THEN people.id END FROM
-                fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-                       JOIN groups_permissions ON permissions.id = groups_permissions.permissions_id AND groups_permissions.valid_till IS NULL
-                       JOIN groups ON groups.id = groups_permissions.groups_id AND groups.valid_till IS NULL
-                       JOIN people_groups ON (people_groups.groups_id = groups.id OR groups.name = 'self') AND people_groups.valid_till IS NULL
-                       JOIN people ON people_groups.people_id = people.id AND people.valid_till IS NULL
-                WHERE permissions.type = 'read' AND permissions.ref_type = 'people' AND people.id = $1
-        )
-        SELECT ('{' || (
-            SELECT STRING_AGG('\"' || key || '\":' || TO_JSON(value), ',')
-            FROM (SELECT * FROM JSONB_EACH(data) UNION
-                VALUES
-                    ('gid'::TEXT, TO_JSON(gid)::JSONB),
-                    ('id', TO_JSON(id)::JSONB),
-                    ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
-                    ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
-                    ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
-                    ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
-                    ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
-                    ('modified_by', TO_JSON(modified_by)::JSONB),
-                    ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
-                    ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
-                ) alias
-                WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR people.id = selfid))  || '}')::JSONB
-            FROM people WHERE valid_till IS NULL;"
-        ).unwrap();
+    //let db = req.db_conn();
+    //let stmt = db.prepare("").unwrap();
 
-    let rows = stmt.query(&[&3]).unwrap();
+    //let rows = stmt.query(&[&3]).unwrap();
 
-    let mut members: Vec<Value> = Vec::new();
+    let /*mut*/ members: Vec<Value> = Vec::new();
 
-    // for row in rows {
+    /* for row in rows {
 
-    //     let data: Value = row.get("jsonb");
-    //     println!("{:?}", data);
+         let data: Value = row.get("jsonb");
+         println!("{:?}", data);
 
-    //     members.push(data);
-    // }
+         members.push(data);
+     }*/
 
     Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
     // // Err(Response::with((status::Ok)));
 }
 
-fn handle_edit(req: &mut Request) -> IronResult<Response> {
+fn handle_edit(_: &mut Request) -> IronResult<Response> {
     // Update an existing member.
 
     Ok(Response::with((status::Ok)))
 }
 
-fn handle_create(req: &mut Request) -> IronResult<Response> {
+fn handle_create(_: &mut Request) -> IronResult<Response> {
     // Create a new member. 
 
     Ok(Response::with((status::Ok)))
 }
 
-fn handle_fields(req: &mut Request) -> IronResult<Response> {
+fn handle_fields(_: &mut Request) -> IronResult<Response> {
     // Return fields. 
 
     Ok(Response::with((status::Ok)))
 }
 
-fn handle_fields_edit(req: &mut Request) -> IronResult<Response> {
+fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
     // Update fields, admin only. 
 
     Ok(Response::with((status::Ok)))
@@ -160,16 +126,14 @@ fn main() {
 
     let mut chain = Chain::new(router);
 
-    // for unix domain sockets use: %2Frun%2Fpostgresql%2F9.4-main.pid
-
-        println!("Connected to database.");
-    match PostgresMiddleware::new("postgres://pms@localhost/pms") {
+    // for unix domain sockets use: 
+    match PostgresMiddleware::new("postgres://pms@%2Frun%2Fpostgresql") {
         Ok(pg_middleware) => {
             chain.link_before(pg_middleware);
             println!("Connected to database.");
         },
         Err(err) => {
-            panic!("Database connection error");
+            panic!("Database connection error: {}", err);
         }
     }
 
