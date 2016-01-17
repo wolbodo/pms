@@ -2,6 +2,7 @@ import React from 'react';
 import { PropTypes } from 'react-router';
 import mdl from 'react-mdl';
 
+
 var localStorage = window.localStorage;
 
 var auth = {
@@ -11,16 +12,43 @@ var auth = {
     //   this.onChange(true)
     //   return
     // }
-    pretendRequest(email, pass, (res) => {
-      if (res.authenticated) {
-        localStorage.token = res.token
-        if (callback) callback(true)
-        this.onChange(true)
+
+    fetch('http://localhost:4242/login', {
+      method: 'POST',
+      headers: new Headers({
+        "Content-Type": "application/json"
+      }),
+      body: JSON.stringify({
+        user: email,
+        password: pass
+      })
+    })
+    .then(function (response) {
+      if (response.status === 200) {
+        response.text()
+          .then(function (res) {
+            localStorage.token = res
+
+            if (callback) callback(true)
+            this.onChange(true)
+            console.log(r);
+          });
       } else {
         if (callback) callback(false)
         this.onChange(false)
       }
-    })
+    });
+
+
+    // pretendRequest(email, pass, (res) => {
+    //   if (res.authenticated) {
+    //     if (callback) callback(true)
+    //     this.onChange(true)
+    //   } else {
+    //     if (callback) callback(false)
+    //     this.onChange(false)
+    //   }
+    // })
   },
 
   getToken() {
