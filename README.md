@@ -51,6 +51,8 @@ location / {
 sudo -u postgres psql
 CREATE USER pms;
 CREATE DATABASE pms WITH OWNER pms;
+\c pms;
+CREATE EXTENSION pgcrypto;
 \password pms
 ***
 ***
