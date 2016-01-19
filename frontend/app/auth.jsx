@@ -13,7 +13,7 @@ var auth = {
     //   return
     // }
 
-    fetch('http://localhost:4242/login', {
+    fetch('api/login', {
       method: 'POST',
       headers: new Headers({
         "Content-Type": "application/json"
