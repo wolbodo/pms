@@ -22,7 +22,7 @@ class MemberView extends React.Component {
 	}
 
 	render() {
-		var fields = ['nickname', 'firstname', 'lastname', 'city', 'gender','city',
+		var fields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
 						'mobile', 'email'];
 
 		const {history} = this.props;

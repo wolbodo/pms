@@ -2,17 +2,23 @@
 
 import _ from 'lodash';
 
-import axios from 'axios';
-
 
 var data = {};
 
+var localStorage = window.localStorage;
 
-const update = () => axios.get('/api/members')
+const update = () => fetch('/api/members', {
+			headers: new Headers({
+				"Authorization": localStorage.token
+			})
+		})
 		 .then(function (resp) {
-		 	data.members = resp.data;
-		 	return data.members;
+		 	return resp.json();
 		 })
+		 .then(function (body) {
+		 	data.members = body;
+		 	return body;
+		 });
 
 var API = {
 

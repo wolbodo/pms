@@ -7,12 +7,6 @@ var localStorage = window.localStorage;
 
 var auth = {
   login(email, pass, callback) {
-    // if (localStorage.token) {
-    //   if (callback) callback(true)
-    //   this.onChange(true)
-    //   return
-    // }
-
     fetch('api/login', {
       method: 'POST',
       headers: new Headers({
@@ -38,17 +32,6 @@ var auth = {
         this.onChange(false)
       }
     });
-
-
-    // pretendRequest(email, pass, (res) => {
-    //   if (res.authenticated) {
-    //     if (callback) callback(true)
-    //     this.onChange(true)
-    //   } else {
-    //     if (callback) callback(false)
-    //     this.onChange(false)
-    //   }
-    // })
   },
 
   getToken() {
@@ -74,19 +57,6 @@ var auth = {
 
 
   onChange() {}
-}
-
-function pretendRequest(email, pass, callback) {
-  setTimeout(() => {
-    if (email === 'test' && pass === 'test') {
-      callback({
-        authenticated: true,
-        token: Math.random().toString(36).substring(7)
-      })
-    } else {
-      callback({ authenticated: false })
-    }
-  }, 0)
 }
 
 

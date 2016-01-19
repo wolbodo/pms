@@ -41,6 +41,7 @@
     "react-tap-event-plugin": "^0.2.1",
     "react-ui-datepicker": "^0.1.0",
     "redux": "^3.0.5",
+    "redux-simple-router": "^2.0.3",
     "resolve-url-loader": "^1.4.2"
   },
   "devDependencies": {
@@ -63,6 +64,8 @@
     "react-hot-loader": "^1.3.0",
     "react-redux": "^4.0.6",
     "redux-devtools": "^3.0.1",
+    "redux-devtools-dock-monitor": "^1.0.1",
+    "redux-devtools-log-monitor": "^1.0.2",
     "serviceworker-loader": "^0.1.0",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.7",
