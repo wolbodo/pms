@@ -1,4 +1,6 @@
 #![feature(custom_derive)]
+#![feature(plugin)]
+#![plugin(postgres_macros)]
 extern crate iron;
 extern crate bodyparser;
 extern crate persistent;
@@ -67,10 +69,17 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     let db = req.db_conn();
 
     //note bodyparser is still using rustc_serialize, not serde_json!
-    let body = req.get::<bodyparser::Json>().unwrap().unwrap(); //core::result::Result<core::option::Option<rustc_serialize::json::Json>, bodyparser::errors::BodyError>
-    let json = body.as_object().unwrap(); //we cannot combine this on one line with the line above (since 'borrowed value does not live long enough')
+    let body = match req.get::<bodyparser::Json>() {//core::result::Result<core::option::Option<rustc_serialize::json::Json>, bodyparser::errors::BodyError>
+        Ok(Some(body)) => body,
+        Ok(None) => return Ok(Response::with((status::BadRequest, "err"))),
+        Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+    let json = match body.as_object() {
+        Some(json) => json,
+        None => return Ok(Response::with((status::BadRequest, "No JSON object found")))
+    }; //we cannot combine this on one line with the line above (since 'borrowed value does not live long enough')
 
-    let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
+    let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
     let rows = stmt.query(&[
         &json.get("user").unwrap().as_string().unwrap(), 
         &json.get("password").unwrap().as_string().unwrap()

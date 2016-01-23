@@ -8,6 +8,7 @@ iron = "*"
 router = "*"
 persistent = "*"
 postgres = { version = "*", features = ["serde_json", "unix_socket"]}
+postgres_macros = "*"
 serde = "*"
 serde_json = "*"
 #serde_macros = "*"
