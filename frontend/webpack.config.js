@@ -10,8 +10,9 @@ module.exports = {
     target: 'web',
     cache: true,
     entry: {
-        server: 'webpack/hot/dev-server',
-        client: 'webpack-dev-server/client?http://localhost:8090',
+        server: 'webpack/hot/only-dev-server',
+        client: 'webpack-dev-server/client?https://pms.zaphod',
+        // client: 'webpack-dev-server/client?http://localhost:8090',
         module: path.join(srcPath, 'index.jsx'),
         common: ['react', 'react-router']
     },
@@ -37,7 +38,6 @@ module.exports = {
             }, {
                 test: /\.css$/,
                 loader: ExtractTextPlugin.extract('css?sourceMap')
-                
             }, {
                 test: /\.jpe?g$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/, 
                 loader: "file" 
@@ -58,8 +58,7 @@ module.exports = {
             template: 'app/index.html',
             favicon: 'app/favicon.png'
         }),
-        new webpack.NoErrorsPlugin(),
-        new webpack.HotModuleReplacementPlugin()
+        new webpack.NoErrorsPlugin()
     ],
     resolve: {
         root: srcPath,

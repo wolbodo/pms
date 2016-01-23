@@ -5,6 +5,7 @@ authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.c
 
 [dependencies]
 iron = "*"
+hyper = "*"
 router = "*"
 persistent = "*"
 postgres = { version = "*", features = ["serde_json", "unix_socket"]}

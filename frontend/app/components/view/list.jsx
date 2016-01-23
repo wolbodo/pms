@@ -79,7 +79,6 @@ export class Head extends React.Component {
 export class Row extends React.Component {
 	render() {
 		const {className, item, fields, edit} = this.props;
-		debugger;
 		return (
 		<tr className={className} key={item.name} onClick={edit}>
 			{fields.map((field, i) => (

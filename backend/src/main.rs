@@ -6,6 +6,7 @@ extern crate bodyparser;
 extern crate persistent;
 extern crate serde;
 extern crate serde_json;
+extern crate hyper;
 #[macro_use(router)]
 extern crate router;
 // extern crate rand;
@@ -15,7 +16,8 @@ extern crate iron_postgres_middleware as pg_middleware;
 
 use persistent::Read;
 use iron::status;
-//use iron::{BeforeMiddleware};
+use hyper::header::Authorization;
+
 use iron::prelude::*;
 // use router::{Router};
 //use std::collections::BTreeMap;
@@ -95,23 +97,31 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     // todo: fail case ;)
 }
 
-fn handle_members(_: &mut Request) -> IronResult<Response> {
+fn handle_members(req: &mut Request) -> IronResult<Response> {
     // Returns a list of members, might be using filters. 
 
-    //let db = req.db_conn();
-    //let stmt = db.prepare("").unwrap();
+    let db = req.db_conn();
 
-    //let rows = stmt.query(&[&3]).unwrap();
+    let token = match req.headers.get::<Authorization<String>>() {
+        Some(&Authorization(ref token)) => token.clone().to_string(),
+        None => "".to_string()
+    };
 
-    let /*mut*/ members: Vec<Value> = Vec::new();
+    println!("Authorization token: {}", token);
 
-    /* for row in rows {
+    let stmt = db.prepare("SELECT getpeople(token := $1);").unwrap();
+    let rows = stmt.query(&[&token]).unwrap();
 
-         let data: Value = row.get("jsonb");
-         println!("{:?}", data);
+    let mut members: Vec<Value> = Vec::new();
 
-         members.push(data);
-     }*/
+    for row in rows.iter() {
+        println!("{:?}", row);
+        
+        let data: Value = row.get("getpeople");
+        println!("{:?}", data);
+
+        members.push(data);
+    }
 
     Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
     // // Err(Response::with((status::Ok)));

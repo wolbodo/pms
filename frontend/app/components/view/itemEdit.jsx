@@ -27,7 +27,7 @@ export default class ItemEdit extends React.Component {
 	componentWillReceiveProps(props) {
 		if (props.item !== this.props.item) {
 			this.setState({
-				model: props.item
+				model: props.item || {}
 			});
 		}
 	}
@@ -38,9 +38,7 @@ export default class ItemEdit extends React.Component {
 
 		var permissions = schema.permissions || {};
 
-		var {model} = this.state;
-
-
+		let {model} = this.state;
 
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>

@@ -94,44 +94,50 @@ END
 $function$;
 
 
--------------------------------------- sample queries
-INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
+-- -------------------------------------- sample queries
+-- INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
 
 
-SELECT parsejwt(login(emailaddress := 'test@example.com', password := '1234'));
+-- SELECT parsejwt(login(emailaddress := 'test@example.com', password := '1234'));
 
------------------------------------
+-- -----------------------------------
 
 
---
---
---CREATE OR REPLACE FUNCTION getpeople(int, int DEFAULT -1) RETURNS TABLE(json jsonb) AS $$
---DECLARE
---    _self_id ALIAS FOR $1;
---    _people_id ALIAS FOR $2;
---BEGIN
---  RETURN QUERY (
---      WITH readfields AS (SELECT * FROM getpermissions('read'::permissions_type, 'people', _self_id))
---      SELECT ('{' || (
---          SELECT STRING_AGG('"' || key || '":' || TO_JSON(value), ',')
---          FROM (SELECT * FROM JSONB_EACH(data) UNION
---              VALUES
---                  ('gid'::TEXT, TO_JSON(gid)::JSONB),
---                  ('id', TO_JSON(id)::JSONB),
---                  ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
---                  ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
---                  ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
---                  ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
---                  ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
---                  ('modified_by', TO_JSON(modified_by)::JSONB),
---                  ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
---                  ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
---              ) alias
---              WHERE key IN (SELECT key FROM readfields WHERE self_id IS NULL OR people.id = $1))  || '}')::JSONB
---          FROM people WHERE valid_till IS NULL AND (people.id = _people_id OR -1 = _people_id)
---    );
---END;
---$$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION getpeople(token text) 
+ RETURNS TABLE(json jsonb) 
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  self int;
+  person int;
+BEGIN
+  person = -1;
+  self = parsejwt(token)::jsonb->'user';
+
+ RETURN QUERY (
+     WITH readfields AS (SELECT * FROM getpermissions('read'::permissions_type, 'people', self))
+     SELECT ('{' || (
+         SELECT STRING_AGG('"' || key || '":' || TO_JSON(value), ',')
+         FROM (SELECT * FROM JSONB_EACH(data)
+          UNION
+             VALUES
+                 ('gid'::TEXT, TO_JSON(gid)::JSONB),
+                 ('id', TO_JSON(id)::JSONB),
+                 ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
+                 ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
+                 ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
+                 ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
+                 ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
+                 ('modified_by', TO_JSON(modified_by)::JSONB),
+                 ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
+                 ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
+             ) alias
+             WHERE key IN (SELECT key FROM readfields WHERE self_id IS NULL OR people.id = self))  || '}')::JSONB
+         FROM people WHERE valid_till IS NULL AND (people.id = person OR -1 = person)
+   );
+END;
+$function$;
+
 --
 --
 --CREATE OR REPLACE FUNCTION exception(text) RETURNS varchar LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '%', $1; RETURN ''; END; $$;

@@ -4,12 +4,10 @@ import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 import classnames from 'classnames';
 import {Link} from 'react-router';
+import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import {List, Head, Row} from '../view/list';
-
-import member_schema from '../member/schema.json';
-import schema from './schema.json';
+import {List, Head, Row} from 'components/view/list';
 
 import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
@@ -181,8 +179,8 @@ function targetCollect(connect, monitor) {
 }
 function sourceCollect(connect, monitor) {
   return {
-	  connectDragSource: connect.dragSource(),
-	  isDragging: monitor.isDragging()
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
   };
 }
 
@@ -235,8 +233,6 @@ Field = DragSource(ItemTypes.FIELD, fieldSource, sourceCollect)(Field);
 Field = DropTarget(ItemTypes.FIELD, fieldTarget, targetCollect)(Field);
 
 
-
-
 class FieldSet extends React.Component {
   constructor(props) {
     super(props);
@@ -244,7 +240,7 @@ class FieldSet extends React.Component {
   }
 
   render () {
-    const { isOver, connectDropTarget, index, fields, moveField, addSet} = this.props;
+    const { isOver, connectDropTarget, index, fields, moveField, addSet, schema} = this.props;
     const {direction} = this.state;
 
     return connectDropTarget(
@@ -253,7 +249,7 @@ class FieldSet extends React.Component {
         <Field 
           key={i} 
           index={index.concat(i)} 
-          field={member_schema.fields[field]} 
+          field={schema.fields[field]} 
           moveField={moveField}
           addSet={addSet} />
       )}
@@ -262,7 +258,6 @@ class FieldSet extends React.Component {
   }
 }
 FieldSet = DropTarget(ItemTypes.FIELD, fieldSetTarget, targetCollect)(FieldSet);
-
 
 
 class Group extends React.Component {
@@ -281,13 +276,13 @@ class Group extends React.Component {
     }
   }
 
-	render() {
+  render() {
     const { isDragging, isOver, connectDragSource, 
       connectDropTarget, title, offset, index, 
-      moveField, addSet } = this.props;
+      moveField, addSet, schema } = this.props;
     const { fieldsets } = this.state;
-		
-		return connectDropTarget(
+    
+    return connectDropTarget(
         <div>
             <mdl.Card className={classnames('group', 'mdl-color--white', 'mdl-shadow--2dp', {hover: isOver})}>
               <mdl.CardTitle>
@@ -298,6 +293,7 @@ class Group extends React.Component {
                   <FieldSet 
                     fields={fieldset} 
                     moveField={moveField} 
+                    schema={schema}
                     addSet={addSet} 
                     key={i} 
                     index={[index, i]} />
@@ -305,32 +301,29 @@ class Group extends React.Component {
               </mdl.CardText>
             </mdl.Card>
           </div>);
-	}
+  }
 }
 // Group = DragSource(ItemTypes.GROUP, groupSource, sourceCollect)(Group);
 Group = DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)(Group);
 
 
 class FieldsView extends React.Component {
-	constructor(props) {
-		super(props);
-
-    this.state = {
-      groups: member_schema.form
-    }
+  constructor(props) {
+    super(props);
 
     this.moveField = this.moveField.bind(this);
     this.addSet = this.addSet.bind(this);
-	}
+  }
 
   moveField(fromIndex, toIndex) {
-    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
+    const {fields} = this.props
+
+    const field = _.get(fields.schemas.member.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
 
     console.log("Dragging field", field, "fromto", fromIndex, toIndex);
 
-
-    let fromFieldset = member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]],
-        toFieldset = member_schema.form[toIndex[GROUP]].fields[toIndex[SET]];
+    let fromFieldset = fields.schemas.member.form[fromIndex[GROUP]].fields[fromIndex[SET]],
+        toFieldset = fields.schemas.member.form[toIndex[GROUP]].fields[toIndex[SET]];
 
     // mind the order, 
     if (fromIndex[FIELD] > toIndex[FIELD]) {
@@ -345,75 +338,60 @@ class FieldsView extends React.Component {
     }
 
     // remove old fieldset if it was empty
-    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    var fieldsets = fields.schemas.member.form[fromIndex[GROUP]].fields;
     if (_.isEmpty(fieldsets[fromIndex[SET]])) {
       fieldsets.splice(fromIndex[SET], 1);
     }
-
-    this.setState({
-      groups: member_schema.form
-    })
-
-    // var diff = {
-    //   [toIndex[GROUP]]: {
-    //     fields: {
-    //       [toIndex[SET]]: {
-    //         $splice: [
-    //           [toIndex[FIELD], 0, field]
-    //         ]
-            
-    //       }
-    //     }
-    //   }
-    // };
-    // member_schema = update(member_schema.form, diff);
   }
 
   addSet(fromIndex, toIndex) {
+    const {fields} = this.props
 
-    const field = _.get(member_schema.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
+    const field = _.get(fields.schemas.member.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
 
     console.log("adding set", field, "fromto", fromIndex, toIndex);
 
     // remove from old place.
-    member_schema.form[fromIndex[GROUP]].fields[fromIndex[SET]].splice(fromIndex[FIELD], 1);
+    fields.schemas.member.form[fromIndex[GROUP]].fields[fromIndex[SET]].splice(fromIndex[FIELD], 1);
     // add in the new place.
-    member_schema.form[toIndex[GROUP]].fields.splice(toIndex[SET], 0, [field]);
+    fields.schemas.member.form[toIndex[GROUP]].fields.splice(toIndex[SET], 0, [field]);
 
     // remove old fieldset if it was empty
-    var fieldsets = member_schema.form[fromIndex[GROUP]].fields;
+    var fieldsets = fields.schemas.member.form[fromIndex[GROUP]].fields;
     if (_.isEmpty(fieldsets[fromIndex[SET]])) {
       fieldsets.splice(fromIndex[SET], 1);
     }
-
-
-    this.setState({
-      groups: member_schema.form
-    })
-
-
   }
 
-	render() {
-		var fields = member_schema.fields;
-    const {groups} = this.state;
+  render() {
+    const {fields} = this.props;
 
-				// <mdl.CardTitle>Alle velden</mdl.CardTitle>
+    // <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
       <div className='content fieldsview'>
-				{ _.map(groups, (group, i) => 
-					<Group 
+        { _.map(fields.schemas.member.form, (group, i) => 
+          <Group 
             key={i} 
             index={i} 
-            moveField={this.moveField} 
+            moveField={this.moveField}
+            schema={fields.schemas.member}
             addSet={this.addSet} 
             title={group.title} 
             fieldsets={group.fields} />
-				)}
+        )}
       </div>
-		);
-	}	
+    );
+  } 
 }
 
-export default DragDropContext(Backend)(FieldsView);
+function mapStateToProps(state) {
+  const { fields } = state
+
+  return {
+    fields
+  }
+}
+
+
+export default connect(mapStateToProps)(DragDropContext(Backend)(FieldsView));
 

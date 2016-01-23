@@ -1,9 +1,13 @@
 BEGIN;
 
+
+
+-- INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
+
 -- "WOLBODOISAWESOME, itmysupersecretpassword"
 INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
-('admin@example.com', '+31152121516', '$2b$12$gjythVOXppwtIIs30n26JuNh.X/KJoJllRLhR0xLAsYjOgZRQjDnm', -1, '{}'),
-('wikkert@example.com', '+31152121516', '$2b$12$gjythVOXppwtIIs30n26JuNh.X/KJoJllRLhR0xLAsYjOgZRQjDnm', -1,
+('admin@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1, '{}'),
+('wikkert@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1,
     '{
          "nickname": "Wikkert",
          "firstname": "Willem",
@@ -33,7 +37,7 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution", "coasters"]
     }'
 ),
-('sammy@example.com', '+31600000001', '$2b$12$gjythVOXppwtIIs30n26JuNh.X/KJoJllRLhR0xLAsYjOgZRQjDnm', -1,
+('sammy@example.com', '+31600000001', crypt('1234',gen_salt('bf',13)), -1,
     '{
          "nickname": "Sammy",
          "firstname": "Sam",
@@ -55,10 +59,10 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution"]
     }'
 ),
-('keymaster@example.com', '+31152121516', '$2b$12$gjythVOXppwtIIs30n26JuNh.X/KJoJllRLhR0xLAsYjOgZRQjDnm', -1, '{}'),
-('aivd@example.com', '+31793205050', '$2b$12$gjythVOXppwtIIs30n26JuNh.X/KJoJllRLhR0xLAsYjOgZRQjDnm', -1, '{}');
+('keymaster@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1, '{}'),
+('aivd@example.com', '+31793205050', crypt('1234',gen_salt('bf',13)), -1, '{}');
 
-INSERT INTO groups (name, modified_by)
+INSERT INTO roles (name, modified_by)
 VALUES
     ('login', -1),
     ('self', -1),
@@ -70,17 +74,17 @@ VALUES
     ('keymanager', -1),
     ('keyobserver', -1);
 
-INSERT INTO people_groups (people_id, groups_id, modified_by)
-SELECT people.id, groups.id, -1 FROM
+INSERT INTO people_roles (people_id, roles_id, modified_by)
+SELECT people.id, roles.id, -1 FROM
     (VALUES
         ('admin@example.com', array['login','admin']),
         ('wikkert@example.com', array['login','member']),
         ('sammy@example.com', array['login','member','board','solvable']),
         ('keymaster@example.com', array['login','keymanager']),
         ('aivd@example.com', array['login','keyobserver'])
-    ) alias (people_email, groups_names)
+    ) alias (people_email, roles_names)
     JOIN people ON people.valid_till IS NULL AND people.email = alias.people_email
-    JOIN groups ON groups.valid_till IS NULL AND groups.name IN (SELECT unnest(alias.groups_names));
+    JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names));
 
 INSERT INTO fields (ref_type, name, data, modified_by)
 VALUES
@@ -127,12 +131,12 @@ VALUES
 
 INSERT INTO permissions (type, ref_type, ref_key, ref_value, modified_by)
 SELECT unnest(array['read','write'])::permissions_type AS type, ref_type, 'field' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_type = 'people' UNION
-SELECT 'create' AS type, 'people_groups' AS ref_type, 'groups_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM groups UNION
-SELECT 'create' AS type, unnest(array['people','groups','people_groups','fields','permissions']) AS ref_type, '*' AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
+SELECT 'create' AS type, 'people_roles' AS ref_type, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
+SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_type, '*' AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
 VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1);
 
-INSERT INTO groups_permissions (groups_id, permissions_id, modified_by)
-SELECT DISTINCT groups.id, permissions.id, -1 FROM
+INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
+SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
         (array['read'],          array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
         (array['read'],          array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
@@ -142,8 +146,8 @@ SELECT DISTINCT groups.id, permissions.id, -1 FROM
         (array['read', 'write'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','peoplesince','frontdoor','cashregister']),
         (array['read', 'write'], array['keymanager'],   array['keycode','frontdoor','cashregister']),
         (array['read'],          array['keyobserver'],  array['keycode','frontdoor','cashregister'])
-    ) alias (types, groups_names, fields_names)
-    JOIN groups ON groups.valid_till IS NULL AND groups.name IN (SELECT unnest(alias.groups_names))
+    ) alias (types, roles_names, fields_names)
+    JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names))
     JOIN fields ON fields.valid_till IS NULL AND fields.name IN (SELECT unnest(alias.fields_names))
     JOIN permissions ON permissions.valid_till IS NULL AND permissions.type::TEXT IN (SELECT unnest(alias.types)) AND permissions.ref_type = fields.ref_type AND permissions.ref_key = 'field' AND permissions.ref_value = fields.id;
         --('write', 'website',1,'{"part":"frontpage"}')
