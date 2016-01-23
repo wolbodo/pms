@@ -70,11 +70,13 @@ export function logout() {
 export function requireLogin(store) {
   return (nextState, replaceState) => {
     const state = store.getState()
-    
-    if (localStorage.token) {
+
+    if (state.auth.loggedIn) {
+    } else if (localStorage.token) {
       store.dispatch(login_success(localStorage.token));
-    } else if (!state.auth.loggedIn) {
+    } else  {
       replaceState({ nextPathname: nextState.location.pathname }, '/login')
     }
+
   }
 }
