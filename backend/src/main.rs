@@ -1,10 +1,14 @@
+#![feature(custom_derive)]
+#![feature(plugin)]
+#![plugin(postgres_macros)]
 extern crate iron;
 extern crate bodyparser;
 extern crate persistent;
 extern crate serde;
 extern crate serde_json;
 extern crate hyper;
-#[macro_use(router)] extern crate router;
+#[macro_use(router)]
+extern crate router;
 // extern crate rand;
 // extern crate time;
 extern crate postgres;
@@ -47,17 +51,43 @@ use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
+/*
+#[derive(Serialize, Deserialize, Debug)]
+struct SimpleError {
+    error: String
+}
+
+macro_rules! itry {
+    ($e:expr, $err:expr) => (match $e {
+        Result::Ok(val) => val,
+        Result::Err(err) => {
+            return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError { error: $err }).unwrap())))
+        }
+    })
+}*/
+
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     let db = req.db_conn();
 
-    let json = req.get::<bodyparser::Json>().unwrap().unwrap();
+    //note bodyparser is still using rustc_serialize, not serde_json!
+    let body = match req.get::<bodyparser::Json>() {//core::result::Result<core::option::Option<rustc_serialize::json::Json>, bodyparser::errors::BodyError>
+        Ok(Some(body)) => body,
+        Ok(None) => return Ok(Response::with((status::BadRequest, "err"))),
+        Err(err) => return Ok(Response::with((status::BadRequest, err.to_string())))
+    };
+    let json = match body.as_object() {
+        Some(json) => json,
+        None => return Ok(Response::with((status::BadRequest, "No JSON object found")))
+    }; //we cannot combine this on one line with the line above (since 'borrowed value does not live long enough')
 
-    let stmt = db.prepare("SELECT login(emailaddress := $1, password := $2);").unwrap();
+    let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
     let rows = stmt.query(&[
-        &json.find("user").unwrap().as_string(), 
-        &json.find("password").unwrap().as_string()
+        &json.get("user").unwrap().as_string().unwrap(), 
+        &json.get("password").unwrap().as_string().unwrap()
     ]).unwrap();
+
+    //for status codes, please consult http://racksburg.com/choosing-an-http-status-code/
 
     //let mut userContext = BTreeMap::new();
     //userContext

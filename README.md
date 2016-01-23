@@ -17,6 +17,8 @@ install rustlang
 
 Somehow install libssl-dev or openssl-dev
 
+sudo apt-get install -y libreadline-dev bison flex #for postgres_macros
+
 ```
 ./autobuild.sh
 ``` 
