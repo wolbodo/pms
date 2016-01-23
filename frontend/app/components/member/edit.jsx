@@ -6,7 +6,12 @@ import mdl from 'react-mdl';
 import ItemEdit from '../view/itemEdit';
 
 import schema from './schema.json';
-import API from '../api';
+
+import { connect } from 'react-redux';
+
+import {requestMembers, fetchMembers} from 'actions'
+
+
 
 export default class MemberEdit extends React.Component {
 	constructor(props) {
@@ -15,20 +20,10 @@ export default class MemberEdit extends React.Component {
 		this.state = {
 			member: {}
 		};
-
-		API.get_member(parseInt(props.params.id || 3))
-		 .then(function (member) {
-			this.setState({
-				member: member
-			});
-		 }.bind(this));
 	}
 	render() {
-
 		const {params} = this.props;
-
 		var {member} = this.state;
-
 
 		// var data = _.find(stub, group => group.id === params.groep);
 
@@ -41,3 +36,18 @@ export default class MemberEdit extends React.Component {
 		);
 	}
 }
+
+
+
+export default connect(
+	function mapStateToProps(state) {
+	  const { members } = state
+	  const isFetching = false
+
+	  return {
+	    members,
+	    isFetching
+	  }
+	})
+	(MemberEdit);
+

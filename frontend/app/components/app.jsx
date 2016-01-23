@@ -3,20 +3,16 @@
 import _ from 'lodash';
 
 import React from 'react';
+import { connect } from 'react-redux';
 import mdl from 'react-mdl';
 import { Link } from 'react-router';
 
-import Auth from 'auth';
+import {members, auth} from 'actions'
 
-// Reference static files so they are loaded with webpack.
-import 'app.less';
-import 'material';
-import 'material.css';
-import 'favicon.png';
 import logo from 'img/logo.svg';
 
 
-export default class App extends React.Component {
+class App extends React.Component {
 
 	constructor(props) {
 		super(props);
@@ -27,6 +23,12 @@ export default class App extends React.Component {
 
 		this.handleTab = this.handleTab.bind(this);
 		this.setPage = this.setPage.bind(this);
+	}
+
+	componentDidMount() {
+
+		const { dispatch } = this.props
+
 	}
 
 	handleTab(tab) {
@@ -43,7 +45,7 @@ export default class App extends React.Component {
 	}
 
 	render() {
-		var {main, header} = this.props || {};
+		var {main, header, auth} = this.props;
 		return (
 			<mdl.Layout fixedHeader fixedDrawer>
 				<mdl.Header >
@@ -57,7 +59,7 @@ export default class App extends React.Component {
 					</header>
 
 					<mdl.Navigation>
-						{Auth.auth.loggedIn() ? [
+						{auth.loggedIn ? [
 							(<Link key="leden" to="/">Leden</Link>),
 							(<Link key="wijzig" to="/wijzig">Wijzig gegevens</Link>),
 						 	(<Link key="velden" to="/velden">Velden</Link>),
@@ -77,3 +79,14 @@ export default class App extends React.Component {
 		);
 	}
 }
+
+
+function mapStateToProps(state) {
+  return {
+    auth: state.auth
+  }
+}
+
+
+
+export default connect(mapStateToProps)(App);

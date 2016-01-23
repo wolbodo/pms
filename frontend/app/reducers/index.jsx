@@ -1,7 +1,17 @@
-import count from './count'
+import {combineReducers} from 'redux'
+
+import fields from './fields'
+import groups from './groups'
+import auth from './auth'
+import members from './members'
+import permissions from './permissions'
 
 
 
 export default {
-	count
+	fields,
+	groups,
+	auth,
+	members,
+	permissions
 }

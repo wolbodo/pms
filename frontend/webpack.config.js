@@ -10,7 +10,7 @@ module.exports = {
     target: 'web',
     cache: true,
     entry: {
-        server: 'webpack/hot/dev-server',
+        server: 'webpack/hot/only-dev-server',
         client: 'webpack-dev-server/client?https://pms.zaphod',
         // client: 'webpack-dev-server/client?http://localhost:8090',
         module: path.join(srcPath, 'index.jsx'),
@@ -58,8 +58,7 @@ module.exports = {
             template: 'app/index.html',
             favicon: 'app/favicon.png'
         }),
-        new webpack.NoErrorsPlugin(),
-        new webpack.HotModuleReplacementPlugin()
+        new webpack.NoErrorsPlugin()
     ],
     resolve: {
         root: srcPath,

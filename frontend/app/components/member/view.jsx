@@ -3,30 +3,35 @@ import React from 'react';
 
 import {List, Head, Row} from '../view/list';
 import schema from './schema.json';
-import API from '../api';
+import API from '../../api';
 import { Link } from 'react-router';
 
 import { Navigation } from 'react-router'
 
+import { connect } from 'react-redux';
+
+import actions from 'actions'
+
 class MemberView extends React.Component {
 
+      static defaultProps = {
+        members: []
+    };
+    
 	constructor(props) {
 		super(props);
+	}
 
-		this.state = {
-			members: []
-		};
-
-		API.get_members()
-			.then(members => this.setState({members: members}));
+	componentDidMount() {
+		var { dispatch, auth } =  this.props;
+		dispatch(actions.members.fetch(auth.token))
 	}
 
 	render() {
 		var fields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
 						'mobile', 'email'];
 
-		const {history} = this.props;
-		const {members} = this.state;
+		const {history, members} = this.props;
 
 		return (
 			<List title="Leden">
@@ -44,4 +49,18 @@ class MemberView extends React.Component {
 	}
 };
 
-export default MemberView;
+
+function mapStateToProps(state) {
+  const { members, auth } = state
+  const isFetching = false
+
+  return {
+    members, auth,
+    isFetching
+  }
+}
+
+
+
+export default connect(mapStateToProps)(MemberView);
+

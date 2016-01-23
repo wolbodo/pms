@@ -27,6 +27,7 @@
     "axios": "^0.7.0",
     "classnames": "^2.2.1",
     "fetch": "^1.0.0",
+    "isomorphic-fetch": "^2.2.1",
     "lodash": "^3.10.1",
     "material-design-icons": "^2.0.0",
     "material-design-lite": "^1.0.5",
@@ -41,7 +42,9 @@
     "react-tap-event-plugin": "^0.2.1",
     "react-ui-datepicker": "^0.1.0",
     "redux": "^3.0.5",
+    "redux-logger": "^2.3.2",
     "redux-simple-router": "^2.0.3",
+    "redux-thunk": "^1.0.3",
     "resolve-url-loader": "^1.4.2"
   },
   "devDependencies": {
