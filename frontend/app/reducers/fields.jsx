@@ -1,10 +1,8 @@
 
-const initialState = []
+import initialState from './fields.state.json'
 
 function update(state = initialState, action) {
 	switch (action.type) {
-		case 'RECEIVE_MEMBERS':
-			return action.members;
 		default:
 			return state;
 	}

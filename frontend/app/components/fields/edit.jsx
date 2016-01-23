@@ -3,35 +3,33 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import ItemEdit from '../view/itemEdit';
+import { connect } from 'react-redux';
 
-import schema from './schema.json';
-import member_schema from '../member/schema.json';
+import ItemEdit from 'components/view/itemEdit';
 
-export default class FieldsEdit extends React.Component {
+
+class FieldsEdit extends React.Component {
 	constructor(props) {
 		super(props);
-
-		this.state = {
-			field: member_schema.fields[this.props.params.veld] || {}
-		};
-
 	}
 	render() {
 
-		const {params} = this.props;
+		const {params, fields } = this.props;
 
-		var {field} = this.state;
-
-
-		// var data = _.find(stub, group => group.id === params.groep);
-
-		return field ?(
+		return (
 			<ItemEdit
-				schema={schema}
-				item={field}/>
-		) : (
-			<p>-</p>
+				schema={fields.schema}
+				item={fields.schemas.member.fields[params.veld]}/>
 		);
 	}
 }
+
+export default connect(
+	function mapStateToProps(state) {
+	  const { fields } = state
+
+	  return {
+	    fields
+	  }
+	})
+	(FieldsEdit);

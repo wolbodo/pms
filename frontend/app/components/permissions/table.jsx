@@ -1,14 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
+import { connect } from 'react-redux';
 
 import {Popover} from 'material-ui';
 
 import _ from 'lodash';
-
-import groups from '../group/stub.json';
-import schema from '../member/schema.json';
-
 
 import { Link } from 'react-router';
 
@@ -89,15 +86,14 @@ var zelf =   {
   };
 
 
-export default class PermissionsView extends React.Component {
+class PermissionsView extends React.Component {
 
 	constructor(props) {
 		super(props);
 
 		this.renderPopover = this.renderPopover.bind(this);
 
-		this.state = {
-		};
+		this.state = {};
 	}
 
 	show(state, e) {
@@ -142,6 +138,9 @@ export default class PermissionsView extends React.Component {
 	}
 
 	render () {
+		const {groups, members} = this.props
+
+
 		return (
 
 
@@ -154,7 +153,7 @@ export default class PermissionsView extends React.Component {
 						<thead>
 							<tr>
 								<th></th>
-								{groups.map(group => (
+								{_.map(groups.items, group => (
 									<th key={group.id} className='mdl-data-table__cell--non-numeric'>
 										<Link to={`/groepen/${group.id}`}>
 											{group.name}
@@ -166,7 +165,7 @@ export default class PermissionsView extends React.Component {
 							</tr>
 						</thead>
 						<tbody>
-							{_.map(schema.fields, (field, i) => 
+							{_.map(members.schema.fields, (field, i) => 
 								(<tr key={i}>
 									<th>
 										<Link to={`/velden/${field.name}`}>
@@ -205,3 +204,15 @@ export default class PermissionsView extends React.Component {
 		)
 	}
 }
+
+
+function mapStateToProps(state) {
+  const { members, groups } = state
+
+  return {
+    members, groups
+  }
+}
+
+export default connect(mapStateToProps)(PermissionsView);
+

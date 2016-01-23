@@ -1,10 +1,10 @@
 
 import React from 'react';
 
-import {List, Head, Row} from '../view/list';
-import schema from './schema.json';
-import stub from './stub.json';
+import {List, Head, Row} from 'components/view/list';
 import {Link} from 'react-router';
+
+import { connect } from 'react-redux';
 
 export default class GroupView extends React.Component {
 	constructor(props) {
@@ -12,15 +12,14 @@ export default class GroupView extends React.Component {
 	}
 
 	render() {
-		var fields = ['name', 'description'],
-			data = stub;
+		var fields = ['name', 'description'];
 
-		const {history} = this.props;
+		const {history, groups} = this.props;
 			
 		return (
 			<List title="Groepen">
-				<Head schema={schema} fields={fields} editLink/>
-				{data.map(row => (
+				<Head schema={groups.schema} fields={fields} editLink/>
+				{_.map(groups.items, row => (
 					<Row className='click' key={row.name} item={row} fields={fields} 
 						edit={ () => history.push(`groepen/${row.id}`) } />
 				))}
@@ -28,3 +27,13 @@ export default class GroupView extends React.Component {
 		);
 	}
 }
+
+export default connect(
+	function mapStateToProps(state) {
+	  const { groups } = state
+
+	  return {
+	    groups
+	  }
+	})
+	(GroupView);

@@ -2,19 +2,15 @@
 import React from 'react';
 
 import {List, Head, Row} from '../view/list';
-import schema from './schema.json';
-import API from '../../api';
 import { Link } from 'react-router';
-
 import { Navigation } from 'react-router'
-
 import { connect } from 'react-redux';
 
 import actions from 'actions'
 
 class MemberView extends React.Component {
 
-      static defaultProps = {
+    static defaultProps = {
         members: []
     };
     
@@ -28,20 +24,20 @@ class MemberView extends React.Component {
 	}
 
 	render() {
-		var fields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
+		var headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
 						'mobile', 'email'];
 
-		const {history, members} = this.props;
+		const {history, members, fields} = this.props;
 
 		return (
 			<List title="Leden">
-				<Head schema={schema} fields={fields} editLink/>
-				{members.map((row, i) => (
+				<Head schema={fields.schemas.member} fields={headerfields} editLink/>
+				{_.values(members.items).map((row, i) => (
 					<Row 
 						className="click"
 						key={i} 
 						item={row} 
-						fields={fields} 
+						fields={headerfields} 
 						edit={() => history.push(`/lid-${row.id}`)} />
 				))}
 			</List>
@@ -52,10 +48,11 @@ class MemberView extends React.Component {
 
 function mapStateToProps(state) {
   const { members, auth } = state
+  const fields = state.fields
   const isFetching = false
 
   return {
-    members, auth,
+    members, auth, fields,
     isFetching
   }
 }

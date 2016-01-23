@@ -3,27 +3,32 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
-import ItemEdit from '../view/itemEdit';
+import { connect } from 'react-redux';
 
-import schema from './schema.json';
-import stub from './stub.json';
+import ItemEdit from 'components/view/itemEdit';
 
 
-export default class GroupEdit extends React.Component {
+class GroupEdit extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 	render() {
-
-		const {groep} = this.props.params;
-
-
-		var data = _.find(stub, group => group.id === groep);
+		const {groups, params} = this.props
 
 		return (
 			<ItemEdit
-				schema={schema}
-				item={data} />
+				schema={groups.schema}
+				item={groups.items[params.groep]} />
 		);
 	}
 }
+
+export default connect(
+	function mapStateToProps(state) {
+	  const { groups } = state
+
+	  return {
+	    groups
+	  }
+	})
+	(GroupEdit);
