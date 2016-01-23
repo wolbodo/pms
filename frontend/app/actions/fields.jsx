@@ -18,3 +18,10 @@ export function moveField(schema, fromIndex, toIndex) {
 		toIndex
 	}
 }
+
+export function updateField(schema, id, field) {
+	return {
+		type: "FIELDS_UPDATE_FIELD",
+		schema, id, field
+	}
+}

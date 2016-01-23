@@ -1,8 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import mdl from 'react-mdl';
 
 import Field from './field';
+import update from  'react-addons-update';
 
 import _ from 'lodash';
 
@@ -17,15 +17,27 @@ export default class ItemEdit extends React.Component {
 		};
 	}
 	handleChange(value, key) {
-		var {model} = this.state;
-		model[key] = value;
+		let {onChange} = this.props,
+			{model} = this.state;
 
-		this.setState({
-			model: model
-		});
+		model = update(model, {
+			[key]: {
+				$set: value
+			}
+		})
+
+		this.setState({ model });
+
+		console.log("Setting store")
+
+		if (onChange) {
+			onChange(model)
+		}
 	}
 	componentWillReceiveProps(props) {
 		if (props.item !== this.props.item) {
+			console.log("Receiving props: ^ meaningless?");
+
 			this.setState({
 				model: props.item || {}
 			});
@@ -54,17 +66,21 @@ export default class ItemEdit extends React.Component {
 									? fields
 									: [fields]
 								).map(
-									(fieldname, key) => (
-										<Field 
-											key={key} 
-											field={schema.fields[fieldname]}
-											disabled={permissions.readonly && _.contains(
-												permissions.readonly, 
-												schema.fields[fieldname].name
-											)}
-											onChange={this.handleChange}
-											value={model[schema.fields[fieldname].name]} />
-									)
+									(fieldname, key) => {
+										let field = schema.fields[fieldname]
+
+										return (
+											<Field 
+												key={key} 
+												field={field}
+												disabled={permissions.readonly && _.contains(
+													permissions.readonly, 
+													field.name
+												) || field.readonly}
+												onChange={this.handleChange}
+												value={model[field.name]} />
+										)
+									}
 								)}
 							</div>
 						))}

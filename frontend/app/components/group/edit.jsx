@@ -7,28 +7,33 @@ import { connect } from 'react-redux';
 
 import ItemEdit from 'components/view/itemEdit';
 
+import actions from 'actions'
+
 
 class GroupEdit extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 	render() {
-		const {groups, params} = this.props
+		const {groups, fields, params, dispatch} = this.props
 
 		return (
 			<ItemEdit
-				schema={groups.schema}
-				item={groups.items[params.groep]} />
+				schema={fields.schemas.group}
+				item={groups.items[params.groep]}
+				onChange={group => {
+					dispatch(actions.groups.update(params.groep, group))
+				}} />
 		);
 	}
 }
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { groups } = state
+	  const { groups, fields } = state
 
 	  return {
-	    groups
+	    groups, fields
 	  }
 	})
 	(GroupEdit);

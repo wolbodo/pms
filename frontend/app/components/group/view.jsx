@@ -12,15 +12,15 @@ export default class GroupView extends React.Component {
 	}
 
 	render() {
-		var fields = ['name', 'description'];
+		var header_fields = ['name', 'description'];
 
-		const {history, groups} = this.props;
+		const {history, groups, fields} = this.props;
 			
 		return (
 			<List title="Groepen">
-				<Head schema={groups.schema} fields={fields} editLink/>
+				<Head schema={fields.schemas.group} fields={header_fields} editLink/>
 				{_.map(groups.items, row => (
-					<Row className='click' key={row.name} item={row} fields={fields} 
+					<Row className='click' key={row.name} item={row} fields={header_fields} 
 						edit={ () => history.push(`groepen/${row.id}`) } />
 				))}
 			</List>
@@ -30,10 +30,10 @@ export default class GroupView extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { groups } = state
+	  const { groups, fields } = state
 
 	  return {
-	    groups
+	    groups, fields
 	  }
 	})
 	(GroupView);

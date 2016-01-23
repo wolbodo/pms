@@ -148,6 +148,18 @@ function fieldreducer(state = initialState, action) {
           }
         }
       });
+    case "FIELDS_UPDATE_FIELD":
+      return update(state, {
+        schemas: {
+          [action.schema]: {
+            fields: {
+              [action.id]: {
+                $set: action.field
+              }
+            }
+          }
+        }
+      })
     default:
       return state;
   }

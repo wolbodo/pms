@@ -1,45 +1,4 @@
 {
-  "schema": {
-    "title": "Wijzig veld",
-    "permissions": {
-      "readonly": []
-    },
-    "form": [
-      {
-        "title": "Veld",
-        "fields": [
-          "name",
-          "label",
-          "type"
-        ]
-      }
-    ],
-    "fields": {
-      "name": {
-        "name": "name",
-        "label": "Naam",
-        "type": "string"
-      },
-      "label": {
-        "name": "label",
-        "label": "Label",
-        "type": "string"
-      },
-      "type": {
-        "name": "type",
-        "label": "Type",
-        "type": "option",
-        "options": {
-          "string": "Tekst",
-          "option": "Optie",
-          "enum": "Dropdown",
-          "date": "Datum",
-          "array": "Lijst",
-          "boolean": "Booleaan"
-        }
-      }
-    }
-  },
   "schemas": {
     "member": {
       "title": "Wijzig lid",
@@ -340,6 +299,70 @@
           "type": "string",
           "name": "created",
           "label": "Aangemaakt"
+        }
+      }
+    },
+    "field": {
+      "title": "Wijzig veld",
+      "permissions": {
+        "readonly": []
+      },
+      "form": [
+        {
+          "title": "Veld",
+          "fields": [
+            "name",
+            "label",
+            "type"
+          ]
+        }
+      ],
+      "fields": {
+        "name": {
+          "name": "name",
+          "label": "Naam",
+          "type": "string",
+          "readonly": true
+        },
+        "label": {
+          "name": "label",
+          "label": "Label",
+          "type": "string"
+        },
+        "type": {
+          "name": "type",
+          "label": "Type",
+          "type": "option",
+          "options": {
+            "string": "Tekst",
+            "option": "Optie",
+            "enum": "Dropdown",
+            "date": "Datum",
+            "array": "Lijst",
+            "boolean": "Booleaan"
+          }
+        }
+      }
+    },
+    "group": {
+      "title": "Wijzig groep",
+      "permissions": {},
+      "form": [{
+        "title": "Gegevens",
+        "fields": [
+          "name", "description"
+        ]
+      }],
+      "fields": {
+        "name": {
+         "name": "name",
+         "type": "string",
+          "label": "Naam"
+        },
+        "description": {
+         "name": "description",
+         "type": "string",
+          "label": "Omschrijving"
         }
       }
     }

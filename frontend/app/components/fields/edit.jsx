@@ -1,11 +1,9 @@
-import _ from 'lodash';
-import React from 'react';
-import ReactDOM from 'react-dom';
-import mdl from 'react-mdl';
+import _ from 'lodash'
+import React from 'react'
+import { connect } from 'react-redux'
 
-import { connect } from 'react-redux';
-
-import ItemEdit from 'components/view/itemEdit';
+import actions from 'actions'
+import ItemEdit from 'components/view/itemEdit'
 
 
 class FieldsEdit extends React.Component {
@@ -14,12 +12,15 @@ class FieldsEdit extends React.Component {
 	}
 	render() {
 
-		const {params, fields } = this.props;
+		const {params, fields, dispatch } = this.props;
 
 		return (
 			<ItemEdit
-				schema={fields.schema}
-				item={fields.schemas.member.fields[params.veld]}/>
+				schema={fields.schemas.field}
+				item={fields.schemas.member.fields[params.veld]}
+				onChange={field => {
+					dispatch(actions.fields.updateField('member', params.veld, field))
+				}} />
 		);
 	}
 }
