@@ -14,16 +14,18 @@ export default class MemberEdit extends React.Component {
 		super(props);
 	}
 	render() {
-		const {params, members, fields, dispatch} = this.props;
+		const {params, members, fields, dispatch, auth} = this.props;
 
 		// var data = _.find(stub, group => group.id === params.groep);
+
+		let member_id = params.id || auth.user.user
 
 		return (
 			<ItemEdit
 				schema={fields.schemas.member}
-				item={members.items[params.id]}
+				item={members.items[member_id]}
 				onChange={member => {
-					dispatch(actions.members.update(params.id, member))
+					dispatch(actions.members.update(member_id, member))
 				}} />
 		);
 	}
@@ -33,12 +35,11 @@ export default class MemberEdit extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { members, fields } = state
+	  const { members, fields, auth } = state
 	  const isFetching = false
 
 	  return {
-	    members, fields, 
-	    isFetching
+	    members, fields, auth
 	  }
 	})
 	(MemberEdit);

@@ -29,7 +29,7 @@ export class List extends React.Component {
 
 
     render() {
-    	const {fields, schema, data, title} = this.props;
+    	const {fields, schema, data, title, buttons} = this.props;
 
     	const {heads, rows} = _.groupBy(_.flatten(this.props.children), function (child) {
     		return (child.type.name === "Head") ? "heads" : "rows";
@@ -37,6 +37,9 @@ export class List extends React.Component {
 
 		return (
 			<mdl.Card className='content mdl-color--white mdl-shadow--2dp'>
+				<mdl.CardMenu>
+					{buttons}
+				</mdl.CardMenu>
 				<mdl.CardTitle>
 					{title || "Lijst"}
 				</mdl.CardTitle>

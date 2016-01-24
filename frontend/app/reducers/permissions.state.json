@@ -1,0 +1,68 @@
+{
+  "leden": {
+    "read": [
+      "nickname",
+      "firstname",
+      "infix",
+      "lastname",
+      "gender",
+      "birthdate",
+      "deathdate",
+      "street",
+      "iban",
+      "directdebit",
+      "email",
+      "mobile",
+      "membertype",
+      "membertill",
+      "functions",
+      "notes",
+      "keycode",
+      "cashregister",
+      "passwordhash",
+      "modified"
+    ],
+    "write": [
+      "nickname",
+      "firstname",
+      "infix",
+      "lastname",
+      "gender",
+      "birthdate",
+      "deathdate",
+      "street",
+      "directdebit",
+      "email",
+      "mobile",
+      "functions",
+      "notes"
+    ]
+  },
+  "bestuur": {
+    "read": [
+      "frontdoor"
+    ],
+    "write": [
+      "zipcode",
+      "city",
+      "country",
+      "iban",
+      "directdebit",
+      "email",
+      "mobile",
+      "phone",
+      "emergencyinfo",
+      "membertype",
+      "membersince",
+      "membertill",
+      "functions",
+      "notes",
+      "wantscontact"
+    ]
+  },
+  "oudleden": {
+    "read": [
+      "frontdoor"
+    ]
+  }
+}

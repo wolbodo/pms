@@ -1,5 +1,5 @@
 import update from  'react-addons-update';
-
+import constants from 'constants'
 import initialState from './fields.state.json'
 import _ from 'lodash'
 
@@ -132,7 +132,7 @@ function fieldreducer(state = initialState, action) {
   let schema = state.schemas[action.schema],
     {fromIndex, toIndex} = action;
   switch (action.type) {
-    case "FIELDS_MOVE_SCHEMAFIELD":
+    case constants.FIELDS_MOVE_SCHEMAFIELD:
       return update(state, {
         schemas: {
           [action.schema]: {
@@ -140,7 +140,7 @@ function fieldreducer(state = initialState, action) {
           }
         }
       });
-    case "FIELDS_CREATE_FIELDSET":
+    case constants.FIELDS_CREATE_FIELDSET:
       return update(state, {
         schemas: {
           [action.schema]: {
@@ -148,14 +148,14 @@ function fieldreducer(state = initialState, action) {
           }
         }
       });
-    case "FIELDS_UPDATE_FIELD":
+    case constants.FIELDS_UPDATE_FIELD:
       return update(state, {
         schemas: {
           [action.schema]: {
             fields: {
               [action.id]: {
-                $set: action.field
-              }
+                $merge: action.field
+              } 
             }
           }
         }

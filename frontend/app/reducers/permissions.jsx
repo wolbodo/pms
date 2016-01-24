@@ -1,14 +1,14 @@
+import initialState from './permissions.state.json'
+import constants from 'constants'
 
-const initialState = []
-
-function update(state = initialState, action) {
+function permissionsReducer(state = initialState, action) {
 	switch (action.type) {
-		case 'RECEIVE_MEMBERS':
-			return action.members;
+		case constants.PERMISSION_SET:
+			return state
 		default:
 			return state;
 	}
 }
 
 
-export default update
+export default permissionsReducer

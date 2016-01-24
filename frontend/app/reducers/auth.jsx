@@ -1,3 +1,4 @@
+import constants from 'constants'
 
 const initialState = {
 	loggedIn: false
@@ -5,22 +6,32 @@ const initialState = {
 
 function update(state = initialState, action) {
 	switch (action.type) {
-		case 'AUTH_LOGIN_ERROR':
+		case constants.AUTH_LOGIN_ERROR:
 			return Object.assign({}, state, {
 				loading: false
 			})
-		case 'AUTH_LOGIN_REQUEST':
+		case constants.AUTH_LOGIN_REQUEST:
 			return Object.assign({}, state, {
 				loggedIn: false,
 				loading: true
 			})
-		case 'AUTH_LOGIN_SUCCESS':
+		case constants.AUTH_LOGIN_SUCCESS:
+			// get the userinfo from the token.
+			let t = action.token.split('.');
+			let user = JSON.parse(
+				atob(
+					t[1].replace(/-/g, '+').replace(/_/g, '/')
+				)
+			)
+
+
 			return Object.assign({}, state, {
 				loggedIn: true,
 				loading: false,
-				token: action.token
+				token: action.token,
+				user: user
 			})
-		case 'AUTH_LOGOUT_REQUEST':
+		case constants.AUTH_LOGOUT_REQUEST:
 			return Object.assign({}, state, {
 				loggedIn: false,
 				token: undefined

@@ -129,10 +129,11 @@ export default class Field extends React.Component {
 					<DatePicker 
                         className = "datepicker"
 					    container="dialog"
+					    onShow={function () {return disabled && this.onRequestClose()} }
                         autoOk={true}
                         disabled={disabled}
                         floatingLabelText={field.label} 
-                        open={true} 
+                        open={!disabled} 
                         style={{
                             width: '125px'
                         }} 

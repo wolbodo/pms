@@ -1,9 +1,10 @@
+import constants from 'constants'
 
 
 
 export function createSet(schema, fromIndex, toIndex) {
 	return {
-		type: "FIELDS_CREATE_FIELDSET",
+		type: constants.FIELDS_CREATE_FIELDSET,
 		schema, fromIndex, toIndex
 	}
 }
@@ -12,7 +13,7 @@ export function createSet(schema, fromIndex, toIndex) {
 export function moveField(schema, fromIndex, toIndex) {
 	// Moves field in schema 
 	return {
-		type: "FIELDS_MOVE_SCHEMAFIELD",
+		type: constants.FIELDS_MOVE_SCHEMAFIELD,
 		schema,
 		fromIndex,
 		toIndex
@@ -21,7 +22,7 @@ export function moveField(schema, fromIndex, toIndex) {
 
 export function updateField(schema, id, field) {
 	return {
-		type: "FIELDS_UPDATE_FIELD",
+		type: constants.FIELDS_UPDATE_FIELD,
 		schema, id, field
 	}
 }

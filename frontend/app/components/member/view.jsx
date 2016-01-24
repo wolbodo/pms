@@ -25,10 +25,12 @@ class MemberView extends React.Component {
 	}
 
 	renderButtons() {
+		let {dispatch} = this.props;
+
 		return (
-			<mdl.FABButton>
-			    <mdl.Icon name="add" />
-			</mdl.FABButton>
+			<mdl.IconButton 
+				name="add"
+				onClick={() => dispatch(actions.members.create())} />
 		)
 	}
 
