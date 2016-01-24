@@ -1,10 +1,10 @@
 import React from 'react';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 
 import Field from './field';
 import update from  'react-addons-update';
 
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 export default class ItemEdit extends React.Component {
 	constructor(props) {
@@ -51,11 +51,10 @@ export default class ItemEdit extends React.Component {
 											<Field 
 												key={key} 
 												field={field}
-												tabIndex={tabIndex++}
-												disabled={permissions.readonly && _.contains(
-													permissions.readonly, 
-													field.name
-												) || field.readonly}
+												tabIndex={tabIndex}
+												disabled={permissions.readonly
+													&& (field.name in permissions.readonly)
+													|| field.readonly}
 												onChange={this.handleChange}
 												value={model[field.name]} />
 										)

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 
 import { connect } from 'react-redux';
 

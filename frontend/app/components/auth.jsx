@@ -1,5 +1,5 @@
 import React from 'react';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 
 import { PropTypes } from 'react-router';
 import { connect } from 'react-redux';
@@ -59,12 +59,12 @@ class Login extends React.Component {
           <div className="mdl-card__form">
             <mdl.Textfield 
               label="Naam" 
-              onChange={value => this.onChange('name', value)} 
+              onChange={e => this.onChange('name', e.target.value)} 
               floatingLabel />
             <mdl.Textfield 
               label="Wachtwoord" 
               type="password"
-              onChange={value => this.onChange('password', value)} 
+              onChange={e => this.onChange('password', e.target.value)} 
               floatingLabel />
 
           <mdl.Button primary raised colored>Verstuur</mdl.Button>

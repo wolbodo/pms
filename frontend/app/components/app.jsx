@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import React from 'react';
 import { connect } from 'react-redux';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 import { Link } from 'react-router';
 
 import {members, auth} from 'actions'

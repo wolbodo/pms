@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom';
 
 import DatePicker from 'material-ui/lib/date-picker/date-picker';
 import SelectField from 'material-ui/lib/select-field';
+import MenuItem from 'material-ui/lib/menus/menu-item';
 
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 
 import _ from 'lodash';
 
@@ -96,16 +97,20 @@ export default class Field extends React.Component {
                         floatingLabelText={field.label} 
                         value={value}
                         onChange={this._handleEnumValueChange.bind(this)}
-                        disabled={disabled}
-                        menuItems={ _.map(field.options, (field, key) => ({
-                                    'payload': key, 
-                                    'text': field
-                                })) } />
+                        disabled={disabled}>
+                        {_.map(field.options, (field, key) => (
+                        	<MenuItem
+                        		key={key}
+                        		value={key}
+                        		primaryText={field}
+                        		/>
+                        ))}
+                    </SelectField>
                 );
 			case "boolean": 
 				return (
 					<mdl.Checkbox
-						checked={value || false}
+						checked={!!value || false}
 						label={field.label}
 						disabled={disabled}
 						onChange={this.handleChange}>

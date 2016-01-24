@@ -11,7 +11,7 @@ function memberReducer(state = initialState, action) {
   switch (action.type) {
     case constants.MEMBERS_RECEIVE:
       return Object.assign({}, state, {
-        items: _.indexBy(action.members, 'id'),
+        items: _.keyBy(action.members, 'id'),
         dirty: false
       })
     case constants.MEMBERS_UPDATE:

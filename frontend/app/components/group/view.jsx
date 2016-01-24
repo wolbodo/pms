@@ -1,6 +1,6 @@
 
 import React from 'react'
-import mdl from 'react-mdl'
+import * as mdl from 'react-mdl'
 
 import {List, Head, Row} from 'components/view/list'
 import {Link} from 'react-router'

@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import update from 'react/lib/update';
 import ReactDOM from 'react-dom';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 import classnames from 'classnames';
 import {Link} from 'react-router';
 import { connect } from 'react-redux';

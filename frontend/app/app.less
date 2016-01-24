@@ -29,31 +29,41 @@ body {
 		color: #00796B;
 	}
 
-	.mdl-layout__header {
-		.dark-primary-color;
+	.mdl-layout {
+		.mdl-layout__inner-container, .mdl-layout__header {
+			.dark-primary-color;
+		}
+		
+		.mdl-layout__header {
 
-		.mdl-layout__header-row {
-			flex-direction: row-reverse;
-			align-items: center;
+			.mdl-layout__header-row {
+				flex-direction: row-reverse;
+				align-items: center;
 
-			.breadcrumbs {
-				a {
-					display: inline-flex;
-					align-items: center;
-					color: white;
-					text-decoration: none;
+				.breadcrumbs {
+					a {
+						display: inline-flex;
+						align-items: center;
+						color: white;
+						text-decoration: none;
+					}
 				}
 			}
 		}
-	}
 
-	.mdl-layout__drawer {
-		.default-primary-color;
-		header {
-			padding: 1rem;
-			img{width: 100%; }
+		.mdl-layout__drawer {
+			.default-primary-color;
+			header {
+				padding: 1rem;
+				img{width: 100%; }
+			}
+		}
+
+		.mdl-layout__content {
+			display: flex;
 		}
 	}
+
 
 	.mdl-textfield label {
 		.secondary-text-color;
