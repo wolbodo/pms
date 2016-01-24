@@ -8,8 +8,6 @@ extern crate serde_json;
 extern crate hyper;
 #[macro_use(router)]
 extern crate router;
-// extern crate rand;
-// extern crate time;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
 extern crate rustc_serialize;
@@ -19,36 +17,15 @@ use iron::status;
 use hyper::header::Authorization;
 
 use iron::prelude::*;
-// use router::{Router};
-//use std::collections::BTreeMap;
 use serde_json::*;
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 use postgres::error::Error as PgError;
 
-// use crypto::digest::Digest;
-// use crypto::sha2::Sha256;
-//use crypto::util::fixed_time_eq
-// use crypto::hmac::Hmac;
-//use rand::Rng;
-//use rand::os::OsRng;
-//use std::iter::repeat;
-// use rustc_serialize::base64::{STANDARD, ToBase64};
-// use crypto::mac::Mac;
-// use std::mem;
-
-// #[derive(Serialize, Deserialize, Debug)]
 #[derive(Debug, Clone, RustcDecodable)]
 struct Login {
    user: String,
    password: String,
 }
-
-// #[derive(Debug, Clone, RustcDecodable, RustcEncodable)]
-// struct Auth {
-//     timestamp: i64,
-//     user_id: u32,
-//     signature: [u8; 32]
-// }
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024 * 10;
 
@@ -57,36 +34,21 @@ struct SimpleError {
     error: String
 }
 
-/*macro_rules! itry {
-    ($e:expr, $err:expr) => (match $e {
-        Result::Ok(val) => val,
-        Result::Err(err) => {
-            return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError { error: $err }).unwrap())))
-        }
-    })
-}*/
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
+    //TODO: correct header (json), fix OK path to json.
+
     let db = req.db_conn();
     //note bodyparser is still using rustc_serialize, not serde_json!
-    //let test = match req.get::<bodyparser::Struct<Login>>().unwrap();
-
-    let body = match req.get::<bodyparser::Json>() {//core::result::Result<core::option::Option<rustc_serialize::json::Json>, bodyparser::errors::BodyError>
+    let login = match req.get::<bodyparser::Struct<Login>>() {
         Ok(Some(body)) => body,
-        Ok(None) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: "err please send some body!".to_owned()}).unwrap()))),
+        Ok(None) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: "Please send some body!".to_owned()}).unwrap()))),
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap()))),
         Err(err) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap())))
     };
-    let json = match body.as_object() {
-        Some(json) => json,
-        None => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: "No JSON object found".to_owned()}).unwrap())))
-    }; //we cannot combine this on one line with the line above (since 'borrowed value does not live long enough')
-
     let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
 
-    let rows = match stmt.query(&[
-        &json.get("user").unwrap().as_string().unwrap(), 
-        &json.get("password").unwrap().as_string().unwrap()
-    ]) {
+    let rows = match stmt.query(&[&login.user, &login.password]) {
         Ok(rows) => rows,
         Err(PgError::Db(err)) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.message}).unwrap()))),
         Err(err) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap()))),
@@ -98,8 +60,6 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     //userContext
     let token: String = rows.get(0).get(0);
     Ok(Response::with((status::Ok, token)))
-
-    // todo: fail case ;)
 }
 
 fn handle_members(req: &mut Request) -> IronResult<Response> {
