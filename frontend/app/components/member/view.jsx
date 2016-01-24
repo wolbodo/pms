@@ -1,5 +1,6 @@
 
 import React from 'react';
+import mdl from 'react-mdl';
 
 import {List, Head, Row} from '../view/list';
 import { Link } from 'react-router';
@@ -23,6 +24,14 @@ class MemberView extends React.Component {
 		dispatch(actions.members.fetch(auth.token))
 	}
 
+	renderButtons() {
+		return (
+			<mdl.FABButton>
+			    <mdl.Icon name="add" />
+			</mdl.FABButton>
+		)
+	}
+
 	render() {
 		var headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
 						'mobile', 'email'];
@@ -30,7 +39,7 @@ class MemberView extends React.Component {
 		const {history, members, fields} = this.props;
 
 		return (
-			<List title="Leden">
+			<List title="Leden" buttons={this.renderButtons()}>
 				<Head schema={fields.schemas.member} fields={headerfields} editLink/>
 				{_.values(members.items).map((row, i) => (
 					<Row 

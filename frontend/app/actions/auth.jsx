@@ -8,8 +8,6 @@ function login_request() {
 }
 
 function login_success(token) {
-  localStorage.token = token;
-
   return {
     type: 'AUTH_LOGIN_SUCCESS',
     token: token
@@ -61,7 +59,6 @@ export function login(username, password) {
 }
 
 export function logout() {
-  delete localStorage.token
   return {
     type: 'AUTH_LOGOUT_REQUEST'
   }
@@ -70,11 +67,10 @@ export function logout() {
 export function requireLogin(store) {
   return (nextState, replaceState) => {
     const state = store.getState()
-    
-    if (localStorage.token) {
-      store.dispatch(login_success(localStorage.token));
-    } else if (!state.auth.loggedIn) {
+
+    if (!state.auth.loggedIn) {
       replaceState({ nextPathname: nextState.location.pathname }, '/login')
     }
+
   }
 }

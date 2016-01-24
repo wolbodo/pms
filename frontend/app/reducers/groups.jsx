@@ -1,27 +1,6 @@
+import update from  'react-addons-update';
 
 const initialState = {
-  schema: {
-    "title": "Wijzig groep",
-    "permissions": {},
-    "form": [{
-      "title": "Gegevens",
-      "fields": [
-        "name", "description"
-      ]
-    }],
-    "fields": {
-      "name": {
-       "name": "name",
-       "type": "string",
-        "label": "Naam"
-      },
-      "description": {
-       "name": "description",
-       "type": "string",
-        "label": "Omschrijving"
-      }
-    }
-  },
   items: {
 	  bestuur: {
 	    "id": "bestuur",
@@ -38,16 +17,27 @@ const initialState = {
 	    "name": "Oud Leden",
 	    "description": "Alle oud leden"
 	  }
-
-  }
+  },
+  dirty: false
 }
 
-function update(state = initialState, action) {
+function groupsReducer(state = initialState, action) {
 	switch (action.type) {
+		case "GROUPS_UPDATE": 
+	    	return update(state, {
+	    		items: {
+	    			[action.id]: {
+	    				$set: action.group
+	    			}
+	    		},
+	    		dirty: {
+	    			$set: true
+	    		}
+	    	})
 		default:
 			return state;
 	}
 }
 
 
-export default update
+export default groupsReducer

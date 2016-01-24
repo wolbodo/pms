@@ -1,20 +1,38 @@
+import update from  'react-addons-update';
 import _ from  'lodash'
 
 
 const initialState = {
-  items: {}
+  items: {},
+  dirty: false
 }
 
-function update(state = initialState, action) {
+function memberReducer(state = initialState, action) {
   switch (action.type) {
     case 'RECEIVE_MEMBERS':
       return Object.assign({}, state, {
-        items: _.indexBy(action.members, 'id')
+        items: _.indexBy(action.members, 'id'),
+        dirty: false
       })
+    case 'MEMBERS_UPDATE':
+    	return update(state, {
+    		items: {
+    			[action.id]: {
+    				$set: action.member
+    			}
+    		},
+    		dirty: {
+    			$set: true
+    		}
+    	})
+    case 'MEMBERS_COMMIT':
+    	return update(state, {
+    		dirty: false
+    	})
     default:
       return state;
   }
 }
 
 
-export default update
+export default memberReducer

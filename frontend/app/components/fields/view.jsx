@@ -13,6 +13,9 @@ import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
 import Backend from 'react-dnd-html5-backend';
 
+
+import actions from 'actions'
+
 const ItemTypes = {
   FIELD: Symbol('field'),
   GROUP: Symbol('group')
@@ -316,51 +319,16 @@ class FieldsView extends React.Component {
   }
 
   moveField(fromIndex, toIndex) {
-    const {fields} = this.props
+    const { dispatch} = this.props
 
-    const field = _.get(fields.schemas.member.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
-
-    console.log("Dragging field", field, "fromto", fromIndex, toIndex);
-
-    let fromFieldset = fields.schemas.member.form[fromIndex[GROUP]].fields[fromIndex[SET]],
-        toFieldset = fields.schemas.member.form[toIndex[GROUP]].fields[toIndex[SET]];
-
-    // mind the order, 
-    if (fromIndex[FIELD] > toIndex[FIELD]) {
-      // remove the field first, then add
-
-      fromFieldset.splice(fromIndex[FIELD], 1);
-      toFieldset.splice(toIndex[FIELD], 0, field);
-    } else {
-      // other way around
-      toFieldset.splice(toIndex[FIELD], 0, field);
-      fromFieldset.splice(fromIndex[FIELD], 1);
-    }
-
-    // remove old fieldset if it was empty
-    var fieldsets = fields.schemas.member.form[fromIndex[GROUP]].fields;
-    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
-      fieldsets.splice(fromIndex[SET], 1);
-    }
+    dispatch(actions.fields.moveField('member', fromIndex, toIndex))
   }
 
   addSet(fromIndex, toIndex) {
-    const {fields} = this.props
+    const { dispatch} = this.props
 
-    const field = _.get(fields.schemas.member.form, [fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]]);
+    dispatch(actions.fields.createSet('member', fromIndex, toIndex))
 
-    console.log("adding set", field, "fromto", fromIndex, toIndex);
-
-    // remove from old place.
-    fields.schemas.member.form[fromIndex[GROUP]].fields[fromIndex[SET]].splice(fromIndex[FIELD], 1);
-    // add in the new place.
-    fields.schemas.member.form[toIndex[GROUP]].fields.splice(toIndex[SET], 0, [field]);
-
-    // remove old fieldset if it was empty
-    var fieldsets = fields.schemas.member.form[fromIndex[GROUP]].fields;
-    if (_.isEmpty(fieldsets[fromIndex[SET]])) {
-      fieldsets.splice(fromIndex[SET], 1);
-    }
   }
 
   render() {

@@ -11,7 +11,7 @@ class Login extends React.Component {
   // mixins: [ History ],
   static contextTypes = {
     history: PropTypes.history
-  }
+  };
 
   constructor(props) {
     super(props);
@@ -82,7 +82,7 @@ class Logout extends React.Component {
   // mixins: [ History ],
   static contextTypes = {
     history: PropTypes.history
-  }
+  };
 
   componentDidMount() {
     const {dispatch} = this.props;

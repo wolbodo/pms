@@ -7,23 +7,24 @@ import ItemEdit from '../view/itemEdit';
 
 import { connect } from 'react-redux';
 
-import {requestMembers, fetchMembers} from 'actions'
-
-
+import actions from 'actions'
 
 export default class MemberEdit extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 	render() {
-		const {params, members, fields} = this.props;
+		const {params, members, fields, dispatch} = this.props;
 
 		// var data = _.find(stub, group => group.id === params.groep);
 
 		return (
 			<ItemEdit
 				schema={fields.schemas.member}
-				item={members.items[params.id]}/>
+				item={members.items[params.id]}
+				onChange={member => {
+					dispatch(actions.members.update(params.id, member))
+				}} />
 		);
 	}
 }

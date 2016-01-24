@@ -13,14 +13,6 @@ import $fetch from 'isomorphic-fetch'
 //     reddit
 //   }
 // }
-
-export function request(members) {
-  return {
-    type: 'REQUEST_MEMBERS',
-    members
-  }
-}
-
 function receive(members) {
   return {
     type: 'RECEIVE_MEMBERS',
@@ -29,16 +21,37 @@ function receive(members) {
   }
 }
 
+
+
+
+function shouldFetchMembers(state) {
+  if (state.members.dirty) {
+    return false
+  } else {
+    // check timestamp?
+    return true
+  }
+}
+
+
 export function fetch(token) {
-  return dispatch => {
-    dispatch(request())
-    return $fetch("/api/members", {
-				headers: new Headers({
-					"Authorization": token
-				})
-			})
-      .then(response => response.json())
-      .then(json => dispatch(receive(json)))
+  return (dispatch, getState) => {
+    if ( shouldFetchMembers(getState()) ) {
+      return $fetch("/api/members", {
+  				headers: new Headers({
+  					"Authorization": token
+  				})
+        })
+        .then(response => response.json())
+        .then(json => dispatch(receive(json)))
+    }
+  }
+}
+
+export function update(id, member) {
+  return {
+    type: "MEMBERS_UPDATE",
+    id, member
   }
 }
 

@@ -11,7 +11,7 @@ export class List extends React.Component {
 	static defaultProps = {
 		// structure
 		// data
-	}
+	};
 
 	constructor(props) {
 		super(props);
