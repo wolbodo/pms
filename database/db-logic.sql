@@ -87,6 +87,10 @@ DECLARE
 BEGIN
   header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
   SELECT ('{ "user":' || TO_JSON(id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + interval '31 days')) || '}')::JSONB INTO payload FROM people p WHERE p.valid_till IS NULL AND p.email = emailaddress AND crypt(password, p.password_hash) = p.password_hash;
+  IF payload IS NULL THEN
+      RAISE EXCEPTION 'Username or password wrong.';
+      RETURN NULL;
+  END IF;
   content = jsonb2base64url(header) || '.' || jsonb2base64url(payload);
   signature = TRANSLATE(ENCODE(HMAC(content, 'secret', 'sha256'), 'base64'), '+/=', '-_');
   RETURN content || '.' || signature;
