@@ -7,6 +7,7 @@ import groups from './groups'
 import auth from './auth'
 import members from './members'
 import permissions from './permissions'
+import constants from 'constants'
 
 
 const rootReducer = combineReducers({
@@ -19,7 +20,7 @@ const rootReducer = combineReducers({
 });
 
 export default function (state, action) {
-	if (action.type === "AUTH_LOGOUT_REQUEST") {
+	if (action.type === constants.AUTH_LOGOUT_REQUEST) {
 		// clear state.
 		state = undefined
 	}

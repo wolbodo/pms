@@ -1,28 +1,29 @@
 import $fetch from 'isomorphic-fetch'
 import { routeActions } from 'redux-simple-router'
+import constants from 'constants'
 
 function login_request() {
   return {
-    type: 'AUTH_LOGIN_REQUEST'
+    type: constants.AUTH_LOGIN_REQUEST
   }
 }
 
 function login_success(token) {
   return {
-    type: 'AUTH_LOGIN_SUCCESS',
+    type: constants.AUTH_LOGIN_SUCCESS,
     token: token
   }
 //   FixeMe? 
 }
 function login_error(err) {
   return {
-    type: 'AUTH_LOGIN_ERROR',
+    type: constants.AUTH_LOGIN_ERROR,
     error: err
   }
 }
 function login_request(username, password) {
   return {
-    type: 'AUTH_LOGIN_REQUEST',
+    type: constants.AUTH_LOGIN_REQUEST,
     username: username,
     password: password
   }
@@ -60,7 +61,7 @@ export function login(username, password) {
 
 export function logout() {
   return {
-    type: 'AUTH_LOGOUT_REQUEST'
+    type: constants.AUTH_LOGOUT_REQUEST
   }
 }
 

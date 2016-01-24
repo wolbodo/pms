@@ -1,4 +1,6 @@
 import update from  'react-addons-update';
+import constants from 'constants'
+
 
 const initialState = {
   items: {
@@ -23,11 +25,11 @@ const initialState = {
 
 function groupsReducer(state = initialState, action) {
 	switch (action.type) {
-		case "GROUPS_UPDATE": 
+		case constants.GROUPS_UPDATE: 
 	    	return update(state, {
 	    		items: {
 	    			[action.id]: {
-	    				$set: action.group
+	    				$merge: action.group
 	    			}
 	    		},
 	    		dirty: {

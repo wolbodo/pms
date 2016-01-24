@@ -1,4 +1,6 @@
 import $fetch from 'isomorphic-fetch'
+import constants from 'constants'
+import { routeActions } from 'redux-simple-router'
 
 // export function selectReddit(members) {
 //   return {
@@ -15,7 +17,7 @@ import $fetch from 'isomorphic-fetch'
 // }
 function receive(members) {
   return {
-    type: 'RECEIVE_MEMBERS',
+    type: constants.MEMBERS_RECEIVE,
     members: members,
     receivedAt: Date.now()
   }
@@ -50,28 +52,18 @@ export function fetch(token) {
 
 export function update(id, member) {
   return {
-    type: "MEMBERS_UPDATE",
+    type: constants.MEMBERS_UPDATE,
     id, member
   }
 }
 
-// function shouldFetch(state, members) {
-//   const posts = state.members[members]
-//   if (!posts) {
-//     return true
-//   }
-//   if (posts.isFetching) {
-//     return false
-//   }
-//   return posts.didInvalidate
-// }
-
-// export function fetchIfNeeded(members) {
-// 	fetch
-// 	debugger;
-//   return (dispatch, getState) => {
-//     // if (shouldFetch(getState(), members)) {
-//       return dispatch(fetch(members))
-//     }
-//   }
-// }
+export function create() {
+  return dispatch => {
+    let id = Date.now()
+    dispatch({
+      type: constants.MEMBERS_CREATE,
+      id: id
+    })
+    dispatch(routeActions.push(`/lid-${id}`))
+  }
+}

@@ -9,83 +9,6 @@ import _ from 'lodash';
 
 import { Link } from 'react-router';
 
-
-
-var permissions = {
-	leden: {
-		read: ["nickname", 
-				"firstname", 
-				"infix", 
-				"lastname", 
-				"gender", 
-				"birthdate", 
-				"deathdate", 
-				"street", 
-				"iban", 
-				"directdebit", 
-				"email", 
-				"mobile", 
-				"membertype", 
-				"membertill", 
-				"functions", 
-				"notes", 
-				"keycode", 
-				"cashregister", 
-				"passwordhash", 
-				"modified"
-		],
-		"write": ["nickname", 
-				"firstname", 
-				"infix", 
-			"lastname", 
-				"gender", 
-				"birthdate", 
-				"deathdate", 
-				"street", 
-				"directdebit", 
-				"email", 
-				"mobile", 
-				"functions", 
-				"notes", 
-		]
-	},
-	bestuur: {
-		read: [
-			"frontdoor"
-		],
-		write: [
-			"zipcode",
-			"city",
-			"country",
-			"iban",
-			"directdebit",
-			"email",
-			"mobile",
-			"phone",
-			"emergencyinfo",
-			"membertype",
-			"membersince",
-			"membertill",
-			"functions",
-			"notes",
-			"wantscontact",
-		]
-	},
-	oudleden: {
-		read: [
-			"frontdoor"
-		]
-	}
-};
-
-
-var zelf =   {
-    "id": "zelf",
-    "name": "Zelf",
-    "description": "jezelf"
-  };
-
-
 class PermissionsView extends React.Component {
 
 	constructor(props) {
@@ -131,6 +54,7 @@ class PermissionsView extends React.Component {
 	}
 
 	getPermissions(group, field) {
+		const {permissions} = this.props
 		var read = _.contains(permissions[group.id].read, field.name),
 			write = _.contains(permissions[group.id].write, field.name);
 
@@ -138,7 +62,7 @@ class PermissionsView extends React.Component {
 	}
 
 	render () {
-		const {groups, members} = this.props
+		const {groups, members, fields, permissions} = this.props
 
 
 		return (
@@ -165,14 +89,14 @@ class PermissionsView extends React.Component {
 							</tr>
 						</thead>
 						<tbody>
-							{_.map(members.schema.fields, (field, i) => 
+							{_.map(fields.schemas.member.fields, (field, i) => 
 								(<tr key={i}>
 									<th>
 										<Link to={`/velden/${field.name}`}>
 											{field.label}
 										</Link>
 									</th>
-									{_.map(groups, (group, i) => 
+									{_.map(groups.items, (group, i) => 
 										(<td key={i}>
 											<span className='permission' onClick={this.show.bind(this, {group:group, field:field})}>
 											{ (({read, write}) => 
@@ -207,10 +131,10 @@ class PermissionsView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const { members, groups } = state
+  const { members, groups, fields, permissions } = state
 
   return {
-    members, groups
+    members, groups, fields, permissions
   }
 }
 

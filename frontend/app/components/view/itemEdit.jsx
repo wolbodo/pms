@@ -11,47 +11,25 @@ export default class ItemEdit extends React.Component {
 		super(props);
 
 		this.handleChange = this.handleChange.bind(this);
-
-		this.state = {
-			model: this.props.item || {}
-		};
 	}
 	handleChange(value, key) {
-		let {onChange} = this.props,
-			{model} = this.state;
-
-		model = update(model, {
-			[key]: {
-				$set: value
-			}
-		})
-
-		this.setState({ model });
+		let {onChange} = this.props;
 
 		console.log("Setting store")
 
 		if (onChange) {
-			onChange(model)
-		}
-	}
-	componentWillReceiveProps(props) {
-		if (props.item !== this.props.item) {
-			console.log("Receiving props: ^ meaningless?");
-
-			this.setState({
-				model: props.item || {}
-			});
+			onChange({
+				[key]: value
+			})
 		}
 	}
 	render() {
-		const {schema, item} = this.props;
+		const {schema, item } = this.props;
 
-		// var model = item;
+		var model = item || {};
 
 		var permissions = schema.permissions || {};
-
-		let {model} = this.state;
-
+		var tabIndex = 0;
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
 			{_.map(schema.form, (fieldset, i) => (
@@ -73,6 +51,7 @@ export default class ItemEdit extends React.Component {
 											<Field 
 												key={key} 
 												field={field}
+												tabIndex={tabIndex++}
 												disabled={permissions.readonly && _.contains(
 													permissions.readonly, 
 													field.name
