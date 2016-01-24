@@ -41,10 +41,28 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     let db = req.db_conn();
     //note bodyparser is still using rustc_serialize, not serde_json!
     let login = match req.get::<bodyparser::Struct<Login>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: "Please send some body!".to_owned()}).unwrap()))),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap()))),
-        Err(err) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap())))
+        Ok(Some(body)) 
+            => body,
+        Ok(None) 
+            => return Ok(Response::with((
+                        status::BadRequest, 
+                        serde_json::to_string(
+                            &SimpleError{error: "Please send some body!".to_owned()}
+                        ).unwrap()
+                    ))),
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) 
+            => return Ok(Response::with((
+                        status::BadRequest, 
+                        serde_json::to_string(
+                            &SimpleError{error: err.to_string()}
+                        ).unwrap()
+                    ))),
+        Err(err) => return Ok(Response::with((
+                        status::BadRequest, 
+                        serde_json::to_string(
+                            &SimpleError{error: err.to_string()}
+                        ).unwrap()
+                    )))
     };
     let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
 
