@@ -13,7 +13,7 @@ postgres_macros = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"
-bodyparser = "*"
+bodyparser = "*" #{git = "https://github.com/jimmycuadra/body-parser.git", branch = "serde" }
 rand = "*"
 time = "*"
 rustc-serialize = "*"

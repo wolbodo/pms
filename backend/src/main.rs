@@ -10,7 +10,7 @@ extern crate hyper;
 extern crate router;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
-extern crate rustc_serialize;
+extern crate rustc_serialize;//remove this line if https://github.com/iron/body-parser/pull/64 gets merged
 
 use persistent::Read;
 use iron::status;
@@ -21,6 +21,7 @@ use serde_json::*;
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 use postgres::error::Error as PgError;
 
+//#[derive(Serialize, Deserialize, Debug, Clone)] //replace line below with this line if https://github.com/iron/body-parser/pull/64 gets merged
 #[derive(Debug, Clone, RustcDecodable)]
 struct Login {
    user: String,
@@ -34,27 +35,37 @@ struct SimpleError {
     error: String
 }
 
+//General notes:
+
+//For status codes, please consult http://racksburg.com/choosing-an-http-status-code/
+
+//Propper use of Authorization header: http://hdknr.bitbucket.org/accounts/bearer.html examples:
+//Client sends: Authorization: Bearer {{JWT}}
+//Server sends: HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Bearer realm="example", error="invalid_token", error_description="The access token expired"
+
+macro_rules! badrequest {
+    ($msg:expr) => (return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
+}
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
     let db = req.db_conn();
-    //note bodyparser is still using rustc_serialize, not serde_json!
+    //Note: bodyparser now still uses rustc_serialize, if https://github.com/iron/body-parser/pull/64 gets merged it will use serde, some small changes are needed, see comments.
     let login = match req.get::<bodyparser::Struct<Login>>() {
         Ok(Some(body)) => body,
-        Ok(None) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: "Please send some body!".to_owned()}).unwrap()))),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap()))),
-        Err(err) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap())))
+        Ok(None) => badrequest!("Please send some body!".to_string()),
+        //Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()), //replace line below with this line if https://github.com/iron/body-parser/pull/64 gets merged
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) => badrequest!(err.to_string()),
+        Err(err) => badrequest!(err.to_string())
     };
     let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
 
     let rows = match stmt.query(&[&login.user, &login.password]) {
         Ok(rows) => rows,
-        Err(PgError::Db(err)) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.message}).unwrap()))),
-        Err(err) => return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: err.to_string()}).unwrap()))),
+        Err(PgError::Db(err)) => badrequest!(err.message),
+        Err(err) => badrequest!(err.to_string()),
     };
-
-    //for status codes, please consult http://racksburg.com/choosing-an-http-status-code/
 
     //let mut userContext = BTreeMap::new();
     //userContext
