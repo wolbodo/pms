@@ -13,8 +13,8 @@ class HeaderBar extends React.Component {
 			<div className='headerBar'>
 				{ changed && (
 				<mdl.Button ripple>
-						Save
-						<mdl.Icon name='more_vert' />
+					Save
+					<mdl.Icon name='more_vert' />
 				</mdl.Button>
 				)}
 			</div>

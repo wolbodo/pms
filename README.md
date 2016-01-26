@@ -13,11 +13,20 @@ npm run build
 
 # Backend
 
-install rustlang
+Install rust (we will later drop the nightly channel).
+```
+curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
+```
 
-Somehow install libssl-dev or openssl-dev
+Install libssl-dev or openssl-dev (for what again?)
+```
+sudo apt-get install -y libssl-dev
+```
 
-sudo apt-get install -y libreadline-dev bison flex #for postgres_macros
+Install some extra dependencies for postgres_macros (sql! macro that syntax checks the SQL at build). Readline is definitly needed, bison and flex are optional.
+```
+sudo apt-get install -y libreadline-dev bison flex
+```
 
 ```
 ./autobuild.sh
@@ -49,6 +58,8 @@ location / {
 ```
 
 # Postgresql Database
+
+Setup database, user, tables and functions.
 ```
 sudo -u postgres psql
 CREATE USER pms;
@@ -58,6 +69,9 @@ CREATE EXTENSION pgcrypto;
 \password pms
 ***
 ***
+\q
+psql -u pms -d pms -f database/create.sql
+psql -u pms -d pms -f database/db-logic.sql
 ```
 
 # Api
