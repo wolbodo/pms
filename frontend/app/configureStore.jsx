@@ -7,7 +7,6 @@ import { syncHistory } from 'redux-simple-router'
 import persistState from 'redux-localstorage';
 import { createHistory } from 'history'
 
-import DevTools from './components/devTools';
 import rootReducer from './reducers'
 
 export const history = createHistory();
@@ -22,7 +21,8 @@ const finalCreateStore = compose(
     createLogger()
   ),
   // Required! Enable Redux DevTools with the monitors you chose
-  DevTools.instrument()
+  window.devToolsExtension ? window.devToolsExtension() : f => f
+  
 )(createStore);
 
 

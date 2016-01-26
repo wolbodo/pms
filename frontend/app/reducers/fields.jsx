@@ -2,6 +2,10 @@ import update from  'react-addons-update';
 import constants from 'constants'
 import initialState from './fields.state.json'
 import _ from 'lodash'
+import Immutable from 'immutable'
+
+
+initialState = Immutable.Map(initialState)
 
 
 // Index depths

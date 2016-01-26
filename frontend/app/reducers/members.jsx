@@ -4,6 +4,7 @@ import constants from 'constants'
 
 const initialState = {
   items: {},
+  updates: {},
   dirty: false
 }
 
@@ -11,20 +12,28 @@ function memberReducer(state = initialState, action) {
   switch (action.type) {
     case constants.MEMBERS_RECEIVE:
       return Object.assign({}, state, {
-        items: _.keyBy(action.members, 'id'),
-        dirty: false
+        items: _.indexBy(action.members, 'id'),
       })
     case constants.MEMBERS_UPDATE:
-    	return update(state, {
-    		items: {
-    			[action.id]:  {
-            $merge: action.member
-          } 
-    		},
-    		dirty: {
-    			$set: true
-    		}
-    	})
+      if (!_.matches(action.member)(state.items[action.id])) {
+        // changed
+      	return update(state, {
+      		items: {
+      			[action.id]:  {
+              $merge: action.member
+            } 
+      		},
+          updates: {
+            $merge: {
+              [action.id]: action.member
+            }
+          },
+      		dirty: {
+      			$set: true
+      		}
+      	})
+      }
+      break;
     case constants.FIELDS_CREATE_MEMBERS_COMMIT:
     	return update(state, {
     		dirty: false
@@ -42,9 +51,8 @@ function memberReducer(state = initialState, action) {
           $set: true
         }
       })
-    default:
-      return state;
   }
+  return state;
 }
 
 

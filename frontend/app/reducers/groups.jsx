@@ -25,6 +25,14 @@ const initialState = {
 
 function groupsReducer(state = initialState, action) {
 	switch (action.type) {
+		case constants.GROUPS_CREATE:
+			return update(state, {
+				items: {
+					$merge: {
+						[action.id]: {}
+					}
+				}
+			})
 		case constants.GROUPS_UPDATE: 
 	    	return update(state, {
 	    		items: {

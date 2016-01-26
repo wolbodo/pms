@@ -33,6 +33,11 @@ body {
 		.mdl-layout__inner-container, .mdl-layout__header {
 			.dark-primary-color;
 		}
+
+		.headerBar {
+			display: flex;
+			
+		}
 		
 		.mdl-layout__header {
 
@@ -78,6 +83,7 @@ body {
 
 		display: flex;
 		flex-wrap: wrap;
+		align-content: flex-start;
 		padding: 0.5rem;
 
 		&.mdl-card {
@@ -92,7 +98,7 @@ body {
 			width: 30rem;
 			margin: 0.5rem;
 			overflow:visible;
-			position:inherit;
+			position:relative;
 			z-index:inherit;
 
 			&.login {
@@ -258,10 +264,10 @@ body {
 	}
 
 	.mdl-data-table {
-	    table-layout: fixed;
+	    // table-layout: fixed;
 		overflow: hidden;
 		border: none;
-		width: 100%;
+		// width: 100%;
 
 		tr {
 			height: 28px;
