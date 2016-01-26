@@ -1,13 +1,21 @@
 # pms
 
-# Frontend
+# Frontend setup
 
-install npm/node
+Install npm/node
 
+Install dependencies
 ```
 npm install
+```
 
-npm run dev
+Start development server
+```
+npm start
+```
+
+Build production frontend
+```
 npm run build
 ```
 
