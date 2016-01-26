@@ -5,9 +5,10 @@ import { connect } from 'react-redux';
 
 class HeaderBar extends React.Component {
 	render() {
+		// `Immutable` types
 		let {members, groups, fields} = this.props
 
-		let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
+		let changed = !members.get('updates').isEmpty() || !groups.get('updates').isEmpty() || !fields.get('updates').isEmpty()
 
 		return (
 			<div className='headerBar'>
@@ -24,7 +25,7 @@ class HeaderBar extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    ...state
+    ...state.app
   }
 }
 

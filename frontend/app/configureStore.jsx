@@ -1,24 +1,37 @@
-import { compose, createStore, combineReducers, applyMiddleware } from 'redux'
+import Immutable from 'immutable'
 
-import createLogger from 'redux-logger'
+import { routeReducer, syncHistory } from 'react-router-redux'
 import thunkMiddleware from 'redux-thunk'
-import { syncHistory } from 'redux-simple-router'
-
+import { compose, createStore, combineReducers, applyMiddleware } from 'redux'
+import { combineReducers as combineImmutableReducers } from 'redux-immutable';
 import persistState from 'redux-localstorage';
+
 import { createHistory } from 'history'
 
-import rootReducer from './reducers'
+// Immutable reducers
+import loggerMiddleware from './middleware/logger'
+import * as appReducers from './reducers';
 
 export const history = createHistory();
 const historyMiddleware = syncHistory(history);
 
+
+
+// Combine the appReducers into one appReducer.
+const appReducer = combineImmutableReducers(appReducers);
+
+// setup the app state. (Immutable)
+const initialAppState = appReducer(Immutable.Map(), {name: 'CONSTRUCT'})
+const initialState = {app: initialAppState}
+
+
 const finalCreateStore = compose(
-  persistState(),
+  // persistState(),
   // Middleware you want to use in development:
   applyMiddleware(
     historyMiddleware,
     thunkMiddleware,
-    createLogger()
+    loggerMiddleware
   ),
   // Required! Enable Redux DevTools with the monitors you chose
   window.devToolsExtension ? window.devToolsExtension() : f => f
@@ -26,8 +39,15 @@ const finalCreateStore = compose(
 )(createStore);
 
 
-export function configureStore(initialState) {
-  const store = finalCreateStore(rootReducer, initialState);
+
+
+export function configureStore(initialState = initialState) {
+  const store = finalCreateStore(
+                  combineReducers({
+                    routing: routeReducer,
+                    app: appReducer
+                  })
+              , initialState);
 
   historyMiddleware.listenForReplays(store);
 

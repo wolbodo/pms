@@ -1,5 +1,3 @@
-
-
 import _ from 'lodash';
 
 import React from 'react';
@@ -83,7 +81,7 @@ class App extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    auth: state.auth
+    auth: state.app.auth.toJS()
   }
 }
 

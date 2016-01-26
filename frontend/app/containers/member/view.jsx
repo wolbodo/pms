@@ -42,14 +42,14 @@ class MemberView extends React.Component {
 
 		return (
 			<List title="Leden" buttons={this.renderButtons()}>
-				<Head schema={fields.schemas.member} fields={headerfields} editLink/>
-				{_.values(members.items).map((row, i) => (
+				<Head schema={fields.getIn(['schemas', 'member'])} fields={headerfields} editLink/>
+				{members.get('items').map((row, i) => (
 					<Row 
 						className="click"
 						key={i} 
 						item={row} 
 						fields={headerfields} 
-						edit={() => history.push(`/lid-${row.id}`)} />
+						edit={() => history.push(`/lid-${row.get('id')}`)} />
 				))}
 			</List>
 		);
@@ -58,7 +58,7 @@ class MemberView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const { members, auth } = state
+  const { members, auth } = state.app
   const fields = state.fields
   const isFetching = false
 
