@@ -3,8 +3,10 @@ import constants from 'constants'
 
 export function update(id, group) {
   return {
-    type: constants.GROUPS_UPDATE,
-    id, group
+    name: constants.GROUPS_UPDATE,
+    data: {
+      id, group
+    }
   }
 }
 
@@ -12,8 +14,10 @@ export function create() {
   return dispatch => {
     let id = Date.now()
     dispatch({
-      type: constants.GROUPS_CREATE,
-      id: id
+      name: constants.GROUPS_CREATE,
+      data: {
+        id: id
+      }
     })
     dispatch(routeActions.push(`/groepen/${id}`))
   }

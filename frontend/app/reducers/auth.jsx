@@ -1,45 +1,56 @@
-import constants from 'constants'
+import Immutable from 'immutable'
 
-const initialState = {
+let CONSTRUCT,
+	AUTH_LOGIN_ERROR,
+	AUTH_LOGIN_REQUEST,
+	AUTH_LOGIN_SUCCESS,
+	AUTH_LOGOUT_REQUEST
+
+CONSTRUCT = () => Immutable.fromJS({
 	loggedIn: false
+})
+
+
+AUTH_LOGIN_ERROR = (auth) => 
+	auth.merge({
+		loading: false
+	})
+
+AUTH_LOGIN_REQUEST = (auth) => 
+	auth.merge({
+		loggedIn: false,
+		loading: true
+	})
+
+AUTH_LOGIN_SUCCESS = (auth, {data}) => {
+	// get the userinfo from the token.
+	let user = JSON.parse(
+		atob(
+			data.token
+				  .split('.')[1]
+				  .replace(/-/g, '+')
+				  .replace(/_/g, '/')
+		)
+	)
+
+	return auth.merge({
+		loggedIn: true,
+		loading: false,
+		token: data.token,
+		user: user
+	})
 }
 
-function update(state = initialState, action) {
-	switch (action.type) {
-		case constants.AUTH_LOGIN_ERROR:
-			return Object.assign({}, state, {
-				loading: false
-			})
-		case constants.AUTH_LOGIN_REQUEST:
-			return Object.assign({}, state, {
-				loggedIn: false,
-				loading: true
-			})
-		case constants.AUTH_LOGIN_SUCCESS:
-			// get the userinfo from the token.
-			let t = action.token.split('.');
-			let user = JSON.parse(
-				atob(
-					t[1].replace(/-/g, '+').replace(/_/g, '/')
-				)
-			)
+AUTH_LOGOUT_REQUEST = (auth) => 
+	auth.merge({
+		loggedIn: false,
+		token: undefined
+	})
 
-
-			return Object.assign({}, state, {
-				loggedIn: true,
-				loading: false,
-				token: action.token,
-				user: user
-			})
-		case constants.AUTH_LOGOUT_REQUEST:
-			return Object.assign({}, state, {
-				loggedIn: false,
-				token: undefined
-			})
-		default:
-			return state;
-	}
+export {
+	CONSTRUCT,
+	AUTH_LOGIN_ERROR,
+	AUTH_LOGIN_REQUEST,
+	AUTH_LOGIN_SUCCESS,
+	AUTH_LOGOUT_REQUEST
 }
-
-
-export default update

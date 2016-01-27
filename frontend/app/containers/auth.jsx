@@ -97,7 +97,7 @@ class Logout extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { members } = state
+  const members = state.app.get('members').toJS()
   const isFetching = false
 
   return {

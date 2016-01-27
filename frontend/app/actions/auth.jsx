@@ -4,28 +4,35 @@ import constants from 'constants'
 
 function login_request() {
   return {
-    type: constants.AUTH_LOGIN_REQUEST
+    name: constants.AUTH_LOGIN_REQUEST
   }
 }
 
 function login_success(token) {
   return {
-    type: constants.AUTH_LOGIN_SUCCESS,
-    token: token
+    name: constants.AUTH_LOGIN_SUCCESS,
+    data: {
+      token: token
+    }
   }
 //   FixeMe? 
 }
 function login_error(err) {
   return {
-    type: constants.AUTH_LOGIN_ERROR,
-    error: err
+    name: constants.AUTH_LOGIN_ERROR,
+    error: {
+      message: err.toString(),
+      error: err
+    }
   }
 }
 function login_request(username, password) {
   return {
-    type: constants.AUTH_LOGIN_REQUEST,
-    username: username,
-    password: password
+    name: constants.AUTH_LOGIN_REQUEST,
+    data: {
+      username: username,
+      password: password
+    }
   }
 }
 
@@ -61,7 +68,7 @@ export function login(username, password) {
 
 export function logout() {
   return {
-    type: constants.AUTH_LOGOUT_REQUEST
+    name: constants.AUTH_LOGOUT_REQUEST
   }
 }
 
@@ -69,7 +76,7 @@ export function requireLogin(store) {
   return (nextState, replaceState) => {
     const state = store.getState()
 
-    if (!state.app.auth.get('loggedIn')) {
+    if (!state.app.getIn(['auth', 'loggedIn'])) {
       replaceState({ nextPathname: nextState.location.pathname }, '/login')
     }
 

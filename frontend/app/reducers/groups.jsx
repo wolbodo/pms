@@ -1,8 +1,11 @@
-import update from  'react-addons-update';
-import constants from 'constants'
 import Immutable from 'immutable'
 
-const initialState = Immutable.fromJS({
+let CONSTRUCT,
+    GROUPS_CREATE,
+    GROUPS_UPDATE
+
+
+CONSTRUCT = () => Immutable.fromJS({
   items: {
       bestuur: {
         "id": "bestuur",
@@ -24,25 +27,23 @@ const initialState = Immutable.fromJS({
   dirty: false
 })
 
-function groupsReducer(state = initialState, action) {
+GROUPS_CREATE = (groups, {data}) => 
+    state.mergeDeep({
+        items: {
+            [data.id]: {}
+        }
+    })
+
+
+GROUPS_UPDATE = (groups, {data}) => 
+    state.mergeDeep({
+        items: {
+            [data.id]: data.group
+        }
+    })
     
-    switch (action.type) {
-        case constants.GROUPS_CREATE:
-            return state.mergeDeep({
-                items: {
-                    [action.id]: {}
-                }
-            })
-        case constants.GROUPS_UPDATE: 
-            return state.mergeDeep({
-                items: {
-                    [action.id]: action.group
-                }
-            })
-        default:
-            return state;
-    }
+export {
+  CONSTRUCT,
+  GROUPS_CREATE,
+  GROUPS_UPDATE
 }
-
-
-export default groupsReducer

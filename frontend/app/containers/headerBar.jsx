@@ -1,6 +1,7 @@
 
 import React from 'react';
 import * as mdl from 'react-mdl';
+import _ from 'lodash'
 import { connect } from 'react-redux';
 
 class HeaderBar extends React.Component {
@@ -8,7 +9,7 @@ class HeaderBar extends React.Component {
 		// `Immutable` types
 		let {members, groups, fields} = this.props
 
-		let changed = !members.get('updates').isEmpty() || !groups.get('updates').isEmpty() || !fields.get('updates').isEmpty()
+		let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
 
 		return (
 			<div className='headerBar'>
@@ -25,7 +26,7 @@ class HeaderBar extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    ...state.app
+    ...state.app.toJS()
   }
 }
 

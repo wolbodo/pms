@@ -43,7 +43,7 @@ export default class GroupView extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { groups, fields } = state
+	  const { groups, fields } = state.app.toJS()
 
 	  return {
 	    groups, fields

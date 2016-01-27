@@ -81,7 +81,7 @@ class App extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    auth: state.app.auth.toJS()
+    auth: state.app.get('auth').toJS()
   }
 }
 

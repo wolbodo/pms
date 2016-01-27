@@ -1,15 +1,21 @@
-import update from  'react-addons-update';
-import constants from 'constants'
 import initialState from './fields.state.json'
 import Immutable from 'immutable'
-
-
-let _initialState = Immutable.fromJS(initialState).merge({updates: {}})
 
 // Index depths
 const FIELD = 2,
       SET   = 1,
       GROUP = 0;
+
+let CONSTRUCT,
+    FIELDS_MOVE_SCHEMAFIELD,
+    FIELDS_CREATE_FIELDSET,
+    FIELDS_UPDATE_FIELD
+
+CONSTRUCT = () => 
+  Immutable.fromJS(initialState)
+           .merge({updates: {}})
+
+
 
 function moveSchemaField(schema, fromIndex, toIndex) {
 
@@ -62,22 +68,24 @@ function createSchemaSet(schema, fromIndex, toIndex) {
 }
 
 
-function fieldreducer(state = _initialState, action) {
-  let schema = state.getIn('schemas', action.schema),
-    {fromIndex, toIndex} = action;
+FIELDS_MOVE_SCHEMAFIELD = (fields, {data}) =>
+  fields.updateIn(['schemas', data.schema], 
+                  moveSchemaField(fields.getIn(['schemas', data.schema]), 
+                                  data.fromIndex, data.toIndex))
 
-  switch (action.type) {
-    case constants.FIELDS_MOVE_SCHEMAFIELD:
-      return schema.updateIn(['schemas', action.schema], moveSchemaField(schema, fromIndex, toIndex))
-    case constants.FIELDS_CREATE_FIELDSET:
-      return schema.updateIn(['schemas', action.schema], createSchemaSet(schema, fromIndex, toIndex))
-    case constants.FIELDS_UPDATE_FIELD:
-      return schema.updateIn(['schemas', action.schema, 'fields', action.id], 
-                            field => field.merge(action.field))
-    default:
-      return state;
-  }
+FIELDS_CREATE_FIELDSET = (fields, {data}) =>
+  fields.updateIn(['schemas', data.schema], 
+                  createSchemaSet(fields.getIn(['schemas', data.schema]), 
+                                  data.fromIndex, data.toIndex))
+
+FIELDS_UPDATE_FIELD = (fields, {data}) =>
+  fields.updateIn(['schemas', data.schema, 'fields', data.id], 
+                    field => field.merge(data.field))
+
+
+export {
+  CONSTRUCT,
+  FIELDS_MOVE_SCHEMAFIELD,
+  FIELDS_CREATE_FIELDSET,
+  FIELDS_UPDATE_FIELD
 }
-
-
-export default fieldreducer

@@ -35,7 +35,7 @@ export default class MemberEdit extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { members, fields, auth } = state
+	  const { members, fields, auth } = state.app.toJS()
 	  const isFetching = false
 
 	  return {

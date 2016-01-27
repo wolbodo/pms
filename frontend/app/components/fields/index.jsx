@@ -10,7 +10,7 @@ export default {
 	Option,
 	Array,
 	Boolean,
-	Date,
-	Enum,
+	Date: Text,
+	Enum: Text,
 	Text
 }
