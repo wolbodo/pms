@@ -28,18 +28,18 @@ function moveSchemaField(schema, fromIndex, toIndex) {
       // remove the field first, then add
       schema = schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
                                 fieldset => fieldset.splice(fromIndex[FIELD], 1))
-                     .updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
+                     .updateIn(['form', toIndex[GROUP], 'fields', toIndex[SET]], 
                                 fieldset => fieldset.splice(toIndex[FIELD], 0, field))
     } else {
       // other way around
-      schema = schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]],
+      schema = schema.updateIn(['form', toIndex[GROUP], 'fields', toIndex[SET]],
                                 fieldset => fieldset.splice(toIndex[FIELD], 0, field))
                      .updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
                                 fieldset => fieldset.splice(fromIndex[FIELD], 1))
     }
 
     // remove old fieldset if it was empty
-    var old_fieldset = schema.getIn([fromIndex[GROUP], 'fields', fromIndex[SET]]);
+    var old_fieldset = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]);
     if (old_fieldset.isEmpty()) {
       schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fields => fields.splice(fromIndex[SET], 1))
     }
@@ -54,27 +54,27 @@ function createSchemaSet(schema, fromIndex, toIndex) {
   schema = schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
                             fieldset => fieldset.splice(fromIndex[FIELD], 1))
 
-  // add in the new place.
-  schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fieldsets => fieldset.splice(toIndex[SET], 0, [field]))
-
   // remove old fieldset if it was empty
-  var old_fieldset = schema.getIn([fromIndex[GROUP], 'fields', fromIndex[SET]]);
-
+  var old_fieldset = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]);
+  debugger;
   if (old_fieldset.isEmpty()) {
     schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fields => fields.splice(fromIndex[SET], 1))
   }
+  
+  // add in the new place.
+  schema = schema.updateIn(['form', toIndex[GROUP], 'fields'], fieldsets => fieldsets.splice(toIndex[SET], 0, [field]))
   // return updated schema
   return schema;
 }
 
 
 FIELDS_MOVE_SCHEMAFIELD = (fields, {data}) =>
-  fields.updateIn(['schemas', data.schema], 
+  fields.setIn(['schemas', data.schema], 
                   moveSchemaField(fields.getIn(['schemas', data.schema]), 
                                   data.fromIndex, data.toIndex))
 
 FIELDS_CREATE_FIELDSET = (fields, {data}) =>
-  fields.updateIn(['schemas', data.schema], 
+  fields.setIn(['schemas', data.schema], 
                   createSchemaSet(fields.getIn(['schemas', data.schema]), 
                                   data.fromIndex, data.toIndex))
 
