@@ -15,10 +15,10 @@ function receive(members) {
 
 function shouldFetchMembers(state) {
   if (state.app.getIn(['members', 'updates']).isEmpty()) {
-    return false
+    return true
   } else {
     // check timestamp?
-    return true
+    return false
   }
 }
 

@@ -10,7 +10,6 @@ CONSTRUCT = () =>
 PERMISSION_SET = (permissions) => 
 	permissions
 
-
 export {
 	CONSTRUCT,
 	PERMISSION_SET

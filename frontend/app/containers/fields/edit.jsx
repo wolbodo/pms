@@ -28,10 +28,8 @@ class FieldsEdit extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { fields } = state
-
 	  return {
-	    fields
+	    fields: state.app.get('fields').toJS()
 	  }
 	})
 	(FieldsEdit);

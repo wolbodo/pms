@@ -4,7 +4,7 @@ import * as mdl from 'react-mdl'
 
 export default class Option extends React.Component {
 	render() {
-		let { name, label, value, disabled,
+		let { name, label, value, disabled, options,
 			  onChange, onBlur } = this.props
 
 		return (

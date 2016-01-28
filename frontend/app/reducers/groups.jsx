@@ -28,7 +28,7 @@ CONSTRUCT = () => Immutable.fromJS({
 })
 
 GROUPS_CREATE = (groups, {data}) => 
-    state.mergeDeep({
+    groups.mergeDeep({
         items: {
             [data.id]: {}
         }
@@ -36,12 +36,12 @@ GROUPS_CREATE = (groups, {data}) =>
 
 
 GROUPS_UPDATE = (groups, {data}) => 
-    state.mergeDeep({
+    groups.mergeDeep({
         items: {
             [data.id]: data.group
         }
     })
-    
+
 export {
   CONSTRUCT,
   GROUPS_CREATE,

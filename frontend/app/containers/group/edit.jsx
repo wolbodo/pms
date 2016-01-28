@@ -30,10 +30,9 @@ class GroupEdit extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { groups, fields } = state
-
 	  return {
-	    groups, fields
+	    groups: state.app.get('groups').toJS(), 
+	    fields: state.app.get('fields').toJS()
 	  }
 	})
 	(GroupEdit);

@@ -42,10 +42,7 @@ AUTH_LOGIN_SUCCESS = (auth, {data}) => {
 }
 
 AUTH_LOGOUT_REQUEST = (auth) => 
-	auth.merge({
-		loggedIn: false,
-		token: undefined
-	})
+	CONSTRUCT()
 
 export {
 	CONSTRUCT,
