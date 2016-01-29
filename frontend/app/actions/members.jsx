@@ -40,7 +40,8 @@ export function update(id, member) {
   return {
     name: constants.MEMBERS_UPDATE,
     data: {
-      id, member
+      id: parseInt(id, 10), 
+      member
     }
   }
 }
@@ -51,7 +52,7 @@ export function create() {
     dispatch({
       name: constants.MEMBERS_CREATE,
       data: {
-        id: id
+        id: parseInt(id, 10)
       }
     })
     dispatch(routeActions.push(`/lid-${id}`))

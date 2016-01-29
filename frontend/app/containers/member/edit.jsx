@@ -25,6 +25,7 @@ export default class MemberEdit extends React.Component {
 				schema={fields.schemas.member}
 				item={members.items[member_id]}
 				onChange={member => {
+					console.log("Updating", member_id, member)
 					dispatch(actions.members.update(member_id, member))
 				}} />
 		);

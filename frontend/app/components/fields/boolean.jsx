@@ -12,8 +12,8 @@ export default class Boolean extends React.Component {
 				checked={!!value || false}
 				label={label}
 				disabled={disabled}
-				onBlur={(e) => onBlur(e.target.value)}
-				onChange={e => onChange(e.target.value)}>
+				onBlur={(e) => onBlur(e.target.checked)}
+				onChange={e => onChange(e.target.checked)}>
 
 			</mdl.Checkbox>
 		)

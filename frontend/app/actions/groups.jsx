@@ -5,7 +5,8 @@ export function update(id, group) {
   return {
     name: constants.GROUPS_UPDATE,
     data: {
-      id, group
+      id: parseInt(id, 10), 
+      group
     }
   }
 }
@@ -16,7 +17,7 @@ export function create() {
     dispatch({
       name: constants.GROUPS_CREATE,
       data: {
-        id: id
+        id: parseInt(id, 10)
       }
     })
     dispatch(routeActions.push(`/groepen/${id}`))

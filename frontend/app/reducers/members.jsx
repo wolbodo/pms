@@ -22,12 +22,13 @@ MEMBERS_RECEIVE = (members, {data}) =>
   })
 
 MEMBERS_UPDATE = (members, {data}) => {
+  console.log("MEMBERS_UPDATE", members.toJS(), data)
   if (!fromJS(data.member).equals(
     members.getIn(['items', data.id])
   )) {
     // changed
     return members.updateIn(['items', data.id], member => (member || Map()).mergeDeep(data.member))
-                .update('updates', updates => updates.mergeDeep({[data.id]: data.member}))
+                  .update('updates', updates => updates.mergeDeep({[data.id]: data.member}))
   }
   return members
 }

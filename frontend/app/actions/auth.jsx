@@ -22,7 +22,7 @@ function login_error(err) {
     name: constants.AUTH_LOGIN_ERROR,
     error: {
       message: err.toString(),
-      error: err
+      err: err
     }
   }
 }
