@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import * as mdl from 'react-mdl'
 import { connect } from 'react-redux';
 
-import {Popover} from 'material-ui';
+import {Dialog, FlatButton} from 'material-ui';
 
 import _ from 'lodash';
 
@@ -17,22 +17,15 @@ class PermissionsView extends React.Component {
 		this.state = {};
 	}
 
-	showPopover(state, e) {
+	showDialog(state) {
 	  this.setState({
-	    popupState:state,
-	    anchorEl:e.currentTarget
+	    dialogState:state
 	  });
 	}
-	closePopover() {
+	closeDialog() {
 		this.setState({
-	    	popupState:undefined
+	    	dialogState:undefined
 	  	});
-	}
-
-	clickTable(e) {
-		if (!_.contains(e.target.className, 'mdl-button')) {
-			() => this.closePopove
-		}
 	}
 
 	getPermissions(group, field) {
@@ -43,15 +36,38 @@ class PermissionsView extends React.Component {
 		return {read: read, write: write};
 	}
 
-	renderPopover() {
-		const {popupState} = this.state
-		return (!!popupState && (
-			<mdl.Card>
-				<mdl.CardTitle>
-					{ `Wijzigen permissies voor '${ popupState.group.name }' op veld '${popupState.field.label}'` }
-				</mdl.CardTitle>
-			</mdl.Card>
-		)) || (<div />)
+	renderDialog() {
+		const {dialogState} = this.state
+
+
+        const actions = [
+          <FlatButton
+            label="Annuleren"
+            secondary={true}
+            onTouchTap={() => this.closeDialog()}
+          />,
+          <FlatButton
+            label="Opslaan"
+            primary={true}
+            onTouchTap={() => this.closeDialog()}
+          />,
+        ];
+
+
+		return (
+            <Dialog
+              title="Permissies wijzigen"
+              className="permissions-dialog"
+              actions={actions}
+              modal={false}
+              open={!!dialogState}
+              onRequestClose={() => this.closeDialog()}
+            >
+            	{ !!dialogState && (
+	            	<h5>{dialogState.group.name}: {dialogState.field.label}</h5>
+        		) || (<div />)}
+			</Dialog>
+		) 
 	}
 	renderHeading() {
 		const {groups} = this.props
@@ -86,7 +102,7 @@ class PermissionsView extends React.Component {
 						</th>
 						{_.map(groups.items, (group, i) => 
 							(<td key={i}>
-								<span className='permission' onClick={(e) => this.showPopover({group:group, field:field}, e)}>
+								<span className='permission' onClick={() => this.showDialog({group:group, field:field})}>
 								{ (({read, write}) => 
 									[read ? <i className='icon'>visibility</i>
 										  : <i className='icon dimmed'>visibility_off</i>,
@@ -118,12 +134,7 @@ class PermissionsView extends React.Component {
 						{ this.renderHeading() }
 						{ this.renderBody() }
 					</table>
-					<Popover open={!!this.state.popupState}
-					  anchorEl={this.state.anchorEl}
-					  anchorOrigin={{horizontal: 'left', vertical: 'top'}}
-					  onRequestClose={() => this.closePopover()} >
-					  { this.renderPopover() }
-					</Popover>
+				  	{ this.renderDialog() }
 				</mdl.CardText>
 			</mdl.Card>
 		)

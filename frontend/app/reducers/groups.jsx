@@ -39,6 +39,9 @@ GROUPS_UPDATE = (groups, {data}) =>
     groups.mergeDeep({
         items: {
             [data.id]: data.group
+        },
+        updates: {
+          [data.id]: data.group
         }
     })
 

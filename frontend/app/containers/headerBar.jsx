@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import { routeActions } from 'react-router-redux'
 
 
-import {Popover, Dialog, FlatButton} from 'material-ui';
+import {Dialog, FlatButton, Divider} from 'material-ui';
 
 class HeaderBar extends React.Component {
     constructor(props) {
@@ -28,11 +28,10 @@ class HeaderBar extends React.Component {
         })
     }
 
-    render() {
+    renderDialog() {
         let {members, groups, fields, dispatch} = this.props
         let {dialogOpen} = this.state
 
-        let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
         const actions = [
           <FlatButton
             label="Annuleren"
@@ -47,6 +46,57 @@ class HeaderBar extends React.Component {
         ];
           
         return (
+            <Dialog
+              title="Opslaan wijzigingen"
+              className="change-dialog"
+              actions={actions}
+              modal={false}
+              open={dialogOpen}
+              onRequestClose={() => this.closeDialog()}
+            >
+            { !_.isEmpty(members.updates) && (
+                <div>
+                    <h6>Leden</h6>
+                    <ul>
+                        {_.map(members.updates, (member, id) => (
+                            <li key={id}>
+                                <p>{members.items[id].nickname} Gewijzigd</p>
+                                <ul>
+                                    {_.map(member, (value, key) => (
+                                        <li key={key}>{key}: {value}</li>
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            { !_.isEmpty(groups.updates) && (
+                <div>
+                    <h6>Groepen</h6>
+                    <ul>
+                        {_.map(groups.updates, (group, id) => (
+                            <li key={id}>
+                                <p>{groups.items[id].name} Gewijzigd</p>
+                                <ul>
+                                    {_.map(group, (value, key) => (
+                                        <li key={key}>{key}: {value}</li>
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            </Dialog>
+        )
+    }
+
+    render() {
+        let {members, groups, fields, dispatch} = this.props
+        let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
+
+        return (
             <div className='headerBar'>
                 { changed && (
                     <mdl.Button 
@@ -56,17 +106,7 @@ class HeaderBar extends React.Component {
                         Opslaan
                     </mdl.Button>
                 ) || (<div />)}
-                <Dialog
-                  title="Opslaan wijzigingen"
-                  actions={actions}
-                  modal={false}
-                  open={dialogOpen}
-                  onRequestClose={() => this.closeDialog()}
-                >
-                {_.map(members.updates, (member, id) => (
-                    <p key={id}>{members.items[id].nickname} Gewijzigd</p>
-                ))}
-                </Dialog>
+                {this.renderDialog()}
             </div>
         )
     }
