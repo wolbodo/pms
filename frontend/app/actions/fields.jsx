@@ -28,7 +28,7 @@ export function updateField(schema, id, field) {
 	return {
 		name: constants.FIELDS_UPDATE_FIELD,
 		data: {
-			id: parseInt(id, 10), 
+			id: id.toString(), 
 			schema, 
 			field
 		}

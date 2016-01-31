@@ -13,22 +13,28 @@ import { createHistory } from 'history'
 
 // Immutable reducers
 import combineImmutableReducers from './combineImmutableReducers';
-import * as appReducers from './reducers';
 
 export const history = createHistory();
 const historyMiddleware = syncHistory(history);
 
-// Combine the appReducers into one appReducer.
-const appReducer = combineImmutableReducers(appReducers);
 
-// Wrap rootreducer to delete entire state when logging out
-let rootReducer = (reducers => (state, action) => 
-    ((action.type || action.name) === 'AUTH_LOGOUT_REQUEST')
-    ? reducers({}, {name: "CONSTRUCT"})
-    : reducers(state, action)
-  )(combineReducers({routing: routeReducer, app: appReducer}))
+function createAppReducers() {
+  // import * as appReducers from './reducers';
+  let appReducers = require('reducers')
+  
+  // Combine the appReducers into one appReducer.
+  const appReducer = combineImmutableReducers(appReducers);
 
-let initialState = rootReducer({}, {name: "CONSTRUCT"})
+  // Wrap rootreducer to delete entire state when logging out
+  return (reducers => (state, action) => 
+      ((action.type || action.name) === 'AUTH_LOGOUT_REQUEST')
+      ? reducers({}, {name: "CONSTRUCT"})
+      : reducers(state, action)
+    )(combineReducers({routing: routeReducer, app: appReducer}))
+}
+
+let appReducer = createAppReducers();
+let initialState = appReducer({}, {name: "CONSTRUCT"})
 
 
 const finalCreateStore = compose(
@@ -69,14 +75,14 @@ const finalCreateStore = compose(
 
 export function configureStore(initialState = initialState) {
 
-  const store = finalCreateStore(rootReducer, initialState);
+  const store = finalCreateStore(appReducer, initialState);
 
   historyMiddleware.listenForReplays(store);
 
   // Hot reload reducers (requires Webpack or Browserify HMR to be enabled)
   if (module.hot) {
     module.hot.accept('reducers', () =>
-      store.replaceReducer(require('reducers')/*.default if you use Babel 6+ */)
+      store.replaceReducer(createAppReducers())
     );
   }
 

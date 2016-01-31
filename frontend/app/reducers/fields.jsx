@@ -19,8 +19,7 @@ CONSTRUCT = () =>
 
 function moveSchemaField(schema, fromIndex, toIndex) {
 
-    const field = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[1], fromIndex[2]])
-
+    const field = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET], fromIndex[FIELD]])
     // move (delete and add) the field from fromIndex to toIndex.
 
     // mind the order, 
@@ -37,8 +36,7 @@ function moveSchemaField(schema, fromIndex, toIndex) {
                      .updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
                                 fieldset => fieldset.splice(fromIndex[FIELD], 1))
     }
-
-    // remove old fieldset if it was empty
+    // remove old fieldset if it was empty    
     var old_fieldset = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]);
     if (old_fieldset.isEmpty()) {
       schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fields => fields.splice(fromIndex[SET], 1))
@@ -48,21 +46,33 @@ function moveSchemaField(schema, fromIndex, toIndex) {
 }
 
 function createSchemaSet(schema, fromIndex, toIndex) {
+  // get field to move.
   const field = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET], fromIndex[FIELD]])
+  console.log("Moving field:", field, fromIndex, toIndex)
 
   // remove from old place.
   schema = schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]], 
                             fieldset => fieldset.splice(fromIndex[FIELD], 1))
 
+  console.log("From:", schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]).toJS())
+  console.log("To:",   schema.getIn(['form', toIndex[GROUP]]).toJS())
+  
+
+  // add in the new place.
+  schema = schema.updateIn(['form', toIndex[GROUP], 'fields'], fieldsets => fieldsets.splice(toIndex[SET], 0, Immutable.List([field])))
+
+  let fromIndexSet = fromIndex[SET]
+  // if the new fieldset was created in the same group, and before the empty old fieldset, the fromIndex[SET] index has increased by 1.
+  if ((fromIndex[GROUP] === toIndex[GROUP]) && (fromIndex[SET] > toIndex[SET])) {
+    fromIndexSet += 1
+  } 
+
   // remove old fieldset if it was empty
-  var old_fieldset = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]);
-  debugger;
+  var old_fieldset = schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndexSet]);
   if (old_fieldset.isEmpty()) {
-    schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fields => fields.splice(fromIndex[SET], 1))
+    schema = schema.updateIn(['form', fromIndex[GROUP], 'fields'], fields => fields.splice(fromIndexSet, 1))
   }
   
-  // add in the new place.
-  schema = schema.updateIn(['form', toIndex[GROUP], 'fields'], fieldsets => fieldsets.splice(toIndex[SET], 0, [field]))
   // return updated schema
   return schema;
 }
@@ -81,7 +91,6 @@ FIELDS_CREATE_FIELDSET = (fields, {data}) =>
 FIELDS_UPDATE_FIELD = (fields, {data}) =>
   fields.updateIn(['schemas', data.schema, 'fields', data.id], 
                     field => field.merge(data.field))
-
 
 export {
   CONSTRUCT,

@@ -16,7 +16,7 @@ MEMBERS_RECEIVE = (members, {data}) =>
   members.merge({
     items: fromJS(data.members)
                     .reduce(
-                      (lookup, item) => lookup.set(item.get('id'), item),
+                      (lookup, item) => lookup.set(item.get('id').toString(), item),
                       Map()
                     )
   })
