@@ -4,6 +4,7 @@ import * as mdl from 'react-mdl';
 import _ from 'lodash'
 import { connect } from 'react-redux';
 import { routeActions } from 'react-router-redux'
+import actions from 'actions'
 
 
 import {Dialog, FlatButton, Divider} from 'material-ui';
@@ -92,6 +93,11 @@ class HeaderBar extends React.Component {
         )
     }
 
+    saveCurrent() {
+        let {members, groups, fields, dispatch} = this.props
+        dispatch(actions.members.commit())
+    }
+
     render() {
         let {members, groups, fields, dispatch} = this.props
         let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
@@ -102,7 +108,7 @@ class HeaderBar extends React.Component {
                     <mdl.Button 
                         ripple 
                         id="header-save-button" 
-                        onClick={e => this.showDialog()} >
+                        onClick={() => this.saveCurrent()} >
                         Opslaan
                     </mdl.Button>
                 ) || (<div />)}

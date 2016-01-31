@@ -23,13 +23,40 @@ export default class ItemEdit extends React.Component {
 			})
 		}
 	}
+
+	renderField(fieldname, key) {
+		const {schema, permissions, item} = this.props
+
+		let field = schema.fields[fieldname]
+		let disabled = !_.includes(permissions.write, fieldname)
+
+
+		return (
+			<Field 
+				key={key} 
+				field={field}
+				tabIndex="0"
+				disabled={disabled}
+				onChange={this.handleChange}
+				value={item[field.name]} />
+		)
+	}
+	renderFieldSet(fields, key) {
+		return (
+			<div key={key} className="mdl-card__formset">
+			{
+				// Turn fields into array if not already.
+				(_.isArray(fields) 
+					? fields
+					: [fields]
+				).map(this.renderField.bind(this))
+			}
+			</div>
+		)
+	}
 	render() {
 		const {schema, item } = this.props;
 
-		var model = item || {};
-
-		var permissions = schema.permissions || {};
-		var tabIndex = 0;
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
 			{_.map(schema.form, (fieldset, i) => (
@@ -38,30 +65,7 @@ export default class ItemEdit extends React.Component {
 						{fieldset.title}
 					</mdl.CardTitle>
 					<div className="mdl-card__form">
-						{_.map(fieldset.fields, (fields, key) => (
-							<div key={key} className="mdl-card__formset">
-								{(_.isArray(fields) 
-									? fields
-									: [fields]
-								).map(
-									(fieldname, key) => {
-										let field = schema.fields[fieldname]
-
-										return (
-											<Field 
-												key={key} 
-												field={field}
-												tabIndex={tabIndex}
-												disabled={permissions.readonly
-													&& (field.name in permissions.readonly)
-													|| field.readonly}
-												onChange={this.handleChange}
-												value={model[field.name]} />
-										)
-									}
-								)}
-							</div>
-						))}
+						{ _.map(fieldset.fields, this.renderFieldSet.bind(this)) }
 					</div>
 				</mdl.Card>
 
@@ -70,4 +74,4 @@ export default class ItemEdit extends React.Component {
 
 		)
 	}
-}
+} 

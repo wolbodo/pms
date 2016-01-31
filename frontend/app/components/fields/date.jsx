@@ -10,21 +10,19 @@ export default class Date extends React.Component {
               onChange, onBlur } = this.props
 
         return (
-            <p>{name}</p>
+        <DatePicker 
+            className="datepicker"
+            container="dialog"
+            autoOk={true}
+            disabled={disabled}
+            floatingLabelText={label} 
+            open={!disabled} 
+            style={{
+                width: '125px'
+            }} 
+            textFieldStyle={{
+                width: '125px'
+            }} />
         );
-            // <DatePicker 
-            //     className="datepicker"
-                // container="dialog"
-                // onShow={function () {return disabled && this.onRequestClose()} }
-                // autoOk={true}
-                // disabled={disabled}
-                // floatingLabelText={label} 
-                // open={!disabled} 
-                // style={{
-                //     width: '125px'
-                // }} 
-                // textFieldStyle={{
-                //     width: '125px'
-                // }} />
     }
 }

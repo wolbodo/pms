@@ -36,6 +36,12 @@ export function fetch(token) {
   }
 }
 
+export function commit() {
+  return {
+    name: 'FIELDS_CREATE_MEMBERS_COMMIT'
+  }
+}
+
 export function update(id, member) {
   return {
     name: constants.MEMBERS_UPDATE,

@@ -34,7 +34,8 @@ MEMBERS_UPDATE = (members, {data}) => {
 }
 
 FIELDS_CREATE_MEMBERS_COMMIT = (members, {data}) =>
-  members.merge({updates: {}})
+  members.merge({updates: undefined})
+         .merge({updates: {}})
   
 MEMBERS_CREATE = (members, {data}) =>
   members.update('items', items => items.merge({[data.id]: {id: data.id}}))

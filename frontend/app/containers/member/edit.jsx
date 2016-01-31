@@ -10,38 +10,44 @@ import { connect } from 'react-redux';
 import actions from 'actions'
 
 export default class MemberEdit extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-	render() {
-		const {params, members, fields, dispatch, auth} = this.props;
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        const {
+            params, dispatch,
+            members, fields, auth, permissions
+        } = this.props;
 
-		// var data = _.find(stub, group => group.id === params.groep);
+        // var data = _.find(stub, group => group.id === params.groep);
 
-		let member_id = params.id || auth.user.user
+        let member_id = params.id || auth.user.user
 
-		return (
-			<ItemEdit
-				schema={fields.schemas.member}
-				item={members.items[member_id]}
-				onChange={member => {
-					console.log("Updating", member_id, member)
-					dispatch(actions.members.update(member_id, member))
-				}} />
-		);
-	}
+        return (
+            <ItemEdit
+                schema={fields.schemas.member}
+                item={members.items[member_id]}
+                permissions={permissions.leden}
+                onChange={member => {
+                    console.log("Updating", member_id, member)
+                    dispatch(actions.members.update(member_id, member))
+                }} />
+        );
+    }
 }
 
 
 
 export default connect(
-	function mapStateToProps(state) {
-	  const { members, fields, auth } = state.app.toJS()
-	  const isFetching = false
+    function mapStateToProps(state) {
+        const {
+            members, fields, auth, permissions 
+        } = state.app.toJS()
 
-	  return {
-	    members, fields, auth
-	  }
-	})
-	(MemberEdit);
+        return {
+            members, fields, auth, permissions
+        }
+
+    })
+    (MemberEdit);
 
