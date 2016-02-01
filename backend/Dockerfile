@@ -3,13 +3,11 @@
 #
 # https://github.com/dockerfile/nodejs-bower-gulp-runtime
 #
-FROM jimmycuadra/rust
+FROM busybox
 
 WORKDIR /app
 
-COPY . .
-
-RUN cargo build
+COPY target/release/ .
 
 
 # Define default command.

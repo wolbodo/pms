@@ -1,6 +1,6 @@
 import $fetch from 'isomorphic-fetch'
 import constants from 'constants'
-import { routeActions } from 'redux-simple-router'
+import { routeActions } from 'react-router-redux'
 
 
 function receive(members) {
