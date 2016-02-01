@@ -9,6 +9,8 @@ build:
         - npm config set registry https://registry.npmjs.org/
         - npm install 
         - npm run build
+        - cd ../backend
+        - cargo build
         - cd ..
         - docker-compose pull
         - docker-compose build

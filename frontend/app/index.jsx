@@ -12,10 +12,11 @@ import routes from 'routes'
 import {history, configureStore} from 'configureStore'
 
 // Reference static files so they are loaded with webpack.
-import 'app.less';
-import 'material';
-import 'material.css';
-import 'favicon.png';
+import 'file?name=[name].[ext]!../index.html'
+import 'app.less'
+import 'material'
+import 'material.css'
+import 'favicon.png'
 
 //Needed for onTouchTap
 //Can go away when react 1.0 release
