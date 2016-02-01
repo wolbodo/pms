@@ -1,8 +1,4 @@
 
-
-postgres:
-    image: postgres
-
 frontend: 
     build: frontend
     ports:
@@ -20,4 +16,10 @@ backend:
         - VIRTUAL_PORT=4242
         - CERT_NAME=dxlb.nl
     links:
-        - postgres
+        - postgres:postgres
+
+postgres:
+    image: postgres
+    volumes:
+        - /opt/postgresql/pms:/var/lib/postgresql/data
+

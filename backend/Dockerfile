@@ -5,6 +5,7 @@
 #
 FROM busybox
 
+RUN mkdir /app
 WORKDIR /app
 
 COPY target/release/ .
@@ -12,4 +13,4 @@ COPY target/release/ .
 
 # Define default command.
 # Setup server
-CMD ["cargo", "run"]
+CMD ["./backend"]
