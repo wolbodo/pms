@@ -7,6 +7,12 @@ frontend:
         - VIRTUAL_HOST=pms.dxlb.nl
         - CERT_NAME=dxlb.nl
 
+pms_postgres:
+    image: postgres
+    volumes:
+        - /opt/postgresql/pms:/var/lib/postgresql/data
+
+
 backend:
     build: backend
     ports: 
@@ -16,10 +22,4 @@ backend:
         - VIRTUAL_PORT=4242
         - CERT_NAME=dxlb.nl
     links:
-        - postgres:postgres
-
-postgres:
-    image: postgres
-    volumes:
-        - /opt/postgresql/pms:/var/lib/postgresql/data
-
+        - pms_postgres:postgres
