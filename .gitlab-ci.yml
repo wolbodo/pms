@@ -12,6 +12,17 @@ build:
         - cd ../backend
         - cargo build --release
         - cd ..
+
+        - mkdir build
+        - cp Dockerfile build/
+        - cp -r frontend/dist/ build/frontend/
+        - cp backend/target/release/backend build/backend
+        - cp backend/run_backend.sh build/backend/
+        - cp -r database build/database
+        - cp -r nginx build/nginx
+
+        - cd build
+
         - docker-compose pull
         - docker-compose build
 
