@@ -10,7 +10,6 @@ extern crate hyper;
 extern crate router;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
-extern crate rustc_serialize;//remove this line if https://github.com/iron/body-parser/pull/64 gets merged
 
 use persistent::Read;
 use iron::status;
@@ -21,8 +20,7 @@ use serde_json::*;
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
 use postgres::error::Error as PgError;
 
-//#[derive(Serialize, Deserialize, Debug, Clone)] //replace line below with this line if https://github.com/iron/body-parser/pull/64 gets merged
-#[derive(Debug, Clone, RustcDecodable)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Login {
    user: String,
    password: String,
@@ -51,12 +49,10 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
     let db = req.db_conn();
-    //Note: bodyparser now still uses rustc_serialize, if https://github.com/iron/body-parser/pull/64 gets merged it will use serde, some small changes are needed, see comments.
     let login = match req.get::<bodyparser::Struct<Login>>() {
         Ok(Some(body)) => body,
         Ok(None) => badrequest!("Please send some body!".to_string()),
-        //Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()), //replace line below with this line if https://github.com/iron/body-parser/pull/64 gets merged
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::DecoderError(err), ..}) => badrequest!(err.to_string()),
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
         Err(err) => badrequest!(err.to_string())
     };
     let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
@@ -73,8 +69,8 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, token)))
 }
 
-fn handle_members(req: &mut Request) -> IronResult<Response> {
-    // Returns a list of members, might be using filters. 
+fn handle_people(req: &mut Request) -> IronResult<Response> {
+    // Returns a list of people, might be using filters. 
 
     let db = req.db_conn();
 
@@ -88,7 +84,7 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
     let stmt = db.prepare("SELECT getpeople(token := $1);").unwrap();
     let rows = stmt.query(&[&token]).unwrap();
 
-    let mut members: Vec<Value> = Vec::new();
+    let mut people: Vec<Value> = Vec::new();
 
     for row in rows.iter() {
         println!("{:?}", row);
@@ -96,21 +92,21 @@ fn handle_members(req: &mut Request) -> IronResult<Response> {
         let data: Value = row.get("getpeople");
         println!("{:?}", data);
 
-        members.push(data);
+        people.push(data);
     }
 
-    Ok(Response::with((status::Ok, serde_json::to_string(&members).unwrap())))
+    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
     // // Err(Response::with((status::Ok)));
 }
 
 fn handle_edit(_: &mut Request) -> IronResult<Response> {
-    // Update an existing member.
+    // Update an existing person.
 
     Ok(Response::with((status::Ok)))
 }
 
 fn handle_create(_: &mut Request) -> IronResult<Response> {
-    // Create a new member. 
+    // Create a new person. 
 
     Ok(Response::with((status::Ok)))
 }
@@ -133,11 +129,11 @@ fn main() {
 
     let router = router!(
         post "/login" => handle_login,
-        get "/members" => handle_members,
-        put "/member/:id" => handle_edit,
+        get "/people" => handle_people,
+        put "/person/:id" => handle_edit,
         get "/fields" => handle_fields,
         put "/fields" => handle_fields_edit,
-        post "/member/new" => handle_create
+        post "/person/new" => handle_create
     );
 
     let mut chain = Chain::new(router);
