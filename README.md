@@ -1,4 +1,4 @@
-# pms
+# People Management System
 
 # Frontend setup
 
@@ -36,11 +36,12 @@ Install some extra dependencies for postgres_macros (sql! macro that syntax chec
 sudo apt-get install -y libreadline-dev bison flex
 ```
 
+Convenient autobuilder script that whatses /src for changes to do a debug build & run.
 ```
 ./autobuild.sh
 ``` 
-debug
 
+More debugging:
 ```
 set RUST_BACKTRACE=1
 ```
@@ -70,6 +71,8 @@ location / {
 Setup database, user, tables and functions.
 ```
 sudo -u postgres psql
+```
+```
 CREATE USER pms;
 CREATE DATABASE pms WITH OWNER pms;
 \c pms;
@@ -78,23 +81,40 @@ CREATE EXTENSION pgcrypto;
 ***
 ***
 \q
-psql -u pms -d pms -f database/create.sql
-psql -u pms -d pms -f database/db-logic.sql
+```
+```
+sudo -u pms psql -f database/create.sql
+sudo -u pms psql -f database/db-logic.sql
+```
+
+# Backup Cycle
+
+Make a backup every 28 days.
+```
+sudo -u pms crontab -e
+```
+```
+0 0 */28 * * pg_dump | bzip2 > backups/$(date +'%Y%m%dT%H%M%S%z').sql.bz2
+```
+
+Recovery of backups.
+```
+bzcat backups/YYYYmmddTHHMMSS+ZZZZ.sql.bz2 | sudo -u pms psql
 ```
 
 # Api
 
 ## Login 
 * POST /api/login                   ; create token
-    - :username, :password 
+    - :username, :password
     - :token
     -> returns the current user.
 
-## Members
-* GET  /api/members                 ; returns a list of all members.
-* POST /api/member                  ; creates a new member
-* PUT  /api/member/:memberid        ; updates a member
+## People
+* GET  /api/people                  ; returns a list of all members
+* POST /api/person                  ; creates a new member
+* PUT  /api/person/:id              ; updates a member
 
 ## Fields
-* GET  /api/fields                  ; returns all fields available for current user.
-* PUT  /api/fields                  ; updates fields 
+* GET  /api/fields                  ; returns all fields available for current user
+* PUT  /api/fields                  ; updates fields
