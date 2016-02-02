@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link} from 'react-router';
 
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 import _ from 'lodash';
 
 export default class RolesEdit extends React.Component {

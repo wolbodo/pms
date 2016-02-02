@@ -2,21 +2,6 @@
   "schemas": {
     "member": {
       "title": "Wijzig lid",
-      "permissions": {
-        "readonly": [
-          "birthdate",
-          "street",
-          "city",
-          "mobile",
-          "phone",
-          "emergencyinfo",
-          "membertype",
-          "functions",
-          "wantscontact",
-          "keycode",
-          "coasters"
-        ]
-      },
       "form": [
         {
           "title": "Persoon",
@@ -304,9 +289,6 @@
     },
     "field": {
       "title": "Wijzig veld",
-      "permissions": {
-        "readonly": []
-      },
       "form": [
         {
           "title": "Veld",
@@ -346,7 +328,6 @@
     },
     "group": {
       "title": "Wijzig groep",
-      "permissions": {},
       "form": [{
         "title": "Gegevens",
         "fields": [

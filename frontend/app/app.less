@@ -29,31 +29,51 @@ body {
 		color: #00796B;
 	}
 
-	.mdl-layout__header {
-		.dark-primary-color;
+	.mdl-layout {
+		.mdl-layout__inner-container, .mdl-layout__header {
+			.dark-primary-color;
+		}
 
-		.mdl-layout__header-row {
-			flex-direction: row-reverse;
-			align-items: center;
+		.headerBar {
+			display: flex;
+			width: 100%;
+			flex-direction: column;
+			
+			> * {
+				align-self: flex-start;
+			}
+		}
+		
+		.mdl-layout__header {
+			z-index: inherit;
+			.mdl-layout__header-row {
+				flex-direction: row-reverse;
+				align-items: center;
 
-			.breadcrumbs {
-				a {
-					display: inline-flex;
-					align-items: center;
-					color: white;
-					text-decoration: none;
+				.breadcrumbs {
+					a {
+						display: inline-flex;
+						align-items: center;
+						color: white;
+						text-decoration: none;
+					}
 				}
 			}
 		}
-	}
 
-	.mdl-layout__drawer {
-		.default-primary-color;
-		header {
-			padding: 1rem;
-			img{width: 100%; }
+		.mdl-layout__drawer {
+			.default-primary-color;
+			header {
+				padding: 1rem;
+				img{width: 100%; }
+			}
+		}
+
+		.mdl-layout__content {
+			display: flex;
 		}
 	}
+
 
 	.mdl-textfield label {
 		.secondary-text-color;
@@ -68,10 +88,12 @@ body {
 
 		display: flex;
 		flex-wrap: wrap;
+		align-content: flex-start;
 		padding: 0.5rem;
 
 		&.mdl-card {
 			max-width: 1080px;
+			flex-wrap: nowrap;
 		}
 
 		.mdl-cell {
@@ -82,7 +104,7 @@ body {
 			width: 30rem;
 			margin: 0.5rem;
 			overflow:visible;
-			position:inherit;
+			position:relative;
 			z-index:inherit;
 
 			&.login {
@@ -248,10 +270,10 @@ body {
 	}
 
 	.mdl-data-table {
-	    table-layout: fixed;
+	    // table-layout: fixed;
 		overflow: hidden;
 		border: none;
-		width: 100%;
+		// width: 100%;
 
 		tr {
 			height: 28px;
@@ -304,6 +326,14 @@ body {
 		}
 	}
 }
+
+
+.change-dialog {
+	li {
+		list-style: none;
+	}
+}
+
 
 @font-face {
   font-family: 'Material Icons';

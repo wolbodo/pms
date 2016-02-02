@@ -1,14 +1,16 @@
 import initialState from './permissions.state.json'
-import constants from 'constants'
+import Immutable from 'immutable'
 
-function permissionsReducer(state = initialState, action) {
-	switch (action.type) {
-		case constants.PERMISSION_SET:
-			return state
-		default:
-			return state;
-	}
+let CONSTRUCT,
+	PERMISSION_SET
+
+CONSTRUCT = () => 
+	Immutable.fromJS(initialState)
+
+PERMISSION_SET = (permissions) => 
+	permissions
+
+export {
+	CONSTRUCT,
+	PERMISSION_SET
 }
-
-
-export default permissionsReducer

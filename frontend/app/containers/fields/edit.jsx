@@ -3,7 +3,8 @@ import React from 'react'
 import { connect } from 'react-redux'
 
 import actions from 'actions'
-import ItemEdit from 'components/view/itemEdit'
+
+import { ItemEdit } from 'components'
 
 
 class FieldsEdit extends React.Component {
@@ -27,10 +28,8 @@ class FieldsEdit extends React.Component {
 
 export default connect(
 	function mapStateToProps(state) {
-	  const { fields } = state
-
 	  return {
-	    fields
+	    fields: state.app.get('fields').toJS()
 	  }
 	})
 	(FieldsEdit);

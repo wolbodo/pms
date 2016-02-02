@@ -1,11 +1,13 @@
 
-import React from 'react';
-import mdl from 'react-mdl';
+import React from 'react'
+import * as mdl from 'react-mdl'
 
-import {List, Head, Row} from '../view/list';
-import { Link } from 'react-router';
+import {List, Head, Row} from 'components/list'
+import { Link } from 'react-router'
 import { Navigation } from 'react-router'
-import { connect } from 'react-redux';
+import { connect } from 'react-redux'
+
+import _ from 'lodash'
 
 import actions from 'actions'
 
@@ -43,7 +45,7 @@ class MemberView extends React.Component {
 		return (
 			<List title="Leden" buttons={this.renderButtons()}>
 				<Head schema={fields.schemas.member} fields={headerfields} editLink/>
-				{_.values(members.items).map((row, i) => (
+				{_.map(members.items, (row, i) => (
 					<Row 
 						className="click"
 						key={i} 
@@ -58,9 +60,10 @@ class MemberView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const { members, auth } = state
-  const fields = state.fields
-  const isFetching = false
+  const members = state.app.get('members').toJS(),
+  		auth = state.app.get('auth').toJS(),
+  		fields = state.app.get('fields').toJS(),
+  		isFetching = false
 
   return {
     members, auth, fields,

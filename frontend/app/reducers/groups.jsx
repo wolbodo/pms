@@ -1,45 +1,52 @@
-import update from  'react-addons-update';
-import constants from 'constants'
+import Immutable from 'immutable'
+
+let CONSTRUCT,
+    GROUPS_CREATE,
+    GROUPS_UPDATE
 
 
-const initialState = {
+CONSTRUCT = () => Immutable.fromJS({
   items: {
-	  bestuur: {
-	    "id": "bestuur",
-	    "name": "Bestuur",
-	    "description": "Alle bestuursleden"
-	  },
-	  leden: {
-	    "id": "leden",
-	    "name": "Leden",
-	    "description": "Alle leden"
-	  },
-	  oudleden: {
-	    "id": "oudleden",
-	    "name": "Oud Leden",
-	    "description": "Alle oud leden"
-	  }
+      bestuur: {
+        "id": "bestuur",
+        "name": "Bestuur",
+        "description": "Alle bestuursleden"
+      },
+      leden: {
+        "id": "leden",
+        "name": "Leden",
+        "description": "Alle leden"
+      },
+      oudleden: {
+        "id": "oudleden",
+        "name": "Oud Leden",
+        "description": "Alle oud leden"
+      }
   },
+  updates: {},
   dirty: false
+})
+
+GROUPS_CREATE = (groups, {data}) => 
+    groups.mergeDeep({
+        items: {
+            [data.id]: {}
+        }
+    })
+
+
+GROUPS_UPDATE = (groups, {data}) => 
+    groups.mergeDeep({
+        items: {
+            [data.id]: data.group
+        },
+        updates: {
+          [data.id]: data.group
+        }
+    })
+
+export {
+  CONSTRUCT,
+  GROUPS_CREATE,
+  GROUPS_UPDATE
 }
-
-function groupsReducer(state = initialState, action) {
-	switch (action.type) {
-		case constants.GROUPS_UPDATE: 
-	    	return update(state, {
-	    		items: {
-	    			[action.id]: {
-	    				$merge: action.group
-	    			}
-	    		},
-	    		dirty: {
-	    			$set: true
-	    		}
-	    	})
-		default:
-			return state;
-	}
-}
-
-
-export default groupsReducer

@@ -1,7 +1,16 @@
-import Edit from './edit'
-import View from './view'
+import Option from './option'
+import Array from './array'
+import Boolean from './boolean'
+import Date from './date'
+import Enum from './enum'
+import Text from './text'
+
 
 export default {
-	Edit,
-	View
+	Option,
+	Array,
+	Boolean,
+	Date,
+	Enum,
+	Text
 }

@@ -2,39 +2,25 @@ import $fetch from 'isomorphic-fetch'
 import constants from 'constants'
 import { routeActions } from 'redux-simple-router'
 
-// export function selectReddit(members) {
-//   return {
-//     type: SELECT_REDDIT,
-//     reddit
-//   }
-// }
 
-// export function invalidateReddit(reddit) {
-//   return {
-//     type: INVALIDATE_REDDIT,
-//     reddit
-//   }
-// }
 function receive(members) {
   return {
-    type: constants.MEMBERS_RECEIVE,
-    members: members,
-    receivedAt: Date.now()
+    name: constants.MEMBERS_RECEIVE,
+    data: {
+      members: members,
+      receivedAt: Date.now()
+    }
   }
 }
-
-
-
 
 function shouldFetchMembers(state) {
-  if (state.members.dirty) {
-    return false
+  if (state.app.getIn(['members', 'updates']).isEmpty()) {
+    return true
   } else {
     // check timestamp?
-    return true
+    return false
   }
 }
-
 
 export function fetch(token) {
   return (dispatch, getState) => {
@@ -50,10 +36,19 @@ export function fetch(token) {
   }
 }
 
+export function commit() {
+  return {
+    name: 'FIELDS_CREATE_MEMBERS_COMMIT'
+  }
+}
+
 export function update(id, member) {
   return {
-    type: constants.MEMBERS_UPDATE,
-    id, member
+    name: constants.MEMBERS_UPDATE,
+    data: {
+      id: id.toString(), 
+      member
+    }
   }
 }
 
@@ -61,8 +56,10 @@ export function create() {
   return dispatch => {
     let id = Date.now()
     dispatch({
-      type: constants.MEMBERS_CREATE,
-      id: id
+      name: constants.MEMBERS_CREATE,
+      data: {
+        id: id.toString()
+      }
     })
     dispatch(routeActions.push(`/lid-${id}`))
   }

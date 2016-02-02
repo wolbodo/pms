@@ -1,51 +1,50 @@
-import update from  'react-addons-update';
-import _ from  'lodash'
-import constants from 'constants'
+import {fromJS, Map} from 'immutable'
 
-const initialState = {
+let CONSTRUCT,
+    MEMBERS_RECEIVE,
+    MEMBERS_UPDATE,
+    FIELDS_CREATE_MEMBERS_COMMIT,
+    MEMBERS_CREATE
+
+CONSTRUCT = () => fromJS({
   items: {},
+  updates: {},
   dirty: false
-}
+})
 
-function memberReducer(state = initialState, action) {
-  switch (action.type) {
-    case constants.MEMBERS_RECEIVE:
-      return Object.assign({}, state, {
-        items: _.indexBy(action.members, 'id'),
-        dirty: false
-      })
-    case constants.MEMBERS_UPDATE:
-    	return update(state, {
-    		items: {
-    			[action.id]:  {
-            $merge: action.member
-          } 
-    		},
-    		dirty: {
-    			$set: true
-    		}
-    	})
-    case constants.FIELDS_CREATE_MEMBERS_COMMIT:
-    	return update(state, {
-    		dirty: false
-    	})
-    case constants.MEMBERS_CREATE:
-      return update(state, {
-        items: {
-          $merge: {
-            [action.id]: {
-              id: action.id
-            }
-          }
-        },
-        dirty: {
-          $set: true
-        }
-      })
-    default:
-      return state;
+MEMBERS_RECEIVE = (members, {data}) =>
+  members.merge({
+    items: fromJS(data.members)
+                    .reduce(
+                      (lookup, item) => lookup.set(item.get('id').toString(), item),
+                      Map()
+                    )
+  })
+
+MEMBERS_UPDATE = (members, {data}) => {
+  console.log("MEMBERS_UPDATE", members.toJS(), data)
+  if (!fromJS(data.member).equals(
+    members.getIn(['items', data.id])
+  )) {
+    // changed
+    return members.updateIn(['items', data.id], member => (member || Map()).mergeDeep(data.member))
+                  .update('updates', updates => updates.mergeDeep({[data.id]: data.member}))
   }
+  return members
 }
 
+FIELDS_CREATE_MEMBERS_COMMIT = (members, {data}) =>
+  members.merge({updates: undefined})
+         .merge({updates: {}})
+  
+MEMBERS_CREATE = (members, {data}) =>
+  members.update('items', items => items.merge({[data.id]: {id: data.id}}))
 
-export default memberReducer
+
+export {
+  CONSTRUCT,
+  MEMBERS_RECEIVE,
+  MEMBERS_UPDATE,
+  FIELDS_CREATE_MEMBERS_COMMIT,
+  MEMBERS_CREATE
+}

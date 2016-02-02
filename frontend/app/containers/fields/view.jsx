@@ -1,13 +1,13 @@
 import React, { PropTypes } from 'react';
 import update from 'react/lib/update';
 import ReactDOM from 'react-dom';
-import mdl from 'react-mdl';
+import * as mdl from 'react-mdl'
 import classnames from 'classnames';
 import {Link} from 'react-router';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 
-import {List, Head, Row} from 'components/view/list';
+import {List, Head, Row} from 'components/list';
 
 import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
@@ -353,7 +353,7 @@ class FieldsView extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const { fields } = state
+  const fields = state.app.get('fields').toJS()
 
   return {
     fields

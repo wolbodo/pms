@@ -2,14 +2,17 @@ import React from 'react';
 import { Route, IndexRoute } from 'react-router'
 
 import {
+	HeaderBar
+} from 'containers'
+
+import {
 	group,
 	member,
 	fields,
 	permissions,
 	Auth,
-	App,
-	HeaderBar
-} from 'components'
+	App
+} from 'containers'
 
 import actions from 'actions'
 

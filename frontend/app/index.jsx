@@ -10,7 +10,6 @@ import injectTapEventPlugin from "react-tap-event-plugin";
 
 import routes from 'routes'
 import {history, configureStore} from 'configureStore'
-import DevTools from 'components/devTools'
 
 // Reference static files so they are loaded with webpack.
 import 'app.less';
@@ -27,15 +26,14 @@ injectTapEventPlugin();
 const store = configureStore()
 
 
-ReactDOM.render(
-
+ReactDOM.render((
 	<Provider store={store}>
 		<div>
 		<Router history={history}>
 			{ routes(store) }
 		</Router>
-	    <DevTools />
 		</div>
-	</Provider>,
+	</Provider>
+	),
 	document.getElementById('app')
 );
