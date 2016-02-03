@@ -23,53 +23,64 @@ export default class ItemEdit extends React.Component {
 			})
 		}
 	}
-
-	renderField(fieldname, key) {
-		const {schema, permissions, item} = this.props
-
-		let field = schema.fields[fieldname]
-		let disabled = permissions && !_.includes(permissions.write, fieldname)
-
-
-		return (
-			<Field 
-				key={key} 
-				field={field}
-				tabIndex="0"
-				disabled={disabled}
-				onChange={this.handleChange}
-				value={item[field.name]} />
-		)
-	}
-	renderFieldSet(fields, key) {
-		return (
-			<div key={key} className="mdl-card__formset">
-			{
-				// Turn fields into array if not already.
-				(_.isArray(fields) 
-					? fields
-					: [fields]
-				).map(this.renderField.bind(this))
-			}
-			</div>
-		)
-	}
 	render() {
-		const {schema, item } = this.props;
+		const {schema, item, permissions } = this.props;
+
+		// Filter all readable nonempty fields, or writable fields
+		// _.(readable && filled) || writable
+		let map_filter = (arr, mapfun, filterfun) => _.filter(_.map(arr, mapfun), filterfun)
+
+		let form = map_filter(
+			schema.form, 
+			group => ({
+				title: group.title,
+				fields: map_filter(
+					group.fields,
+					fieldset => map_filter(
+						fieldset,
+						field => (
+							// Readable and nonempty					// writable
+							(_.contains(permissions.read, field) && item[field]) || _.contains(permissions.write, field)
+						) && {
+						 	// Then add the field, with all info zipped into an object.
+							schema: schema.fields[field],
+							value: item[field],
+							readable: _.contains(permissions.read, field),
+							writable: _.contains(permissions.write, field)
+						},
+						field => !!field
+					),
+					fieldset => !_.isEmpty(fieldset)
+				)
+			}),
+			group => !_.isEmpty(group.fields)
+		)
+
 
 		return (
 		<form className='content' onSubmit={this.handleSubmit}>
-			{_.map(schema.form, (fieldset, i) => (
-				<mdl.Card key={i} className='mdl-color--white mdl-shadow--2dp'>
-					<mdl.CardTitle>
-						{fieldset.title}
-					</mdl.CardTitle>
-					<div className="mdl-card__form">
-						{ _.map(fieldset.fields, this.renderFieldSet.bind(this)) }
+		{_.map(form, (group, i) => (
+			<mdl.Card key={i} className='mdl-color--white mdl-shadow--2dp'>
+				<mdl.CardTitle>
+					{group.title}
+				</mdl.CardTitle>
+				<div className="mdl-card__form">
+				{_.map(group.fields, (fieldset, key) => (
+					<div key={key} className="mdl-card__formset">
+					{_.map(fieldset, (field, key) => (
+						<Field 
+							key={key} 
+							field={field.schema}
+							tabIndex="0"
+							disabled={!field.writable}
+							onChange={this.handleChange}
+							value={field.value} />
+					))}
 					</div>
-				</mdl.Card>
-
-			))}
+				))}
+				</div>
+			</mdl.Card>
+		))}
 		</form>
 
 		)

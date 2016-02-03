@@ -18,6 +18,7 @@ class FieldsEdit extends React.Component {
 		return (
 			<ItemEdit
 				schema={fields.schemas.field}
+                permissions={{read:[], write:[]}}
 				item={fields.schemas.member.fields[params.veld]}
 				onChange={field => {
 					dispatch(actions.fields.updateField('member', params.veld, field))
