@@ -15,7 +15,7 @@ self.addEventListener('install', function(event) {
         '/common.js',
         '/favicon.png',
 
-        '/api/members'
+        '/api/people'
       ]);
     })
 });

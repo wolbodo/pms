@@ -15,13 +15,13 @@ class GroupEdit extends React.Component {
 		super(props);
 	}
 	render() {
-		const {groups, fields, params, dispatch} = this.props
+		const {groups, fields, params, permissions, dispatch} = this.props
 
 		return (
 			<ItemEdit
 				schema={fields.schemas.group}
 				item={groups.items[params.groep]}
-                permissions={{read:[], write:[]}}
+                permissions={permissions.leden.group}
 				onChange={group => {
 					dispatch(actions.groups.update(params.groep, group))
 				}} />
@@ -33,7 +33,8 @@ export default connect(
 	function mapStateToProps(state) {
 	  return {
 	    groups: state.app.get('groups').toJS(), 
-	    fields: state.app.get('fields').toJS()
+	    fields: state.app.get('fields').toJS(),
+	    permissions: state.app.get('permissions').toJS()
 	  }
 	})
 	(GroupEdit);

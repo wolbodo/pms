@@ -9,28 +9,28 @@ import { connect } from 'react-redux';
 
 import actions from 'actions'
 
-export default class MemberEdit extends React.Component {
+export default class PersonEdit extends React.Component {
     constructor(props) {
         super(props);
     }
     render() {
         const {
             params, dispatch,
-            members, fields, auth, permissions
+            people, fields, auth, permissions
         } = this.props;
 
         // var data = _.find(stub, group => group.id === params.groep);
 
-        let member_id = params.id || auth.user.user
+        let person_id = params.id || auth.user.user
 
         return (
             <ItemEdit
-                schema={fields.schemas.member}
-                item={members.items[member_id]}
-                permissions={permissions.leden}
-                onChange={member => {
-                    console.log("Updating", member_id, member)
-                    dispatch(actions.members.update(member_id, member))
+                schema={fields.schemas.person}
+                item={people.items[person_id]}
+                permissions={permissions.leden.person}
+                onChange={person => {
+                    console.log("Updating", person_id, person)
+                    dispatch(actions.people.update(person_id, person))
                 }} />
         );
     }
@@ -41,13 +41,13 @@ export default class MemberEdit extends React.Component {
 export default connect(
     function mapStateToProps(state) {
         const {
-            members, fields, auth, permissions 
+            people, fields, auth, permissions 
         } = state.app.toJS()
 
         return {
-            members, fields, auth, permissions
+            people, fields, auth, permissions
         }
 
     })
-    (MemberEdit);
+    (PersonEdit);
 

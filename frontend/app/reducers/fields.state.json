@@ -1,6 +1,7 @@
 {
   "schemas": {
-    "member": {
+    "person": {
+      "name": "Mensen",
       "title": "Wijzig lid",
       "form": [
         {
@@ -288,14 +289,15 @@
       }
     },
     "field": {
+      "name": "Velden",
       "title": "Wijzig veld",
       "form": [
         {
           "title": "Veld",
           "fields": [
-            "name",
-            "label",
-            "type"
+            ["name"],
+            ["label"],
+            ["type"]
           ]
         }
       ],
@@ -327,22 +329,26 @@
       }
     },
     "group": {
+      "name": "Groepen",
       "title": "Wijzig groep",
-      "form": [{
-        "title": "Gegevens",
-        "fields": [
-          "name", "description"
-        ]
-      }],
+      "form": [
+        {
+          "title": "Gegevens",
+          "fields": [
+            ["name"],
+            ["description"]
+          ]
+        }
+      ],
       "fields": {
         "name": {
-         "name": "name",
-         "type": "string",
+          "name": "name",
+          "type": "string",
           "label": "Naam"
         },
         "description": {
-         "name": "description",
-         "type": "string",
+          "name": "description",
+          "type": "string",
           "label": "Omschrijving"
         }
       }

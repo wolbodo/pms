@@ -100,20 +100,20 @@
 			}
 		]
 	}, 
-	"member": {
+	"person": {
 		"title": "Lidmaatschap",
 		"fields": [
 			{
 				"type": "string",
-				"name": "membertype",
+				"name": "persontype",
 				"label": "Lid type"
 			}, [{
 				"type": "string",
-				"name": "membersince",
+				"name": "personsince",
 				"label": "Lid sinds"
 			}, {
 				"type": "string",
-				"name": "membertill",
+				"name": "persontill",
 				"label": "Lid tot"
 			}], {
 				"type": "string",

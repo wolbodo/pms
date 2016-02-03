@@ -24,6 +24,7 @@ class PermissionsDialog extends React.Component {
 		// Receiving props from upper component
 		if (!_.isEqual(this.props.dialogState, nextProps.dialogState)) {
 			this.setState(nextProps.dialogState || {
+				schema: undefined,
 				group: undefined,
 				field: undefined,
 				read: false,
@@ -97,8 +98,8 @@ class PermissionsView extends React.Component {
 
 	  this.setState({
 	    dialogState:_.assign(state,  {
-	    	'read': _.contains(this.props.permissions[state.group.id].read, state.field.name), 
-			'write': _.contains(this.props.permissions[state.group.id].read, state.field.name)
+	    	'read': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
+			'write': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name)
 		})
 	  });
 	}
@@ -113,10 +114,10 @@ class PermissionsView extends React.Component {
 		this.closeDialog()
 	}
 
-	getPermissions(group, field) {
+	getPermissions(group, schema, field) {
 		const {permissions} = this.props
-		var read = _.contains(permissions[group.id].read, field.name),
-			write = _.contains(permissions[group.id].write, field.name);
+		var read = _.contains(_.get(permissions, [group.id, schema, 'read']), field.name),
+			write = _.contains(_.get(permissions, [group.id, schema, 'write']), field.name);
 
 		return {read: read, write: write};
 	}
@@ -141,36 +142,52 @@ class PermissionsView extends React.Component {
 		</thead>
 		)
 	}
+	renderSchema(schema, key) {
+		const {groups} = this.props
+
+		return [
+			(<tr key={"heading-" + key}>
+				<th>{schema.name}</th>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th></th>
+			</tr>)
+		].concat(
+			_.map(schema.fields, (field, i) => (
+				<tr key={i}>
+					<th>
+						<Link to={`/velden/${field.name}`}>
+							{field.label}
+						</Link>
+					</th>
+					{_.map(groups.items, (group, i) => 
+						(<td key={i}>
+							<span className='permission' onClick={() => this.showDialog({schema: key, group:group, field:field})}>
+							{ (({read, write}) => 
+								[read ? <i className='icon'>visibility</i>
+									  : <i className='icon dimmed'>visibility_off</i>,
+								  write ? <i className='icon'>edit</i> 
+								   		: <i className='icon dimmed'>edit</i>
+								]
+							  )(this.getPermissions(group, key, field))
+						    }
+						    </span>
+						</td>)
+					)}
+					<td></td>
+					<td>
+					</td>
+				</tr>
+			))
+		)
+	}
 	renderBody() {
-		const {fields, groups} = this.props
+		const {fields} = this.props
 		return (
 			<tbody>
-				{_.map(fields.schemas.member.fields, (field, i) => 
-					(<tr key={i}>
-						<th>
-							<Link to={`/velden/${field.name}`}>
-								{field.label}
-							</Link>
-						</th>
-						{_.map(groups.items, (group, i) => 
-							(<td key={i}>
-								<span className='permission' onClick={() => this.showDialog({group:group, field:field})}>
-								{ (({read, write}) => 
-									[read ? <i className='icon'>visibility</i>
-										  : <i className='icon dimmed'>visibility_off</i>,
-									  write ? <i className='icon'>edit</i> 
-									   		: <i className='icon dimmed'>edit</i>
-									]
-								  )(this.getPermissions(group, field))
-							    }
-							    </span>
-							</td>)
-						)}
-						<td></td>
-						<td>
-						</td>
-					</tr>)
-				)}
+				{ _.map(fields.schemas, (schema, i) => this.renderSchema(schema, i)) }
 			</tbody>
 		)
 	}
@@ -200,10 +217,10 @@ class PermissionsView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const { members, groups, fields, permissions } = state.app.toJS()
+  const { people, groups, fields, permissions } = state.app.toJS()
 
   return {
-    members, groups, fields, permissions
+    people, groups, fields, permissions
   }
 }
 

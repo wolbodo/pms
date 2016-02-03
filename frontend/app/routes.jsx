@@ -7,7 +7,7 @@ import {
 
 import {
 	group,
-	member,
+	people,
 	fields,
 	permissions,
 	Auth,
@@ -21,17 +21,17 @@ export default (store) => {
 	<Route path="/" component={App}>
 		<IndexRoute
 			name='Lijst'
-			components={{main: member.View, header: HeaderBar}}
+			components={{main: people.View, header: HeaderBar}}
 			onEnter={actions.auth.requireLogin(store)}/>
 		<Route
 			name="Lid"
 			path="lid-:id"
-			components={{main: member.Edit, header: HeaderBar}}
+			components={{main: people.Edit, header: HeaderBar}}
 			onEnter={actions.auth.requireLogin(store)} />
 		<Route
 			name="Wijzig"
 			path="wijzig"
-			components={{main: member.Edit, header: HeaderBar}}
+			components={{main: people.Edit, header: HeaderBar}}
 			onEnter={actions.auth.requireLogin(store)} />
 		<Route
 			name="Velden"

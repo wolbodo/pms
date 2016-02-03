@@ -12,12 +12,12 @@ PERMISSION_SET = (permissions) =>
 	permissions
 
 PERMISSION_CHANGE = (permissions, {data}) =>
-	permissions.updateIn([data.group.id, 'read'], 
+	permissions.updateIn([data.group.id, data.schema, 'read'], 
 		readperms => data.read ? 
 			Immutable.Set(readperms).add(data.field.name)
 		  : Immutable.Set(readperms).remove(data.field.name)
 		)
-		.updateIn([data.group.id, 'write'], 
+		.updateIn([data.group.id, data.schema, 'write'], 
 		writeperms => data.write ? 
 			Immutable.Set(writeperms).add(data.field.name)
 		  : Immutable.Set(writeperms).remove(data.field.name)
