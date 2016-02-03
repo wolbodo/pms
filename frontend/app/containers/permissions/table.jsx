@@ -3,11 +3,87 @@ import ReactDOM from 'react-dom';
 import * as mdl from 'react-mdl'
 import { connect } from 'react-redux';
 
+import actions from 'actions'
 import {Dialog, FlatButton} from 'material-ui';
 
 import _ from 'lodash';
 
 import { Link } from 'react-router';
+
+class PermissionsDialog extends React.Component {
+	constructor(props) {
+		super(props)
+		this.state = props.dialogState
+	}
+	handleChange(type, value) {
+		this.setState({
+			[type]: value
+		})
+	}
+	componentWillReceiveProps(nextProps) {
+		// Receiving props from upper component
+		if (!_.isEqual(this.props.dialogState, nextProps.dialogState)) {
+			this.setState(nextProps.dialogState || {
+				group: undefined,
+				field: undefined,
+				read: false,
+				write: false
+			})
+		}
+
+	}
+
+	render() {
+		const {onClose, onSubmit} = this.props
+		const {group, field, read, write} = this.state || {}
+
+		const dialogOpen = group && field;
+
+        const actions = [
+          <FlatButton
+            label="Annuleren"
+            secondary={true}
+            onTouchTap={onClose}
+          />,
+          <FlatButton
+            label="Opslaan"
+            primary={true}
+            onTouchTap={() => onSubmit(this.state)}
+          />,
+        ];
+
+
+		return (
+            <Dialog
+              title="Permissies wijzigen"
+              className="permissions-dialog"
+             	 actions={actions}
+              modal={false}
+              open={!!dialogOpen}
+              onRequestClose={onClose}
+            >
+            	{ !!dialogOpen && (
+            		<div>
+            			<p>
+            				Voor de personen in 
+            				<span className="group">"{group.name}"</span> 
+            				op het veld 
+            				<span className="field">"{field.label}"</span>
+            			</p>
+		            	<div className="switches">
+		            		<div>
+			            		<mdl.Switch ripple id="read" checked={read} onChange={e => this.handleChange('read', e.target.checked)}>Lezen</mdl.Switch>
+		            		</div>
+		            		<div>
+			            		<mdl.Switch ripple id="write" checked={write} onChange={e => this.handleChange('write', e.target.checked)}>Wijzigen</mdl.Switch>
+		            		</div>
+	            		</div>
+	            	</div>
+        		) || (<div />)}
+			</Dialog>
+		) 
+	}
+}
 
 class PermissionsView extends React.Component {
 
@@ -18,14 +94,23 @@ class PermissionsView extends React.Component {
 	}
 
 	showDialog(state) {
+
 	  this.setState({
-	    dialogState:state
+	    dialogState:_.assign(state,  {
+	    	'read': _.contains(this.props.permissions[state.group.id].read, state.field.name), 
+			'write': _.contains(this.props.permissions[state.group.id].read, state.field.name)
+		})
 	  });
 	}
 	closeDialog() {
 		this.setState({
 	    	dialogState:undefined
 	  	});
+	}
+	submitResult(result) {
+		const {dispatch} = this.props
+		dispatch(actions.permissions.changePermission(result))
+		this.closeDialog()
 	}
 
 	getPermissions(group, field) {
@@ -36,39 +121,6 @@ class PermissionsView extends React.Component {
 		return {read: read, write: write};
 	}
 
-	renderDialog() {
-		const {dialogState} = this.state
-
-
-        const actions = [
-          <FlatButton
-            label="Annuleren"
-            secondary={true}
-            onTouchTap={() => this.closeDialog()}
-          />,
-          <FlatButton
-            label="Opslaan"
-            primary={true}
-            onTouchTap={() => this.closeDialog()}
-          />,
-        ];
-
-
-		return (
-            <Dialog
-              title="Permissies wijzigen"
-              className="permissions-dialog"
-              actions={actions}
-              modal={false}
-              open={!!dialogState}
-              onRequestClose={() => this.closeDialog()}
-            >
-            	{ !!dialogState && (
-	            	<h5>{dialogState.group.name}: {dialogState.field.label}</h5>
-        		) || (<div />)}
-			</Dialog>
-		) 
-	}
 	renderHeading() {
 		const {groups} = this.props
 
@@ -76,9 +128,9 @@ class PermissionsView extends React.Component {
 		<thead>
 			<tr>
 				<th></th>
-				{_.map(groups.items, group => (
-					<th key={group.id} className='mdl-data-table__cell--non-numeric'>
-						<Link to={`/groepen/${group.id}`}>
+				{_.map(groups.items, (group, id) => (
+					<th key={id} className='mdl-data-table__cell--non-numeric'>
+						<Link to={`/groepen/${id}`}>
 							{group.name}
 						</Link>
 					</th>
@@ -124,6 +176,8 @@ class PermissionsView extends React.Component {
 	}
 
 	render () {
+		let {dialogState} = this.state;
+
 		return (
 			<mdl.Card className='content permissions mdl-color--white mdl-shadow--2dp'>
 				<mdl.CardTitle>
@@ -134,7 +188,10 @@ class PermissionsView extends React.Component {
 						{ this.renderHeading() }
 						{ this.renderBody() }
 					</table>
-				  	{ this.renderDialog() }
+					<PermissionsDialog 
+						dialogState={dialogState} 
+						onSubmit={result => this.submitResult(result)}
+						onClose={() => this.closeDialog()}/>
 				</mdl.CardText>
 			</mdl.Card>
 		)
