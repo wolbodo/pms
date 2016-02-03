@@ -22,10 +22,10 @@ build:
         - cp -r database build/database
         - cp -r nginx build/nginx
 
-        - cd build
-        - docker-compose build
+        - docker build -t wolbodo/pms build
 
 deploy:
     type: deploy
     script:
-        - docker-compose up -d
+        - docker rm -f pms.dxlb.nl  || echo 'no container to remove'
+        - docker run -d --name pms.dxlb.nl -p ':80' -e CERT_NAME='dxlb.nl' -e VIRTUAL_HOST='pms.dxlb.nl' wolbodo/pms

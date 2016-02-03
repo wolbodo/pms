@@ -1,9 +1,0 @@
-
-
-app:
-    build: build
-    ports:
-        - "80"
-    environment:
-        - VIRTUAL_HOST=pms.dxlb.nl
-        - CERT_NAME=dxlb.nl

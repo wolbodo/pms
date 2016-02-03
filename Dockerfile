@@ -30,7 +30,7 @@ ADD frontend /app/frontend
 ADD backend /app/backend
 ADD database /app/database
 
-ADD nginx/pms.nginx.conf /etc/nginx/sites-enabled/pms.nginx.conf
+ADD nginx/pms.nginx.conf /etc/nginx/sites-enabled/default
 
 # Add Nginx to runit
 RUN mkdir /etc/service/nginx
