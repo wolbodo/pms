@@ -3,7 +3,7 @@ import * as mdl from 'react-mdl'
 
 import { PropTypes } from 'react-router';
 import { connect } from 'react-redux';
-import { routeActions } from 'redux-simple-router'
+import { routeActions } from 'react-router-redux'
 
 import actions from 'actions';
 

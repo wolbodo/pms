@@ -21,6 +21,7 @@ class GroupEdit extends React.Component {
 			<ItemEdit
 				schema={fields.schemas.group}
 				item={groups.items[params.groep]}
+                permissions={{read:[], write:[]}}
 				onChange={group => {
 					dispatch(actions.groups.update(params.groep, group))
 				}} />

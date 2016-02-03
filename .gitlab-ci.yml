@@ -9,11 +9,23 @@ build:
         - npm config set registry https://registry.npmjs.org/
         - npm install 
         - npm run build
+        - cd ../backend
+        - cargo build --release
         - cd ..
-        - docker-compose pull
-        - docker-compose build
+
+        # Copy relevant info to the build dir to construct the image.
+        - mkdir build
+        - cp Dockerfile build/
+        - cp -r frontend/dist/ build/frontend/
+        - cp backend/target/release/backend build/backend
+        - cp backend/run_backend.sh build/
+        - cp -r database build/database
+        - cp -r nginx build/nginx
+
+        - docker build -t wolbodo/pms build
 
 deploy:
     type: deploy
     script:
-        - docker-compose up -d
+        - docker rm -f pms.dxlb.nl  || echo 'no container to remove'
+        - docker run -d --name pms.dxlb.nl -p ':80' -e CERT_NAME='dxlb.nl' -e VIRTUAL_HOST='pms.dxlb.nl' wolbodo/pms

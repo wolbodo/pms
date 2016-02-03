@@ -6,3 +6,4 @@ backend/mms.sublime-workspace
 frontend/node_modules/
 frontend/npm-debug.log
 frontend/build/
+frontend/dist/

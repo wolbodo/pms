@@ -1,6 +1,6 @@
 import $fetch from 'isomorphic-fetch'
 import constants from 'constants'
-import { routeActions } from 'redux-simple-router'
+import { routeActions } from 'react-router-redux'
 
 
 function receive(members) {
@@ -25,7 +25,7 @@ function shouldFetchMembers(state) {
 export function fetch(token) {
   return (dispatch, getState) => {
     if ( shouldFetchMembers(getState()) ) {
-      return $fetch("/api/members", {
+      return $fetch("/api/people", {
   				headers: new Headers({
   					"Authorization": token
   				})

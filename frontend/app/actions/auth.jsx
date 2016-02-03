@@ -1,5 +1,5 @@
 import $fetch from 'isomorphic-fetch'
-import { routeActions } from 'redux-simple-router'
+import { routeActions } from 'react-router-redux'
 import constants from 'constants'
 
 function login_request() {

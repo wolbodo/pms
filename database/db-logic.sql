@@ -1,10 +1,10 @@
 --Select all people with the fields for member id XXX
-CREATE OR REPLACE FUNCTION getpermissions(permissions_type permissions, varchar, int, int DEFAULT -1) RETURNS TABLE(key varchar, self_id int) AS $$
+CREATE OR REPLACE FUNCTION getpermissions(pm_type permissions_type, pm_ref_type varchar, pm_self_id int, pm_people_id int DEFAULT -1) RETURNS TABLE(key varchar, self_id int) AS $$
 DECLARE
-    _type ALIAS FOR $1;
-    _ref_type ALIAS FOR $2;
-    _self_id ALIAS FOR $3;
-    _people_id ALIAS FOR $4;
+    _type ALIAS FOR pm_type;
+    _ref_type ALIAS FOR pm_ref_type;
+    _self_id ALIAS FOR pm_self_id;
+    _people_id ALIAS FOR pm_people_id;
 BEGIN
   RETURN QUERY (SELECT DISTINCT fields.name AS key, CASE WHEN roles.name = 'self' THEN people.id END AS self_id
      FROM
@@ -45,6 +45,7 @@ CREATE OR REPLACE FUNCTION public.parsejwt(token text)
  LANGUAGE plpgsql
 AS $function$
 DECLARE
+
   header JSONB;
   payload JSONB;
   match TEXT[];

@@ -1,5 +1,6 @@
 var path = require('path');
 var webpack = require('webpack');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var srcPath = path.join(__dirname, 'app');
 
 module.exports = {
@@ -30,6 +31,7 @@ module.exports = {
         'NODE_ENV': JSON.stringify('production')
       }
     }),
+    new ExtractTextPlugin('styles.css'),
     new webpack.optimize.UglifyJsPlugin({
       compressor: {
         warnings: false
@@ -46,10 +48,10 @@ module.exports = {
         loader: "json-loader"
     }, {
         test: /\.less$/,
-        loader: 'css?sourceMap!less?sourceMap'
+        loader: ExtractTextPlugin.extract('css?sourceMap!' + 'less?sourceMap')
     }, {
         test: /\.css$/,
-        loader: 'css?sourceMap'
+        loader: ExtractTextPlugin.extract('css?sourceMap')
     }, {
         test: /\.jpe?g$|\.gif$|\.png$|\.svg$|\.woff$|\.ttf$|\.wav$|\.mp3$/, 
         loader: "file" 
