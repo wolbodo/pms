@@ -58,13 +58,7 @@ const finalCreateStore = compose(
     // Wrap store to change getState to unwrap :)
     store => diffLogger({
       getState: getState => store.getState().app.toJS()
-    }) ,
-    // Unwrap action
-    store => next => action => 
-      // return type only if name si not defined. (for immutable actions :S)
-      next(_.pick(action, (value, key) => 
-        !((key === 'type') && _.has(action, 'name'))
-      )),
+    }) 
   ),
   // Required! Enable Redux DevTools with the monitors you chose
   window.devToolsExtension ? window.devToolsExtension() : f => f

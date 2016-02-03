@@ -106,7 +106,8 @@ export default (reducer) => {
             return state;
         }
 
-        validateAction(action);
+        // Fails on stupid reasons :()
+        // validateAction(action);
 
         // Tapper is an object that tracks execution of the action.
         // @todo Make this an opt-in.

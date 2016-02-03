@@ -25,7 +25,7 @@ function shouldFetchMembers(state) {
 export function fetch(token) {
   return (dispatch, getState) => {
     if ( shouldFetchMembers(getState()) ) {
-      return $fetch("/api/members", {
+      return $fetch("/api/people", {
   				headers: new Headers({
   					"Authorization": token
   				})

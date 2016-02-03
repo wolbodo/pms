@@ -28,7 +28,7 @@ export default class ItemEdit extends React.Component {
 		const {schema, permissions, item} = this.props
 
 		let field = schema.fields[fieldname]
-		let disabled = !_.includes(permissions.write, fieldname)
+		let disabled = permissions && !_.includes(permissions.write, fieldname)
 
 
 		return (
