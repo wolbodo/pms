@@ -122,6 +122,10 @@ body {
 				padding-left: 3rem;
 				padding-bottom: 0.5rem;
 
+				input:disabled {
+					color: black;
+				}
+
 				input[disabled] {
 					border: none;
 				}
@@ -170,6 +174,9 @@ body {
 	}
 
 	.permissions {
+		.mdl-card__supporting-text {
+			overflow: visible;
+		}
 
 		.permission {
 			padding: 0.3rem;
@@ -271,7 +278,8 @@ body {
 
 	.mdl-data-table {
 	    // table-layout: fixed;
-		overflow: hidden;
+		overflow-y: hidden;
+		overflow-x: visible;
 		border: none;
 		// width: 100%;
 
