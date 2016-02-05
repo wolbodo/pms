@@ -37,6 +37,12 @@ export function fetch(token) {
 }
 
 export function commit() {
+
+  // return (dispatch, getState) => {
+  //   return $fetch('/api/setperso')
+  // }
+
+
   return {
     name: 'FIELDS_CREATE_PEOPLE_COMMIT'
   }

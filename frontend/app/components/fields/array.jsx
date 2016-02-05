@@ -2,6 +2,8 @@ import React from 'react';
 import _ from 'lodash'
 import * as mdl from 'react-mdl'
 
+import {Chip} from 'components'
+
 export default class Array extends React.Component {
 
 	render() {
@@ -10,16 +12,22 @@ export default class Array extends React.Component {
 
 		// Shows an array of strings for now.
 		value = value || [];
+			// <mdl.Textfield
+			// 	className={['field-' + name, (value !== undefined) ? 'is-dirty' : ''].join(' ')}
+			// 	label={label}
+			// 	name={name}
+			// 	value={value.join(', ')}
+			// 	disabled={disabled}
+			// 	onChange={(e) => onChange(_.map(e.target.value.split(','), _.trim))}
+			// 	onBlur={(e) => onBlur(_.map(e.target.value.split(','), _.trim))}
+			// 	floatingLabel/>
 		return (
-			<mdl.Textfield
-				className={['field-' + name, (value !== undefined) ? 'is-dirty' : ''].join(' ')}
-				label={label}
-				name={name}
-				value={value.join(', ')}
-				disabled={disabled}
-				onChange={(e) => onChange(_.map(e.target.value.split(','), _.trim))}
-				onBlur={(e) => onBlur(_.map(e.target.value.split(','), _.trim))}
-				floatingLabel/>
+			<div className='chipList'>
+				
+				{ _.map(value, (value, i) => (
+					<Chip>{value}</Chip>
+				))}
+			</div>
 		);
 	}
 }

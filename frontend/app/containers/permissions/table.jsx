@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import * as mdl from 'react-mdl'
 import { connect } from 'react-redux';
 
@@ -99,7 +98,7 @@ class PermissionsView extends React.Component {
 	  this.setState({
 	    dialogState:_.assign(state,  {
 	    	'read': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
-			'write': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name)
+			'write': _.contains(this.props.permissions[state.group.id][state.schema].write, state.field.name)
 		})
 	  });
 	}
