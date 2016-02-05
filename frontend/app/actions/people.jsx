@@ -3,18 +3,18 @@ import constants from 'constants'
 import { routeActions } from 'react-router-redux'
 
 
-function receive(members) {
+function receive(people) {
   return {
-    name: constants.MEMBERS_RECEIVE,
+    name: constants.PEOPLE_RECEIVE,
     data: {
-      members: members,
+      people: people,
       receivedAt: Date.now()
     }
   }
 }
 
-function shouldFetchMembers(state) {
-  if (state.app.getIn(['members', 'updates']).isEmpty()) {
+function shouldFetchPeople(state) {
+  if (state.app.getIn(['people', 'updates']).isEmpty()) {
     return true
   } else {
     // check timestamp?
@@ -24,7 +24,7 @@ function shouldFetchMembers(state) {
 
 export function fetch(token) {
   return (dispatch, getState) => {
-    if ( shouldFetchMembers(getState()) ) {
+    if ( shouldFetchPeople(getState()) ) {
       return $fetch("/api/people", {
   				headers: new Headers({
   					"Authorization": token
@@ -38,16 +38,16 @@ export function fetch(token) {
 
 export function commit() {
   return {
-    name: 'FIELDS_CREATE_MEMBERS_COMMIT'
+    name: 'FIELDS_CREATE_PEOPLE_COMMIT'
   }
 }
 
-export function update(id, member) {
+export function update(id, person) {
   return {
-    name: constants.MEMBERS_UPDATE,
+    name: constants.PEOPLE_UPDATE,
     data: {
       id: id.toString(), 
-      member
+      person
     }
   }
 }
@@ -56,7 +56,7 @@ export function create() {
   return dispatch => {
     let id = Date.now()
     dispatch({
-      name: constants.MEMBERS_CREATE,
+      name: constants.PEOPLE_CREATE,
       data: {
         id: id.toString()
       }

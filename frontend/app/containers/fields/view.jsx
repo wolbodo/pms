@@ -321,13 +321,13 @@ class FieldsView extends React.Component {
   moveField(fromIndex, toIndex) {
     const { dispatch} = this.props
 
-    dispatch(actions.fields.moveField('member', fromIndex, toIndex))
+    dispatch(actions.fields.moveField('person', fromIndex, toIndex))
   }
 
   addSet(fromIndex, toIndex) {
     const { dispatch} = this.props
 
-    dispatch(actions.fields.createSet('member', fromIndex, toIndex))
+    dispatch(actions.fields.createSet('person', fromIndex, toIndex))
 
   }
 
@@ -337,12 +337,12 @@ class FieldsView extends React.Component {
     // <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
       <div className='content fieldsview'>
-        { _.map(fields.schemas.member.form, (group, i) => 
+        { _.map(fields.schemas.person.form, (group, i) => 
           <Group 
             key={i} 
             index={i} 
             moveField={this.moveField}
-            schema={fields.schemas.member}
+            schema={fields.schemas.person}
             addSet={this.addSet} 
             title={group.title} 
             fieldsets={group.fields} />

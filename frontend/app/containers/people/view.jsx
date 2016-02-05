@@ -11,10 +11,10 @@ import _ from 'lodash'
 
 import actions from 'actions'
 
-class MemberView extends React.Component {
+class PeopleView extends React.Component {
 
     static defaultProps = {
-        members: []
+        people: []
     };
     
 	constructor(props) {
@@ -23,7 +23,7 @@ class MemberView extends React.Component {
 
 	componentDidMount() {
 		var { dispatch, auth } =  this.props;
-		dispatch(actions.members.fetch(auth.token))
+		dispatch(actions.people.fetch(auth.token))
 	}
 
 	renderButtons() {
@@ -32,7 +32,7 @@ class MemberView extends React.Component {
 		return (
 			<mdl.IconButton 
 				name="add"
-				onClick={() => dispatch(actions.members.create())} />
+				onClick={() => dispatch(actions.people.create())} />
 		)
 	}
 
@@ -40,12 +40,12 @@ class MemberView extends React.Component {
 		var headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
 						'mobile', 'email'];
 
-		const {history, members, fields} = this.props;
+		const {history, people, fields} = this.props;
 
 		return (
 			<List title="Leden" buttons={this.renderButtons()}>
-				<Head schema={fields.schemas.member} fields={headerfields} editLink/>
-				{_.map(members.items, (row, i) => (
+				<Head schema={fields.schemas.person} fields={headerfields} editLink/>
+				{_.map(people.items, (row, i) => (
 					<Row 
 						className="click"
 						key={i} 
@@ -60,18 +60,18 @@ class MemberView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const members = state.app.get('members').toJS(),
+  const people = state.app.get('people').toJS(),
   		auth = state.app.get('auth').toJS(),
   		fields = state.app.get('fields').toJS(),
   		isFetching = false
 
   return {
-    members, auth, fields,
+    people, auth, fields,
     isFetching
   }
 }
 
 
 
-export default connect(mapStateToProps)(MemberView);
+export default connect(mapStateToProps)(PeopleView);
 

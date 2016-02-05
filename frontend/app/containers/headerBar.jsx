@@ -30,7 +30,7 @@ class HeaderBar extends React.Component {
     }
 
     renderDialog() {
-        let {members, groups, fields, dispatch} = this.props
+        let {people, groups, fields, dispatch} = this.props
         let {dialogOpen} = this.state
 
         const actions = [
@@ -55,15 +55,15 @@ class HeaderBar extends React.Component {
               open={dialogOpen}
               onRequestClose={() => this.closeDialog()}
             >
-            { !_.isEmpty(members.updates) && (
+            { !_.isEmpty(people.updates) && (
                 <div>
                     <h6>Leden</h6>
                     <ul>
-                        {_.map(members.updates, (member, id) => (
+                        {_.map(people.updates, (person, id) => (
                             <li key={id}>
-                                <p>{members.items[id].nickname} Gewijzigd</p>
+                                <p>{people.items[id].nickname} Gewijzigd</p>
                                 <ul>
-                                    {_.map(member, (value, key) => (
+                                    {_.map(person, (value, key) => (
                                         <li key={key}>{key}: {value}</li>
                                     ))}
                                 </ul>
@@ -94,13 +94,13 @@ class HeaderBar extends React.Component {
     }
 
     saveCurrent() {
-        let {members, groups, fields, dispatch} = this.props
-        dispatch(actions.members.commit())
+        let {people, groups, fields, dispatch} = this.props
+        dispatch(actions.people.commit())
     }
 
     render() {
-        let {members, groups, fields, dispatch} = this.props
-        let changed = !_.isEmpty(members.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
+        let {people, groups, fields, dispatch} = this.props
+        let changed = !_.isEmpty(people.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
 
         return (
             <div className='headerBar'>

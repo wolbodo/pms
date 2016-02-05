@@ -1,6 +1,6 @@
 import fields from './fields'
 import group from './group'
-import member from './member'
+import people from './people'
 import permissions from './permissions'
 import HeaderBar from './headerBar'
 
@@ -10,7 +10,7 @@ import Auth from './auth'
 export {
 	fields,
 	group,
-	member,
+	people,
 	HeaderBar,
 	permissions,
 

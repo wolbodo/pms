@@ -13,15 +13,15 @@ class FieldsEdit extends React.Component {
 	}
 	render() {
 
-		const {params, fields, dispatch } = this.props;
+		const {params, fields, permissions, dispatch } = this.props;
 
 		return (
 			<ItemEdit
 				schema={fields.schemas.field}
-                permissions={{read:[], write:[]}}
-				item={fields.schemas.member.fields[params.veld]}
+                permissions={permissions.leden.field}
+				item={fields.schemas.person.fields[params.veld]}
 				onChange={field => {
-					dispatch(actions.fields.updateField('member', params.veld, field))
+					dispatch(actions.fields.updateField('person', params.veld, field))
 				}} />
 		);
 	}
@@ -30,7 +30,8 @@ class FieldsEdit extends React.Component {
 export default connect(
 	function mapStateToProps(state) {
 	  return {
-	    fields: state.app.get('fields').toJS()
+	    fields: state.app.get('fields').toJS(),
+	    permissions: state.app.get('permissions').toJS()
 	  }
 	})
 	(FieldsEdit);
