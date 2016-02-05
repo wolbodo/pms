@@ -81,19 +81,15 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
 
     println!("Authorization token: {}", token);
 
-    let stmt = db.prepare("SELECT getpeople(token := $1);").unwrap();
-    let rows = stmt.query(&[&token]).unwrap();
+    let stmt = db.prepare("SELECT people_get(token := $1);").unwrap();
 
-    let mut people: Vec<Value> = Vec::new();
+    let rows = match stmt.query(&[&token]) {
+        Ok(rows) => rows,
+        Err(PgError::Db(err)) => badrequest!(err.message),
+        Err(err) => badrequest!(err.to_string()),
+    };
 
-    for row in rows.iter() {
-        println!("{:?}", row);
-        
-        let data: Value = row.get("getpeople");
-        println!("{:?}", data);
-
-        people.push(data);
-    }
+    let people: Value = rows.get(0).get(0);
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
     // // Err(Response::with((status::Ok)));
