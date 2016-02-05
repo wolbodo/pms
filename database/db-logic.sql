@@ -1,5 +1,5 @@
-CREATE OR REPLACE FUNCTION public.base64url2jsonb(json text, info text DEFAULT ''::text)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.base64url_jsonb(json TEXT, info TEXT DEFAULT ''::TEXT)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -15,8 +15,8 @@ END
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.jsonb2base64url(jsonbytes jsonb)
- RETURNS text
+CREATE OR REPLACE FUNCTION public.jsonb_base64url(jsonbytes JSONB)
+ RETURNS TEXT
  LANGUAGE plpgsql
 AS $function$
 BEGIN
@@ -25,21 +25,19 @@ END
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.parsejwt(token text)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.parse_jwt(token TEXT)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
   header JSONB;
   payload JSONB;
   match TEXT[];
---  debug1 TEXT;
---  debug2 TEXT;
 BEGIN
     match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
-    header = base64url2jsonb(match[2]);
-    payload = base64url2jsonb(match[3]);
-    IF match[3] != TRANSLATE(ENCODE(HMAC(match[0], 'secret', 'sha256'), 'base64'), '+/=', '-_') THEN
+    header = base64url_jsonb(match[2]);
+    payload = base64url_jsonb(match[3]);
+    IF match IS NULL OR match[4] != TRANSLATE(ENCODE(HMAC(match[1], 'FIXME: this is a secret value that should better be replaced otherwise we are seriously fucked!', 'sha256'), 'base64'), '+/=', '-_') THEN
       RAISE EXCEPTION 'Invalid signature';
       RETURN NULL;
     END IF;
@@ -48,21 +46,11 @@ BEGIN
       RETURN NULL;
     END IF;
     RETURN payload;
---EXCEPTION
-----    WHEN invalid_parameter_value THEN
-----        RAISE EXCEPTION '%', 'error';
-----        RETURN NULL;
---    WHEN OTHERS THEN
---        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT,
---                          debug3 = PG_EXCEPTION_CONTEXT;
---        RAISE EXCEPTION 'Error "%" (%).', debug1, debug2
---        RETURN NULL;
 END
 $function$;
 
-
-CREATE OR REPLACE FUNCTION public.login(emailaddress text, password text)
- RETURNS text
+CREATE OR REPLACE FUNCTION public.login(emailaddress TEXT, password TEXT)
+ RETURNS TEXT
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -72,24 +60,24 @@ DECLARE
   signature TEXT;
 BEGIN
   header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
-  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + interval '31 days')) || '}')::JSONB INTO payload
-      FROM people p 
+  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO payload
+      FROM people p
       JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
       JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
-      WHERE p.email = emailaddress AND crypt(password, p.password_hash) = p.password_hash AND r.name = 'login';
+      WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
   IF payload IS NULL THEN
       RAISE EXCEPTION 'Username or password wrong.';
       RETURN NULL;
   END IF;
-  content = jsonb2base64url(header) || '.' || jsonb2base64url(payload);
-  signature = TRANSLATE(ENCODE(HMAC(content, 'secret', 'sha256'), 'base64'), '+/=', '-_');
+  content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
+  signature = TRANSLATE(ENCODE(HMAC(content, 'FIXME: this is a secret value that should better be replaced otherwise we are seriously fucked!', 'sha256'), 'base64'), '+/=', '-_');
   RETURN content || '.' || signature;
 END
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.hasrole(self_id integer, role_name varchar)
- RETURNS bool
+CREATE OR REPLACE FUNCTION public.has_role(self_id INT, role_name VARCHAR)
+ RETURNS BOOL
  LANGUAGE plpgsql
 AS $function$
 BEGIN
@@ -105,8 +93,8 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.getfieldpermissions(permissions_type permissions_type, ref_type character varying, self_id integer)
- RETURNS TABLE(key character varying, selfid integer)
+CREATE OR REPLACE FUNCTION public.get_field_permissions(permissions_type PERMISSIONS_TYPE, ref_type VARCHAR, self_id INT)
+ RETURNS TABLE(key VARCHAR, selfid INT)
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -126,8 +114,8 @@ BEGIN
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.getfieldpermissions(permissions_type permissions_type, ref_type character varying, self_id integer, people_id integer)
- RETURNS varchar[]
+CREATE OR REPLACE FUNCTION public.get_field_permissions(permissions_type PERMISSIONS_TYPE, ref_type VARCHAR, self_id INT, people_id INT)
+ RETURNS VARCHAR[]
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -135,9 +123,9 @@ DECLARE
     _ref_type ALIAS FOR ref_type;
     _self_id ALIAS FOR self_id;
     _people_id ALIAS FOR people_id;
-    returnvalue varchar[];
+    returnvalue VARCHAR[];
 BEGIN
-  SELECT array_agg(DISTINCT f.name) INTO returnvalue
+  SELECT ARRAY_AGG(DISTINCT f.name) INTO returnvalue
      FROM fields f
      JOIN permissions pm ON pm.ref_key = 'field' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
      JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND rpm.valid_till IS NULL
@@ -150,40 +138,47 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.getpeople(token text, people_id integer DEFAULT '-1'::integer)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.people_get(token TEXT, people_id INT DEFAULT '-1'::INT)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-    _self_id int;
-    returnvalue jsonb;
+    _self_id INT;
+    returnvalue JSONB;
 BEGIN
-    _self_id = parsejwt(token)->'user';
-    WITH readfields AS (SELECT * FROM getfieldpermissions('read'::permissions_type, 'people', _self_id))
-    SELECT jsonb_agg((SELECT jsonb_object_agg(key, value)
-        FROM (SELECT * FROM JSONB_EACH(data)
-            UNION
-            VALUES
-                ('gid'::TEXT, TO_JSON(gid)::JSONB),
-                ('id', TO_JSON(id)::JSONB),
-                ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
-                ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till))), 'null')::JSONB),
-                ('email', COALESCE(TO_JSON(email), 'null')::JSONB),
-                ('phone', COALESCE(TO_JSON(phone), 'null')::JSONB),
-                ('password_hash', COALESCE(TO_JSON(password_hash), 'null')::JSONB),
-                ('modified_by', TO_JSON(modified_by)::JSONB),
-                ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified))), 'null')::JSONB),
-                ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
-        ) alias
-        WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR people.id = _self_id))) INTO returnvalue
-        FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id);
-    RETURN returnvalue;
+    _self_id = parse_jwt(token)->'user';
+    WITH readfields AS (SELECT * FROM get_field_permissions('read'::PERMISSIONS_TYPE, 'people', _self_id))
+    SELECT JSONB_AGG(object) INTO returnvalue
+        FROM (
+            SELECT (SELECT JSONB_OBJECT_AGG(key, value)
+            FROM (SELECT * FROM JSONB_EACH(data)
+                UNION
+                VALUES
+                    ('gid'::TEXT, TO_JSON(gid)::JSONB),
+                    ('id', TO_JSON(id)::JSONB),
+                    ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
+                    ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till))), 'null')::JSONB),
+                    ('email', COALESCE(TO_JSON(email), 'null')::JSONB),
+                    ('phone', COALESCE(TO_JSON(phone), 'null')::JSONB),
+                    ('password_hash', COALESCE(TO_JSON(password_hash), 'null')::JSONB),
+                    ('modified_by', TO_JSON(modified_by)::JSONB),
+                    ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified))), 'null')::JSONB),
+                    ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
+            ) alias
+            WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR people.id = _self_id))
+            FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id)
+        ) alias (object) WHERE object IS NOT NULL;
+    IF people_id = -1 THEN
+        RETURN returnvalue;
+    ELSE
+        RETURN returnvalue->0;
+    END IF;
 END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.jsonb_merge(base jsonb = '{}'::JSONB, update jsonb = '{}'::JSONB, read text[] = ARRAY[]::text[], write text[] = ARRAY[]::text[])
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.jsonb_merge(base JSONB = '{}'::JSONB, update JSONB = '{}'::JSONB, read text[] = ARRAY[]::text[], write text[] = ARRAY[]::text[])
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -191,7 +186,7 @@ DECLARE
 BEGIN
     FOR kv IN (SELECT * FROM JSONB_EACH(update))
     LOOP
-        IF NOT (array[kv.key] <@ write OR (array[kv.key] <@ read AND base ? kv.key AND base->kv.key = update->kv.key)) THEN
+        IF NOT (ARRAY[kv.key] <@ write OR (ARRAY[kv.key] <@ read AND base ? kv.key AND base->kv.key = update->kv.key)) THEN
             RAISE EXCEPTION 'writing "%" not allowed', kv.key;
             RETURN NULL;
         END IF;
@@ -201,14 +196,14 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.remove_base(base jsonb)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.remove_base(base JSONB)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-    field text;
+    field VARCHAR;
 BEGIN
-    FOREACH field IN ARRAY array['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
+    FOREACH field IN ARRAY ARRAY['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
         base = base -field;
     END LOOP;
     RETURN base;
@@ -216,20 +211,20 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.setperson(token text, people_id integer, data jsonb)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.person_set(token TEXT, people_id INT, data JSONB)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-    self_id int;
+    self_id INT;
     _data ALIAS FOR data;
 BEGIN
-    self_id = parsejwt(token)->'user';
+    self_id = parse_jwt(token)->'user';
     _data = remove_base(jsonb_merge(
-        base := getpeople(token, people_id)->0,
+        base := getpeople(token, people_id),
         update := _data,
-        read := getfieldpermissions('read'::permissions_type, 'people', self_id, people_id),
-        write := getfieldpermissions('write'::permissions_type, 'people', self_id, people_id)
+        read := get_field_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, people_id),
+        write := get_field_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, people_id)
     ));
 
     UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
@@ -238,30 +233,30 @@ BEGIN
         SELECT id, valid_till, _data->>'email', _data->>'phone', password_hash, self_id, _data -'email' -'phone'
             FROM people WHERE id = people_id ORDER BY valid_till DESC LIMIT 1;
 
-    RETURN getpeople(token, people_id)->0;
+    RETURN people_get(token, people_id);
 END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.addperson(token text, data jsonb)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.person_add(token TEXT, data JSONB)
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-    self_id int;
+    self_id INT;
     _data ALIAS FOR data;
-    people_id integer;
+    people_id INT;
 BEGIN
-    self_id = parsejwt(token)->'user';
+    self_id = parse_jwt(token)->'user';
     _data = remove_base(jsonb_merge(
         update := _data,
-        read := getfieldpermissions('read'::permissions_type, 'people', self_id, -1),
-        write := getfieldpermissions('write'::permissions_type, 'people', self_id, -1)
+        read := get_field_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, -1),
+        write := get_field_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, -1)
     ));
 
     INSERT INTO people (email, phone, modified_by, data)
         VALUES (_data->>'email', _data->>'phone', self_id, _data -'email' -'phone') RETURNING id INTO people_id;
 
-    RETURN getpeople(token, people_id)->0;
+    RETURN people_get(token, people_id);
 END;
 $function$;
