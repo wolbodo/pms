@@ -1,35 +1,19 @@
---Select all people with the fields for member id XXX
-CREATE OR REPLACE FUNCTION getpermissions(pm_type permissions_type, pm_ref_type varchar, pm_self_id int, pm_people_id int DEFAULT -1) RETURNS TABLE(key varchar, self_id int) AS $$
-DECLARE
-    _type ALIAS FOR pm_type;
-    _ref_type ALIAS FOR pm_ref_type;
-    _self_id ALIAS FOR pm_self_id;
-    _people_id ALIAS FOR pm_people_id;
-BEGIN
-  RETURN QUERY (SELECT DISTINCT fields.name AS key, CASE WHEN roles.name = 'self' THEN people.id END AS self_id
-     FROM
-        fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
-               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
-               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
-               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
-               JOIN people ON people_roles.people_id = people.id AND people.id = _self_id AND (roles.name != 'self' OR _people_id = -1 OR _people_id = _self_id) AND people.valid_till IS NULL
-      WHERE permissions.type = _type AND permissions.ref_type = _ref_type);
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION base64url2jsonb(json TEXT, info TEXT DEFAULT '') RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION public.base64url2jsonb(json text, info text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
   debug1 TEXT;
 BEGIN
-    RETURN CONVERT_FROM(DECODE(TRANSLATE($1 || REPEAT('=', LENGTH($1) * 6 % 8 / 2), '-_',''), 'base64'), 'UTF-8')::JSONB;
-EXCEPTION
-    WHEN invalid_parameter_value THEN
-        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
-        RAISE EXCEPTION  'E: % %', info, debug1;
-        RETURN NULL;
+    RETURN CONVERT_FROM(DECODE(TRANSLATE(json || REPEAT('=', LENGTH(json) * 6 % 8 / 2), '-_',''), 'base64'), 'UTF-8')::JSONB;
+    EXCEPTION
+        WHEN invalid_parameter_value THEN
+            GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
+            RAISE EXCEPTION  'E: % %', info, debug1;
+            RETURN NULL;
 END
-$$ LANGUAGE plpgsql;
+$function$;
+
 
 CREATE OR REPLACE FUNCTION public.jsonb2base64url(jsonbytes jsonb)
  RETURNS text
@@ -40,17 +24,17 @@ BEGIN
 END
 $function$;
 
+
 CREATE OR REPLACE FUNCTION public.parsejwt(token text)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-
   header JSONB;
   payload JSONB;
   match TEXT[];
-  debug1 TEXT;
-  debug2 TEXT;
+--  debug1 TEXT;
+--  debug2 TEXT;
 BEGIN
     match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
     header = base64url2jsonb(match[2]);
@@ -76,6 +60,7 @@ BEGIN
 END
 $function$;
 
+
 CREATE OR REPLACE FUNCTION public.login(emailaddress text, password text)
  RETURNS text
  LANGUAGE plpgsql
@@ -87,7 +72,11 @@ DECLARE
   signature TEXT;
 BEGIN
   header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
-  SELECT ('{ "user":' || TO_JSON(id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + interval '31 days')) || '}')::JSONB INTO payload FROM people p WHERE p.valid_till IS NULL AND p.email = emailaddress AND crypt(password, p.password_hash) = p.password_hash;
+  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + interval '31 days')) || '}')::JSONB INTO payload
+      FROM people p 
+      JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
+      JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
+      WHERE p.email = emailaddress AND crypt(password, p.password_hash) = p.password_hash AND r.name = 'login';
   IF payload IS NULL THEN
       RAISE EXCEPTION 'Username or password wrong.';
       RETURN NULL;
@@ -99,199 +88,180 @@ END
 $function$;
 
 
--- -------------------------------------- sample queries
--- INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
-
-
--- SELECT parsejwt(login(emailaddress := 'test@example.com', password := '1234'));
-
--- -----------------------------------
-
-
-CREATE OR REPLACE FUNCTION getpeople(token text) 
- RETURNS TABLE(json jsonb) 
+CREATE OR REPLACE FUNCTION public.hasrole(self_id integer, role_name varchar)
+ RETURNS bool
  LANGUAGE plpgsql
 AS $function$
-DECLARE
-  self int;
-  person int;
 BEGIN
-  person = -1;
-  self = parsejwt(token)::jsonb->'user';
-
- RETURN QUERY (
-     WITH readfields AS (SELECT * FROM getpermissions('read'::permissions_type, 'people', self))
-     SELECT ('{' || (
-         SELECT STRING_AGG('"' || key || '":' || TO_JSON(value), ',')
-         FROM (SELECT * FROM JSONB_EACH(data)
-          UNION
-             VALUES
-                 ('gid'::TEXT, TO_JSON(gid)::JSONB),
-                 ('id', TO_JSON(id)::JSONB),
-                 ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
-                 ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
-                 ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
-                 ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
-                 ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
-                 ('modified_by', TO_JSON(modified_by)::JSONB),
-                 ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
-                 ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
-             ) alias
-             WHERE key IN (SELECT key FROM readfields WHERE self_id IS NULL OR people.id = self))  || '}')::JSONB
-         FROM people WHERE valid_till IS NULL AND (people.id = person OR -1 = person)
-   );
+  PERFORM FROM roles r
+               JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL AND r.valid_till IS NULL
+               JOIN people p ON pr.people_id = p.id AND r.name != 'self' AND p.valid_till IS NULL
+      WHERE p.id = self_id AND r.name = role_name;
+  IF NOT FOUND THEN
+      RETURN FALSE;
+  END IF;
+  RETURN TRUE;
 END;
 $function$;
 
---
---
---CREATE OR REPLACE FUNCTION exception(text) RETURNS varchar LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '%', $1; RETURN ''; END; $$;
---
-----FIXME LATER: Dexter case (update people as same people)
---CREATE OR REPLACE FUNCTION setperson(int, int, jsonb) RETURNS TABLE(json jsonb) AS $$
---DECLARE
---    _self_id ALIAS FOR $1;
---    _people_id ALIAS FOR $2;
---    _data ALIAS FOR $3;
---BEGIN
---    UPDATE people SET valid_till = NOW() WHERE id = $2 AND valid_till IS NULL;
---
---    INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, data)
---    WITH readfields (key) AS (SELECT key FROM getpermissions('read'::permissions_type, 'people', _self_id, _people_id)),
---         writefields (key) AS (SELECT key FROM getpermissions('write'::permissions_type, 'people', _self_id, _people_id))
---    SELECT id, valid_till,
-        --CASE WHEN NOT _data ? 'email' THEN email WHEN 'email' IN (SELECT * FROM readfields) AND email = _data->>'email' OR 'email' IN (SELECT * FROM writefields) THEN _data->>'email' ELSE exception('writing "email" not allowed') END,
-        --CASE WHEN NOT _data ? 'phone' THEN phone WHEN 'phone' IN (SELECT * FROM readfields) AND phone = _data->>'phone' OR 'phone' IN (SELECT * FROM writefields) THEN _data->>'phone' ELSE exception('writing "phone" not allowed') END,
---        password_hash,
---        _self_id,
---        (SELECT ('{' || STRING_AGG('"' ||
-            --CASE WHEN t2.key IS NULL THEN t1.key WHEN t2.key IN (SELECT * FROM writefields) OR t2.key IN (SELECT * FROM readfields) AND t1.value = t2.value THEN t2.key ELSE exception('writing "' || t2.key || '" not allowed') END
---                || '":' || TO_JSON(COALESCE(t2.value, t1.value)), ',') || '}')::JSONB
---            FROM JSONB_EACH(data) t1
---            FULL OUTER JOIN (SELECT * FROM JSONB_EACH(DATA) WHERE key NOT IN ('email','phone')) t2 USING (key))
---    FROM people WHERE id = _people_id ORDER BY valid_till DESC LIMIT 1;
---    RETURN QUERY (SELECT * FROM getpeople(_self_id, people_id));
---END;
---$$ LANGUAGE plpgsql;
---
---
---WITH readfields AS (
---    SELECT DISTINCT key, self_id FROM viewpermissions WHERE type = 'read' AND ref_type = 'people' AND people_id = XXX
---)
---SELECT ('{' || (
---    SELECT STRING_AGG('"' || key || '":' || TO_JSON(value), ',')
---    FROM (SELECT * FROM JSONB_EACH(data) UNION
---        VALUES
---            ('gid'::TEXT, TO_JSON(gid)::JSONB),
---            ('id', TO_JSON(id)::JSONB),
---            ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
---            ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
---            ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
---            ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
---            ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
---            ('modified_by', TO_JSON(modified_by)::JSONB),
---            ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
---            ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
---        ) alias
---        WHERE key IN (SELECT key FROM readfields WHERE self_id IS NULL OR people.id = self_id))  || '}')::JSONB
---    FROM people WHERE valid_till IS NULL;
---
---
---
---
---CREATE OR REPLACE VIEW viewpermissions AS
---    SELECT DISTINCT fields.name AS key, CASE WHEN roles.name = 'self' THEN people.id END AS self_id
---     FROM
---        fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
---               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
---               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
---               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
---               JOIN people ON people_roles.people_id = people.id AND people.valid_till IS NULL;
---
---
---        --WHERE permissions.type = type AND permissions.ref_type = 'people' AND people.id = selfid
---
---WITH readfields AS (
---    SELECT DISTINCT key, self_id FROM viewpermissions WHERE type = 'read' AND ref_type = 'people' AND people_id = XXX
---)
---SELECT ('{' || (
---    SELECT STRING_AGG('"' || key || '":' || TO_JSON(value), ',')
---    FROM (SELECT * FROM JSONB_EACH(data) UNION
---        VALUES
---            ('gid'::TEXT, TO_JSON(gid)::JSONB),
---            ('id', TO_JSON(id)::JSONB),
---            ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
---            ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till)))::JSONB, 'null'::JSONB)),
---            ('email', COALESCE(TO_JSON(email)::JSONB, 'null'::JSONB)),
---            ('phone', COALESCE(TO_JSON(phone)::JSONB, 'null'::JSONB)),
---            ('password_hash', COALESCE(TO_JSON(password_hash)::JSONB, 'null'::JSONB)),
---            ('modified_by', TO_JSON(modified_by)::JSONB),
---            ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified)))::JSONB, 'null'::JSONB)),
---            ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
---        ) alias
---        WHERE key IN (SELECT key FROM readfields WHERE self_id IS NULL OR people.id = self_id))  || '}')::JSONB
---    FROM people WHERE valid_till IS NULL;
---
-----Alternative for the current construction (with 1 id pass) is this less complex but longer construct (with 2 id passes)
-----WITH readfields (key, forall) AS (
-----    SELECT fields.name, TRUE FROM
-----        fields JOIN fields_roles ON fields_roles.fields_id = fields.id AND fields_roles.valid_till IS NULL AND fields.valid_till IS NULL
-----               JOIN roles ON roles.id = fields_roles.roles_id AND roles.valid_till IS NULL
-----               JOIN people_roles ON people_roles.roles_id = roles.id AND people_roles.valid_till IS NULL
-----               JOIN people ON people_roles.people_id = people.id AND people.valid_till IS NULL
-----        WHERE read AND people.id = XXX
-----    UNION
-----    SELECT fields.name, FALSE FROM
-----        fields JOIN fields_roles ON fields_roles.fields_id = fields.id AND fields_roles.valid_till IS NULL AND fields.valid_till IS NULL
-----               JOIN roles ON roles.id = fields_roles.roles_id AND roles.valid_till IS NULL
-----        WHERE read AND roles.name = 'self'
-----)
-----...
-----        WHERE key IN (SELECT key FROM readfields WHERE forall OR people.id = XXX))  
---
-----Raise exception function
---CREATE OR REPLACE FUNCTION exception(text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '%', $1; END; $$;
-----Can also use: RAISE unique_violation USING MESSAGE = 'Duplicate user ID: ' || user_id;
-----use:
---SELECT exception('this is the problem');
---
---
-----variables: XXX (member who is performing the action) YYY (write to member), DATA (JSON data to update)
---BEGIN;
---UPDATE people SET valid_till = NOW() WHERE id = YYY AND valid_till IS NULL;
---
---INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, data)
---WITH writefields (key) AS (
---    SELECT DISTINCT fields.name FROM
---        fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
---               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
---               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
---               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
---               JOIN people ON people_roles.people_id = people.id AND (roles.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
---        WHERE permissions.type = 'write' AND permissions.ref_type = 'people'
---), readfields (key) AS (
---    SELECT DISTINCT fields.name FROM
---        fields JOIN permissions ON  permissions.ref_key = 'field' AND permissions.ref_value = fields.id AND permissions.valid_till IS NULL AND fields.valid_till IS NULL
---               JOIN roles_permissions ON permissions.id = roles_permissions.permissions_id AND roles_permissions.valid_till IS NULL
---               JOIN roles ON roles.id = roles_permissions.roles_id AND roles.valid_till IS NULL
---               JOIN people_roles ON (people_roles.roles_id = roles.id OR roles.name = 'self') AND people_roles.valid_till IS NULL
---               JOIN people ON people_roles.people_id = people.id AND (roles.name != 'self' OR people.id = XXX) AND people.valid_till IS NULL
---        WHERE permissions.type = 'read' AND permissions.ref_type = 'people'
---)
---SELECT id, valid_till,
-    --CASE WHEN NOT (DATA)::JSONB ? 'email' THEN email WHEN 'email' IN (SELECT * FROM readfields) AND email = (DATA)::JSONB->>'email' OR 'email' IN (SELECT * FROM writefields) THEN (DATA)::JSONB->>'email' ELSE '' || exception('writing "email" not allowed') END,
-    --CASE WHEN NOT (DATA)::JSONB ? 'phone' THEN phone WHEN 'phone' IN (SELECT * FROM readfields) AND phone = (DATA)::JSONB->>'phone' OR 'phone' IN (SELECT * FROM writefields) THEN (DATA)::JSONB->>'phone' ELSE '' || exception('writing "phone" not allowed') END,
---    password_hash,
---    XXX,
---    (SELECT ('{' || STRING_AGG('"' ||
-        --CASE WHEN t2.key IS NULL THEN t1.key WHEN t2.key IN (SELECT * FROM writefields) OR t2.key IN (SELECT * FROM readfields) AND t1.value = t2.value THEN t2.key ELSE '' || exception('writing "' || t2.key || '" not allowed') END
---            || '":' || TO_JSON(COALESCE(t2.value, t1.value)), ',') || '}')::JSONB
---        FROM JSONB_EACH(data) t1
---        FULL OUTER JOIN (SELECT * FROM JSONB_EACH(DATA) WHERE key NOT IN ('email','phone')) t2 USING (key))
---FROM people WHERE id = YYY ORDER BY valid_till DESC LIMIT 1;
---
---COMMIT;
---
-----try '{"email":"test@example.com","city":"Amsterdam","nickname":"Wikkert"}' with 2 2 will succeed
-----    '{"email":"test@example.com","city":"Amsterdam","nickname":"Wikker"}' with 2 2 will error
-----    '{"email":"test@example.com","city":"Amsterdam","nickname":"Wikker"}' with 2 3 will succeed
+
+CREATE OR REPLACE FUNCTION public.getfieldpermissions(permissions_type permissions_type, ref_type character varying, self_id integer)
+ RETURNS TABLE(key character varying, selfid integer)
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    _permissions_type ALIAS FOR permissions_type;
+    _ref_type ALIAS FOR ref_type;
+    _self_id ALIAS FOR self_id;
+--    _people_id ALIAS FOR people_id;
+BEGIN
+  RETURN QUERY (SELECT DISTINCT f.name, CASE WHEN r.name = 'self' THEN p.id END
+     FROM fields f
+     JOIN permissions pm ON pm.ref_key = 'field' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
+     JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND rpm.valid_till IS NULL
+     JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
+     JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL
+     JOIN people p ON pr.people_id = p.id AND p.id = _self_id --AND (r.name != 'self' OR _people_id = -1 OR _people_id = _self_id) AND p.valid_till IS NULL
+     WHERE pm.type = _permissions_type AND pm.ref_type = _ref_type);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.getfieldpermissions(permissions_type permissions_type, ref_type character varying, self_id integer, people_id integer)
+ RETURNS varchar[]
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    _permissions_type ALIAS FOR permissions_type;
+    _ref_type ALIAS FOR ref_type;
+    _self_id ALIAS FOR self_id;
+    _people_id ALIAS FOR people_id;
+    returnvalue varchar[];
+BEGIN
+  SELECT array_agg(DISTINCT f.name) INTO returnvalue
+     FROM fields f
+     JOIN permissions pm ON pm.ref_key = 'field' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
+     JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND rpm.valid_till IS NULL
+     JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
+     JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL
+     JOIN people p ON pr.people_id = p.id AND p.id = _self_id AND (r.name != 'self' OR _people_id = _self_id) AND p.valid_till IS NULL
+     WHERE pm.type = _permissions_type AND pm.ref_type = _ref_type;
+  RETURN returnvalue;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.getpeople(token text, people_id integer DEFAULT '-1'::integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    _self_id int;
+    returnvalue jsonb;
+BEGIN
+    _self_id = parsejwt(token)->'user';
+    WITH readfields AS (SELECT * FROM getfieldpermissions('read'::permissions_type, 'people', _self_id))
+    SELECT jsonb_agg((SELECT jsonb_object_agg(key, value)
+        FROM (SELECT * FROM JSONB_EACH(data)
+            UNION
+            VALUES
+                ('gid'::TEXT, TO_JSON(gid)::JSONB),
+                ('id', TO_JSON(id)::JSONB),
+                ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
+                ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till))), 'null')::JSONB),
+                ('email', COALESCE(TO_JSON(email), 'null')::JSONB),
+                ('phone', COALESCE(TO_JSON(phone), 'null')::JSONB),
+                ('password_hash', COALESCE(TO_JSON(password_hash), 'null')::JSONB),
+                ('modified_by', TO_JSON(modified_by)::JSONB),
+                ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified))), 'null')::JSONB),
+                ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
+        ) alias
+        WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR people.id = _self_id))) INTO returnvalue
+        FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id);
+    RETURN returnvalue;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.jsonb_merge(base jsonb = '{}'::JSONB, update jsonb = '{}'::JSONB, read text[] = ARRAY[]::text[], write text[] = ARRAY[]::text[])
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    kv record;
+BEGIN
+    FOR kv IN (SELECT * FROM JSONB_EACH(update))
+    LOOP
+        IF NOT (array[kv.key] <@ write OR (array[kv.key] <@ read AND base ? kv.key AND base->kv.key = update->kv.key)) THEN
+            RAISE EXCEPTION 'writing "%" not allowed', kv.key;
+            RETURN NULL;
+        END IF;
+    END LOOP;
+    RETURN base || update;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.remove_base(base jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    field text;
+BEGIN
+    FOREACH field IN ARRAY array['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
+        base = base -field;
+    END LOOP;
+    RETURN base;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.setperson(token text, people_id integer, data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    self_id int;
+    _data ALIAS FOR data;
+BEGIN
+    self_id = parsejwt(token)->'user';
+    _data = remove_base(jsonb_merge(
+        base := getpeople(token, people_id)->0,
+        update := _data,
+        read := getfieldpermissions('read'::permissions_type, 'people', self_id, people_id),
+        write := getfieldpermissions('write'::permissions_type, 'people', self_id, people_id)
+    ));
+
+    UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
+
+    INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, data)
+        SELECT id, valid_till, _data->>'email', _data->>'phone', password_hash, self_id, _data -'email' -'phone'
+            FROM people WHERE id = people_id ORDER BY valid_till DESC LIMIT 1;
+
+    RETURN getpeople(token, people_id)->0;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.addperson(token text, data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    self_id int;
+    _data ALIAS FOR data;
+    people_id integer;
+BEGIN
+    self_id = parsejwt(token)->'user';
+    _data = remove_base(jsonb_merge(
+        update := _data,
+        read := getfieldpermissions('read'::permissions_type, 'people', self_id, -1),
+        write := getfieldpermissions('write'::permissions_type, 'people', self_id, -1)
+    ));
+
+    INSERT INTO people (email, phone, modified_by, data)
+        VALUES (_data->>'email', _data->>'phone', self_id, _data -'email' -'phone') RETURNING id INTO people_id;
+
+    RETURN getpeople(token, people_id)->0;
+END;
+$function$;
