@@ -13,6 +13,7 @@ extern crate iron_postgres_middleware as pg_middleware;
 
 use persistent::Read;
 use iron::status;
+use router::{Router};
 use hyper::header::Authorization;
 
 use iron::prelude::*;
@@ -72,6 +73,12 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 fn handle_people(req: &mut Request) -> IronResult<Response> {
     // Returns a list of people, might be using filters. 
 
+    let ref people_id_arg = req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1");
+    let people_id = match people_id_arg.parse::<i32>() {
+        Ok(value) => value,
+        Err(err) => badrequest!(err.to_string())
+    };
+
     let db = req.db_conn();
 
     let token = match req.headers.get::<Authorization<String>>() {
@@ -81,15 +88,19 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
 
     println!("Authorization token: {}", token);
 
-    let stmt = db.prepare("SELECT people_get(token := $1);").unwrap();
+    let stmt = db.prepare("SELECT people_get(token := $1, people_id := $2);").unwrap();
 
-    let rows = match stmt.query(&[&token]) {
+    let rows = match stmt.query(&[&token, &people_id]) {
         Ok(rows) => rows,
         Err(PgError::Db(err)) => badrequest!(err.message),
         Err(err) => badrequest!(err.to_string()),
     };
 
-    let people: Value = rows.get(0).get(0);
+    let people = match rows.get(0).get(0) {
+        value@ Value::Array(_) => value,
+        value@Value::Object(_) => value,
+        Value::Null | _ => badrequest!("don't touch that".to_string())
+    };
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
     // // Err(Response::with((status::Ok)));
@@ -126,6 +137,7 @@ fn main() {
     let router = router!(
         post "/login" => handle_login,
         get "/people" => handle_people,
+        get "/person/:id" => handle_people,
         put "/person/:id" => handle_edit,
         get "/fields" => handle_fields,
         put "/fields" => handle_fields_edit,
