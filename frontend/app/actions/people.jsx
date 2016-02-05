@@ -38,9 +38,15 @@ export function fetch(token) {
 
 export function commit() {
 
-  // return (dispatch, getState) => {
-  //   return $fetch('/api/setperso')
-  // }
+  return (dispatch, getState) => {
+
+    return Promise.all(
+
+    )
+    return $fetch('/api/person', {
+      method: 'PUT'
+    })
+  }
 
 
   return {

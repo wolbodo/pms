@@ -22,11 +22,11 @@ export default class Array extends React.Component {
 			// 	onBlur={(e) => onBlur(_.map(e.target.value.split(','), _.trim))}
 			// 	floatingLabel/>
 		return (
-			<div className='chipList'>
-				
+			<div className='chip-list'>
 				{ _.map(value, (value, i) => (
 					<Chip>{value}</Chip>
 				))}
+				<label class="chip-list--label">{label}</label>
 			</div>
 		);
 	}
