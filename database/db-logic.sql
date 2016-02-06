@@ -60,18 +60,21 @@ DECLARE
   signature TEXT;
 BEGIN
   header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
-  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO payload
+  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO STRICT payload
       FROM people p
       JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
       JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
       WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
-  IF payload IS NULL THEN
-      RAISE EXCEPTION 'Username or password wrong.';
-      RETURN NULL;
-  END IF;
   content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
   signature = TRANSLATE(ENCODE(HMAC(content, 'FIXME: this is a secret value that should better be replaced otherwise we are seriously fucked!', 'sha256'), 'base64'), '+/=', '-_');
   RETURN content || '.' || signature;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RAISE EXCEPTION 'Username or password wrong.';
+      RETURN NULL;
+    WHEN TOO_MANY_ROWS THEN
+      RAISE EXCEPTION 'More than one entry found, please contact an admin or board member to fix this.';
+      RETURN NULL;
 END
 $function$;
 
