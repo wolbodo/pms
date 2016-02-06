@@ -37,6 +37,18 @@ export function fetch(token) {
 }
 
 export function commit() {
+
+  return (dispatch, getState) => {
+
+    return Promise.all(
+
+    )
+    return $fetch('/api/person', {
+      method: 'PUT'
+    })
+  }
+
+
   return {
     name: 'FIELDS_CREATE_PEOPLE_COMMIT'
   }

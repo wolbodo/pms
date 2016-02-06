@@ -17,6 +17,7 @@ class GroupEdit extends React.Component {
 	render() {
 		const {groups, fields, params, permissions, dispatch} = this.props
 
+                // extra={}
 		return (
 			<ItemEdit
 				schema={fields.schemas.group}

@@ -32,14 +32,15 @@ export default class GroupView extends React.Component {
 		return (
 			<List title="Groepen" buttons={this.renderButtons()}>
 				<Head schema={fields.schemas.group} fields={header_fields} editLink/>
-				{_.map(groups.items, row => (
-					<Row className='click' key={row.name} item={row} fields={header_fields} 
-						edit={ () => history.push(`groepen/${row.id}`) } />
+				{_.map(groups.items, (row, i) => (
+					<Row className='click' key={i} item={row} fields={header_fields} 
+						edit={ () => history.push(`groepen/${i}`) } />
 				))}
 			</List>
 		);
 	}
 }
+
 
 export default connect(
 	function mapStateToProps(state) {

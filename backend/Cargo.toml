@@ -20,3 +20,7 @@ rustc-serialize = "*"
 
 [dependencies.iron-postgres-middleware]
 git = "https://github.com/neoel/iron-postgres-middleware.git"
+
+[dependencies.logger]
+
+git = "https://github.com/iron/logger.git"
