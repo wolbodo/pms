@@ -12,12 +12,15 @@ extern crate router;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
 
+use std::collections::BTreeMap;
+
 use persistent::Read;
 use iron::status;
 use iron::{AfterMiddleware};
 use iron::prelude::*;
+use iron::modifiers::Header;
 
-use hyper::header::{Authorization, Headers, ContentType};
+use hyper::header::{Authorization, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 
 use router::Router;
@@ -70,10 +73,14 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string()),
     };
 
+    let mut resp = BTreeMap::new();
+
+    let token: String = rows.get(0).get(0);
+    resp.insert("token", token);
+
     //let mut userContext = BTreeMap::new();
     //userContext
-    let token: String = rows.get(0).get(0);
-    Ok(Response::with((status::Ok, token)))
+    Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
 }
 
 fn handle_people(req: &mut Request) -> IronResult<Response> {
@@ -94,7 +101,7 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
 
     println!("Authorization token: {}", token);
 
-    let stmt = db.prepare("SELECT people_get(token := $1, people_id := $2);").unwrap();
+    let stmt = db.prepare(sql!("SELECT people_get(token := $1, people_id := $2);")).unwrap();
 
     let rows = match stmt.query(&[&token, &people_id]) {
         Ok(rows) => rows,
@@ -112,10 +119,52 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
     // // Err(Response::with((status::Ok)));
 }
 
-fn handle_edit(_: &mut Request) -> IronResult<Response> {
+
+
+fn handle_edit(req: &mut Request) -> IronResult<Response> {
     // Update an existing person.
 
-    Ok(Response::with((status::Ok)))
+    let people_id;
+    {
+        let router = req.extensions.get::<Router>().unwrap();
+        let ref people_id_arg = router.find("id").unwrap();
+        people_id = match people_id_arg.parse::<i32>() {
+            Ok(value) => value,
+            Err(err) => badrequest!(err.to_string())
+        };
+    }
+
+    let db = req.db_conn();
+
+    let token = match req.headers.get::<Authorization<String>>() {
+        Some(&Authorization(ref token)) => token.clone().to_string(),
+        None => "".to_string() 
+    };
+
+    let data = match req.get::<bodyparser::Struct<Value>>() {
+        Ok(Some(body)) => body,
+        Ok(None) => badrequest!("Please send some body!".to_string()),
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
+        Err(err) => badrequest!(err.to_string())
+    };
+
+    let stmt = db.prepare(sql!("SELECT person_set(token := $1, people_id := $2, data := $3);")).unwrap();
+
+    let rows = match stmt.query(&[&token, &people_id, &data]) {
+        Ok(rows) => rows,
+        Err(PgError::Db(err)) => badrequest!(err.message),
+        Err(err) => badrequest!(err.to_string()),
+    };
+
+    let people = match rows.get(0).get(0) {
+        value@ Value::Array(_) => value,
+        value@Value::Object(_) => value,
+        Value::Null | _ => badrequest!("don't touch that".to_string())
+    };
+
+    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
+    // // Err(Response::with((status::Ok)));
+
 }
 
 fn handle_create(_: &mut Request) -> IronResult<Response> {
@@ -136,20 +185,18 @@ fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok)))
 }
 
-// struct JsonResponse;
+struct JsonResponse;
 
-// impl AfterMiddleware for JsonResponse {
-//     fn after(&self, req: &mut Request, res: Response) -> IronResult<Response> {
-//         res.headers.set(
-//             ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![]))
-//         );
-//         Ok(res)
-//     }
-// }
+impl AfterMiddleware for JsonResponse {
+    fn after(&self, _: &mut Request, res: Response) -> IronResult<Response> {
+        Ok(res.set(Header(ContentType(Mime(TopLevel::Application, SubLevel::Json, vec![])))))
+    }
+}
 
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
+    let (logger_before, logger_after) = Logger::new(None);
 
     let router = router!(
         post "/login" => handle_login,
@@ -178,6 +225,7 @@ fn main() {
     chain.link_before(logger_before);
 
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
+    chain.link_after(JsonResponse);
 
     // Link logger_after as your *last* after middleware.
     chain.link_after(logger_after);

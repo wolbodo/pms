@@ -8,6 +8,7 @@ iron = "*"
 hyper = "*"
 router = "*"
 persistent = "*"
+logger = "*"
 postgres = { version = "*", features = ["serde_json", "unix_socket"]}
 postgres_macros = "*"
 serde = "*"
@@ -21,6 +22,3 @@ rustc-serialize = "*"
 [dependencies.iron-postgres-middleware]
 git = "https://github.com/neoel/iron-postgres-middleware.git"
 
-[dependencies.logger]
-
-git = "https://github.com/iron/logger.git"

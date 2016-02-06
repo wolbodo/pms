@@ -221,7 +221,7 @@ DECLARE
 BEGIN
     self_id = parse_jwt(token)->'user';
     _data = remove_base(jsonb_merge(
-        base := getpeople(token, people_id),
+        base := people_get(token, people_id),
         update := _data,
         read := get_field_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, people_id),
         write := get_field_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, people_id)
