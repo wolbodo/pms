@@ -1,6 +1,7 @@
 import $fetch from 'isomorphic-fetch'
 import constants from 'constants'
 import { routeActions } from 'react-router-redux'
+import _ from 'lodash'
 
 
 function receive(people) {
@@ -36,16 +37,22 @@ export function fetch(token) {
   }
 }
 
-export function commit() {
+export function commit(token) {
 
   return (dispatch, getState) => {
-
     return Promise.all(
-
+      getState()
+      .app.getIn(['people', 'updates'])
+      .map((person, id) => 
+        $fetch('/api/person/' + id, {
+          method: 'PUT',
+          headers: new Headers({
+            "Authorization": token
+          }),
+          body: JSON.stringify(person)
+        })
+      )
     )
-    return $fetch('/api/person', {
-      method: 'PUT'
-    })
   }
 
 

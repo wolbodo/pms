@@ -94,8 +94,8 @@ class HeaderBar extends React.Component {
     }
 
     saveCurrent() {
-        let {people, groups, fields, dispatch} = this.props
-        dispatch(actions.people.commit())
+        let {people, groups, fields, auth, dispatch} = this.props
+        dispatch(actions.people.commit(auth.token))
     }
 
     render() {
