@@ -32,7 +32,15 @@ export function fetch(token) {
   				})
         })
         .then(response => response.json())
+        .then(body => {
+          if (body.error) 
+            throw body.error
+          return body
+        })
         .then(json => dispatch(receive(json)))
+        .catch(e => {
+          console.error(e)
+        })
     }
   }
 }
@@ -45,19 +53,28 @@ export function commit(token) {
       .app.getIn(['people', 'updates'])
       .map((person, id) => 
         $fetch('/api/person/' + id, {
+          headers: new Headers({
+            "Authorization": token
+          })
+        })
+        .then(resp => {
+          if (resp.json().gid !== person.gid) {
+            throw "Error updating"
+          }
+        })
+        .then(() => $fetch('/api/person/' + id, {
           method: 'PUT',
           headers: new Headers({
             "Authorization": token
           }),
           body: JSON.stringify(person)
-        })
+        }))
+        .then(() => dispatch({
+          name: 'FIELDS_CREATE_PEOPLE_COMMIT'
+        }))
+        .catch((e) => console.error(e))
       )
     )
-  }
-
-
-  return {
-    name: 'FIELDS_CREATE_PEOPLE_COMMIT'
   }
 }
 
