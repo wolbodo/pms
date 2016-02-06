@@ -48,12 +48,12 @@ export function login(username, password) {
         password: password
       })
     })
-    .then(function (response) {
-      if (response.status === 200) {
-        return response.text()
-      } else {
-        throw "Unexpected status " + response.status
+    .then(response => response.json())
+    .then(body => {
+      if (body.error) {
+        throw body.error
       }
+      return body.token
     })
     .then(token => {
         dispatch(login_success(token))
