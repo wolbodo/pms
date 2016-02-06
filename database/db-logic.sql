@@ -186,7 +186,9 @@ DECLARE
 BEGIN
     FOR kv IN (SELECT * FROM JSONB_EACH(update))
     LOOP
-        IF NOT (ARRAY[kv.key] <@ write OR (ARRAY[kv.key] <@ read AND base ? kv.key AND base->kv.key = update->kv.key)) THEN
+        IF ARRAY[kv.key] <@ write OR (ARRAY[kv.key] <@ read AND base->kv.key = update->kv.key) THEN
+            --OK, this construct is chosen because NULL in write, read and base->kv.key is way more tricky to handle correctly in one IF.
+        ELSE
             RAISE EXCEPTION 'writing "%" not allowed', kv.key;
             RETURN NULL;
         END IF;
