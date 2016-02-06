@@ -51,7 +51,7 @@ class PeopleView extends React.Component {
 						key={i} 
 						item={row} 
 						fields={headerfields} 
-						edit={() => history.push(`/lid-${row.id}`)} />
+						edit={() => history.push(`/lid-${i}`)} />
 				))}
 			</List>
 		);
