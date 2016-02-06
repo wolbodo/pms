@@ -55,6 +55,10 @@ macro_rules! badrequest {
     ($msg:expr) => (return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
+macro_rules! notfound {
+    ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
+}
+
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
@@ -109,10 +113,9 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string()),
     };
 
-    let people = match rows.get(0).get(0) {
-        value@ Value::Array(_) => value,
-        value@Value::Object(_) => value,
-        Value::Null | _ => badrequest!("don't touch that".to_string())
+    let people: Value = match rows.get(0).get(0) {
+        Some(value) => value,
+        None => notfound!("Id not found (or no read access)".to_string())
     };
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
