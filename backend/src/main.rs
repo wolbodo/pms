@@ -87,7 +87,7 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
 }
 
-fn handle_people(req: &mut Request) -> IronResult<Response> {
+fn handle_people_get(req: &mut Request) -> IronResult<Response> {
     // Returns a list of people, might be using filters. 
 
     let ref people_id_arg = req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1");
@@ -124,7 +124,7 @@ fn handle_people(req: &mut Request) -> IronResult<Response> {
 
 
 
-fn handle_edit(req: &mut Request) -> IronResult<Response> {
+fn handle_person_set(req: &mut Request) -> IronResult<Response> {
     // Update an existing person.
 
     let people_id;
@@ -170,10 +170,38 @@ fn handle_edit(req: &mut Request) -> IronResult<Response> {
 
 }
 
-fn handle_create(_: &mut Request) -> IronResult<Response> {
+fn handle_person_add(req: &mut Request) -> IronResult<Response> {
     // Create a new person. 
 
-    Ok(Response::with((status::Ok)))
+    let db = req.db_conn();
+
+    let token = match req.headers.get::<Authorization<String>>() {
+        Some(&Authorization(ref token)) => token.clone().to_string(),
+        None => "".to_string() 
+    };
+
+    let data = match req.get::<bodyparser::Struct<Value>>() {
+        Ok(Some(body)) => body,
+        Ok(None) => badrequest!("Please send some body!".to_string()),
+        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
+        Err(err) => badrequest!(err.to_string())
+    };
+
+    let stmt = db.prepare(sql!("SELECT person_add(token := $1, data := $3);")).unwrap();
+
+    let rows = match stmt.query(&[&token, &data]) {
+        Ok(rows) => rows,
+        Err(PgError::Db(err)) => badrequest!(err.message),
+        Err(err) => badrequest!(err.to_string()),
+    };
+
+    let people = match rows.get(0).get(0) {
+        value@ Value::Array(_) => value,
+        value@Value::Object(_) => value,
+        Value::Null | _ => badrequest!("don't touch that".to_string())
+    };
+
+    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
 }
 
 fn handle_fields(_: &mut Request) -> IronResult<Response> {
@@ -203,12 +231,14 @@ fn main() {
 
     let router = router!(
         post "/login" => handle_login,
-        get "/people" => handle_people,
-        get "/person/:id" => handle_people,
-        put "/person/:id" => handle_edit,
+
+        get "/people" => handle_people_get,
+        get "/person/:id" => handle_people_get,
+        put "/person/:id" => handle_person_set,
+        post "/person/" => handle_person_add,
+
         get "/fields" => handle_fields,
-        put "/fields" => handle_fields_edit,
-        post "/person/new" => handle_create
+        put "/fields" => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
