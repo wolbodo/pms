@@ -4,6 +4,7 @@ let CONSTRUCT,
     PEOPLE_RECEIVE,
     PEOPLE_UPDATE,
     FIELDS_CREATE_PEOPLE_COMMIT,
+    PERSON_UPDATE_SUCCESS,
     PEOPLE_CREATE
 
 CONSTRUCT = () => fromJS({
@@ -27,18 +28,22 @@ PEOPLE_UPDATE = (people, {data}) => {
     people.getIn(['items', data.id])
   )) {
     // changed
-    return people.updateIn(['items', data.id], person => (person || Map()).mergeDeep(data.person))
-                  .update('updates', updates => updates.mergeDeep({[data.id]: data.person}))
+    return people.update('updates', updates => updates.mergeDeep({[data.id]: data.person}))
   }
   return people
 }
+
+PERSON_UPDATE_SUCCESS = (people, {data}) =>
+  people.updateIn(['items', data.id.toString()], 
+                  person => person.mergeDeep(data))
+        .deleteIn(['updates', data.id.toString()])
 
 FIELDS_CREATE_PEOPLE_COMMIT = (people, {data}) =>
   people.merge({updates: undefined})
          .merge({updates: {}})
   
 PEOPLE_CREATE = (people, {data}) =>
-  people.update('items', items => items.merge({[data.id]: {id: data.id}}))
+  people.update('updates', updates => updates.merge({[data.id]: {}}))
 
 
 export {
@@ -46,5 +51,6 @@ export {
   PEOPLE_RECEIVE,
   PEOPLE_UPDATE,
   FIELDS_CREATE_PEOPLE_COMMIT,
+  PERSON_UPDATE_SUCCESS,
   PEOPLE_CREATE
 }

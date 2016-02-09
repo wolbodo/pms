@@ -23,57 +23,83 @@ function shouldFetchPeople(state) {
   }
 }
 
+function callAPI(uri, config) {
+  return $fetch("/api/" + uri, config)
+    .then(response => response.json())
+    .then(body => {
+      if (body.error) {
+        throw body.error
+      }
+      return body
+    })
+}
+
 export function fetch(token) {
   return (dispatch, getState) => {
     if ( shouldFetchPeople(getState()) ) {
-      return $fetch("/api/people", {
-  				headers: new Headers({
-  					"Authorization": token
-  				})
+      return callAPI("people", { 
+        headers: new Headers({
+          "Authorization": token
         })
-        .then(response => response.json())
-        .then(body => {
-          if (body.error) 
-            throw body.error
-          return body
-        })
-        .then(json => dispatch(receive(json)))
-        .catch(e => {
-          console.error(e)
-        })
+      })
+      .then(resp => dispatch(receive(resp)))
+      .catch(e => {console.error("API-error:", e)})
     }
   }
 }
 
+function update_success(body) {
+  return {
+    name: 'PERSON_UPDATE_SUCCESS',
+    data: body
+  }
+}
+
+function update_person(token, dispatch, person, update) {
+  return callAPI('person/' + person.get('id'), {
+    method: 'PUT',
+    headers: new Headers({
+      "Authorization": token
+    }),
+    body: JSON.stringify(
+      update.merge({
+        gid: person.get('gid')
+      })
+    )
+  })
+  .then(body => dispatch(update_success(body)))
+  .catch((e) => console.error("API-error:", e))
+}
+
+function add_person(token, dispatch, person) {
+  return callAPI('people', {
+    method: 'POST',
+    headers: new Headers({
+      "Authorization": token
+    }),
+    body: JSON.stringify(
+      person
+    )
+  })
+  .then(body => dispatch(update_success(body)))
+  .catch((e) => console.error("API-error:", e))
+}
+
+
 export function commit(token) {
 
   return (dispatch, getState) => {
+    let people = getState().app.get('people')
+
     return Promise.all(
-      getState()
-      .app.getIn(['people', 'updates'])
-      .map((person, id) => 
-        $fetch('/api/person/' + id, {
-          headers: new Headers({
-            "Authorization": token
-          })
-        })
-        .then(resp => {
-          if (resp.json().gid !== person.gid) {
-            throw "Error updating"
-          }
-        })
-        .then(() => $fetch('/api/person/' + id, {
-          method: 'PUT',
-          headers: new Headers({
-            "Authorization": token
-          }),
-          body: JSON.stringify(person)
-        }))
-        .then(() => dispatch({
-          name: 'FIELDS_CREATE_PEOPLE_COMMIT'
-        }))
-        .catch((e) => console.error(e))
-      )
+      people.get('updates')
+        .map((_person, i) => 
+          // Add or update person, whether gid exists.
+          people.hasIn(['items', i, 'gid'])
+           ? update_person(token, dispatch, people.getIn(['items', i]), _person)
+           : add_person(token, dispatch, _person)
+
+        )
     )
   }
 }

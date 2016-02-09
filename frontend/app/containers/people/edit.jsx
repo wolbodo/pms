@@ -19,14 +19,16 @@ export default class PersonEdit extends React.Component {
             people, fields, auth, permissions
         } = this.props;
 
-        // var data = _.find(stub, group => group.id === params.groep);
-
         let person_id = params.id || auth.user.user
+        let item = _.merge(
+            people.items[person_id] || {},
+            _.get(people, ['updates', person_id])
+        );
 
         return (
             <ItemEdit
                 schema={fields.schemas.person}
-                item={people.items[person_id]}
+                item={item}
                 permissions={permissions.leden.person}
                 onChange={person => {
                     console.log("Updating", person_id, person)

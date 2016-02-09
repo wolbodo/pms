@@ -233,9 +233,9 @@ fn main() {
         post "/login" => handle_login,
 
         get "/people" => handle_people_get,
+        post "/people" => handle_person_add,
         get "/person/:id" => handle_people_get,
         put "/person/:id" => handle_person_set,
-        post "/person/" => handle_person_add,
 
         get "/fields" => handle_fields,
         put "/fields" => handle_fields_edit

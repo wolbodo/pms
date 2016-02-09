@@ -112,7 +112,6 @@ class HeaderBar extends React.Component {
                         Opslaan
                     </mdl.Button>
                 ) || (<div />)}
-                {this.renderDialog()}
             </div>
         )
     }

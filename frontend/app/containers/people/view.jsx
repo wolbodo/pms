@@ -42,10 +42,13 @@ class PeopleView extends React.Component {
 
 		const {history, people, fields} = this.props;
 
+		// merge items with updated items.
+		let items = _.merge(people.items, people.updates);
+
 		return (
 			<List title="Leden" buttons={this.renderButtons()}>
 				<Head schema={fields.schemas.person} fields={headerfields} editLink/>
-				{_.map(people.items, (row, i) => (
+				{_.map(items, (row, i) => (
 					<Row 
 						className="click"
 						key={i} 

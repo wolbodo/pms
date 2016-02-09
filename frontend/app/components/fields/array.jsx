@@ -24,9 +24,9 @@ export default class Array extends React.Component {
 		return (
 			<div className='chip-list'>
 				{ _.map(value, (value, i) => (
-					<Chip>{value}</Chip>
+					<Chip key={i}>{value}</Chip>
 				))}
-				<label class="chip-list--label">{label}</label>
+				<label className="chip-list--label">{label}</label>
 			</div>
 		);
 	}

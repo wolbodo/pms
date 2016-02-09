@@ -175,8 +175,18 @@ class PermissionsView extends React.Component {
 						    </span>
 						</td>)
 					)}
-					<td></td>
-					<td>
+					<td key='space'></td>
+					<td key='self'>
+						<span className='permission' onClick={() => this.showDialog({schema: key, group:'self', field:field})}>
+						{ (({read, write}) => 
+							[read ? <i className='icon'>visibility</i>
+								  : <i className='icon dimmed'>visibility_off</i>,
+							  write ? <i className='icon'>edit</i> 
+							   		: <i className='icon dimmed'>edit</i>
+							]
+						  )(this.getPermissions('self', key, field))
+					    }
+					    </span>
 					</td>
 				</tr>
 			))
