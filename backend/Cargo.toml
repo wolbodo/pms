@@ -14,7 +14,7 @@ postgres_macros = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"
-bodyparser = {git = "https://github.com/jimmycuadra/body-parser.git", branch = "serde" } # move to "*" when https://github.com/iron/body-parser/pull/64 gets approved
+bodyparser = "*"
 rand = "*"
 time = "*"
 rustc-serialize = "*"
