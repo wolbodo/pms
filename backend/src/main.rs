@@ -187,7 +187,7 @@ fn handle_person_add(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string())
     };
 
-    let stmt = db.prepare(sql!("SELECT person_add(token := $1, data := $3);")).unwrap();
+    let stmt = db.prepare(sql!("SELECT person_add(token := $1, data := $2);")).unwrap();
 
     let rows = match stmt.query(&[&token, &data]) {
         Ok(rows) => rows,

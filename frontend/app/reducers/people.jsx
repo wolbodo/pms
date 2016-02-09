@@ -3,7 +3,7 @@ import {fromJS, Map} from 'immutable'
 let CONSTRUCT,
     PEOPLE_RECEIVE,
     PEOPLE_UPDATE,
-    FIELDS_CREATE_PEOPLE_COMMIT,
+    PEOPLE_COMMIT_UPDATES,
     PERSON_UPDATE_SUCCESS,
     PEOPLE_CREATE
 
@@ -35,12 +35,10 @@ PEOPLE_UPDATE = (people, {data}) => {
 
 PERSON_UPDATE_SUCCESS = (people, {data}) =>
   people.updateIn(['items', data.id.toString()], 
-                  person => person.mergeDeep(data))
-        .deleteIn(['updates', data.id.toString()])
+                  person => (person || Map()).mergeDeep(data))
 
-FIELDS_CREATE_PEOPLE_COMMIT = (people, {data}) =>
-  people.merge({updates: undefined})
-         .merge({updates: {}})
+PEOPLE_COMMIT_UPDATES = people =>
+  people.set('updates', Map())
   
 PEOPLE_CREATE = (people, {data}) =>
   people.update('updates', updates => updates.merge({[data.id]: {}}))
@@ -50,7 +48,7 @@ export {
   CONSTRUCT,
   PEOPLE_RECEIVE,
   PEOPLE_UPDATE,
-  FIELDS_CREATE_PEOPLE_COMMIT,
+  PEOPLE_COMMIT_UPDATES,
   PERSON_UPDATE_SUCCESS,
   PEOPLE_CREATE
 }

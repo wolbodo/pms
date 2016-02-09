@@ -101,6 +101,9 @@ export function commit(token) {
 
         )
     )
+    .then(dispatch({
+      name: 'PEOPLE_COMMIT_UPDATES'
+    }))
   }
 }
 
