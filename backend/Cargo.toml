@@ -8,7 +8,6 @@ iron = "*"
 hyper = "*"
 router = "*"
 persistent = "*"
-logger = "*"
 postgres = { version = "*", features = ["serde_json", "unix_socket"]}
 postgres_macros = "*"
 serde = "*"

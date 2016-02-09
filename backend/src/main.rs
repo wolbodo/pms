@@ -5,7 +5,6 @@ extern crate bodyparser;
 extern crate persistent;
 extern crate serde;
 extern crate serde_json;
-extern crate logger;
 extern crate hyper;
 #[macro_use(router)]
 extern crate router;
@@ -24,7 +23,6 @@ use hyper::header::{Authorization, ContentType};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 
 use router::Router;
-use logger::Logger;
 
 use serde_json::*;
 use pg_middleware::{PostgresMiddleware, PostgresReqExt};
@@ -227,7 +225,6 @@ impl AfterMiddleware for JsonResponse {
 // `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
 // and check out the printed json in your terminal.
 fn main() {
-    let (logger_before, logger_after) = Logger::new(None);
 
     let router = router!(
         post "/login" => handle_login,
@@ -254,14 +251,8 @@ fn main() {
         }
     }
 
-    // Link logger_before as your first before middleware.
-    chain.link_before(logger_before);
-
     chain.link_before(Read::<bodyparser::MaxBodyLength>::one(MAX_BODY_LENGTH));
     chain.link_after(JsonResponse);
-
-    // Link logger_after as your *last* after middleware.
-    chain.link_after(logger_after);
 
     Iron::new(chain).http("0.0.0.0:4242").unwrap();
 }
