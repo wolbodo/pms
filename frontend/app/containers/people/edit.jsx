@@ -29,7 +29,7 @@ export default class PersonEdit extends React.Component {
             <ItemEdit
                 schema={fields.schemas.person}
                 item={item}
-                permissions={permissions.leden.person}
+                permissions={permissions.bestuur.person}
                 onChange={person => {
                     console.log("Updating", person_id, person)
                     dispatch(actions.people.update(person_id, person))

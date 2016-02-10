@@ -1,10 +1,37 @@
-import React from 'react';
+import React from 'react'
+import ReactDOM  from 'react-dom'
 import _ from 'lodash'
 import * as mdl from 'react-mdl'
 
 import {Chip} from 'components'
 
 export default class Array extends React.Component {
+	onChange(index) {
+		let {onChange, value} = this.props;
+		onChange(
+			_.filter(value, (x, i) => i !== index)
+		)
+	}
+
+	addValue(e) {
+		let new_value = _.trim(e.target.textContent)
+		let {onChange, value} = this.props
+		value = value || []
+
+		e.target.textContent = undefined
+
+		if (!_.isEmpty(new_value)) {
+			onChange(
+				_(value).concat(new_value).value()
+			)
+		}
+	}
+	deleteValue() {
+		let {onChange, value} = this.props
+
+		onChange(_.slice(value, 0, -1))
+		
+	}
 
 	render() {
 		let { name, label, value, disabled,
@@ -12,21 +39,31 @@ export default class Array extends React.Component {
 
 		// Shows an array of strings for now.
 		value = value || [];
-			// <mdl.Textfield
-			// 	className={['field-' + name, (value !== undefined) ? 'is-dirty' : ''].join(' ')}
-			// 	label={label}
-			// 	name={name}
-			// 	value={value.join(', ')}
-			// 	disabled={disabled}
-			// 	onChange={(e) => onChange(_.map(e.target.value.split(','), _.trim))}
-			// 	onBlur={(e) => onBlur(_.map(e.target.value.split(','), _.trim))}
-			// 	floatingLabel/>
 		return (
-			<div className='chip-list'>
-				{ _.map(value, (value, i) => (
-					<Chip key={i}>{value}</Chip>
+			<div className='chip-list' onClick={e => {
+				// focus the p element when clicking on the chip-list
+				ReactDOM
+					.findDOMNode(this)
+					.querySelector('#chiplist-' + name)
+					.focus()
+			}}>
+				<div>
+				{ _.map(value, (item, i) => (
+					<Chip key={i}>
+						{item}
+						<i className="material-icons" 
+							onClick={() => this.onChange(i)}
+						>cancel</i>
+					</Chip>
 				))}
-				<label className="chip-list--label">{label}</label>
+				<p id={'chiplist-' + name} 
+					contentEditable="true"
+					onBlur={(e) => this.addValue(e)}
+					onKeyPress={e => (e.key === "Enter") && this.addValue(e)}
+					onKeyDown={e => (e.key === "Backspace" && _.isEmpty(e.target.textContent)) && this.deleteValue()}
+				/>
+				</div>
+				<label className="chip-list--label" htmlFor={'chiplist-' + name}>{label}</label>
 			</div>
 		);
 	}
