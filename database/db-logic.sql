@@ -96,46 +96,46 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.get_field_permissions(permissions_type PERMISSIONS_TYPE, ref_type VARCHAR, self_id INT)
+CREATE OR REPLACE FUNCTION public.get_fields_permissions(permissions_type PERMISSIONS_TYPE, ref_table VARCHAR, self_id INT)
  RETURNS TABLE(key VARCHAR, selfid INT)
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     _permissions_type ALIAS FOR permissions_type;
-    _ref_type ALIAS FOR ref_type;
+    _ref_table ALIAS FOR ref_table;
     _self_id ALIAS FOR self_id;
 --    _people_id ALIAS FOR people_id;
 BEGIN
   RETURN QUERY (SELECT DISTINCT f.name, CASE WHEN r.name = 'self' THEN p.id END
-     FROM fields f
-     JOIN permissions pm ON pm.ref_key = 'field' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
+     FROM fieldss f
+     JOIN permissions pm ON pm.ref_key = 'fields' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
      JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND rpm.valid_till IS NULL
      JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
      JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL
      JOIN people p ON pr.people_id = p.id AND p.id = _self_id --AND (r.name != 'self' OR _people_id = -1 OR _people_id = _self_id) AND p.valid_till IS NULL
-     WHERE pm.type = _permissions_type AND pm.ref_type = _ref_type);
+     WHERE pm.type = _permissions_type AND pm.ref_table = _ref_table);
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.get_field_permissions(permissions_type PERMISSIONS_TYPE, ref_type VARCHAR, self_id INT, people_id INT)
+CREATE OR REPLACE FUNCTION public.get_fields_permissions(permissions_type PERMISSIONS_TYPE, ref_table VARCHAR, self_id INT, people_id INT)
  RETURNS VARCHAR[]
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     _permissions_type ALIAS FOR permissions_type;
-    _ref_type ALIAS FOR ref_type;
+    _ref_table ALIAS FOR ref_table;
     _self_id ALIAS FOR self_id;
     _people_id ALIAS FOR people_id;
     returnvalue VARCHAR[];
 BEGIN
   SELECT ARRAY_AGG(DISTINCT f.name) INTO returnvalue
-     FROM fields f
-     JOIN permissions pm ON pm.ref_key = 'field' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
+     FROM fieldss f
+     JOIN permissions pm ON pm.ref_key = 'fields' AND pm.ref_value = f.id AND pm.valid_till IS NULL AND f.valid_till IS NULL
      JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND rpm.valid_till IS NULL
      JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
      JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL
      JOIN people p ON pr.people_id = p.id AND p.id = _self_id AND (r.name != 'self' OR _people_id = _self_id) AND p.valid_till IS NULL
-     WHERE pm.type = _permissions_type AND pm.ref_type = _ref_type;
+     WHERE pm.type = _permissions_type AND pm.ref_table = _ref_table;
   RETURN returnvalue;
 END;
 $function$;
@@ -150,7 +150,7 @@ DECLARE
     returnvalue JSONB;
 BEGIN
     _self_id = parse_jwt(token)->'user';
-    WITH readfields AS (SELECT * FROM get_field_permissions('read'::PERMISSIONS_TYPE, 'people', _self_id))
+    WITH readfieldss AS (SELECT * FROM get_fields_permissions('read'::PERMISSIONS_TYPE, 'people', _self_id))
     SELECT JSONB_AGG(object) INTO returnvalue
         FROM (
             SELECT (SELECT JSONB_OBJECT_AGG(key, value)
@@ -168,7 +168,7 @@ BEGIN
                     ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified))), 'null')::JSONB),
                     ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
             ) alias
-            WHERE key IN (SELECT key FROM readfields WHERE selfid IS NULL OR people.id = _self_id))
+            WHERE key IN (SELECT key FROM readfieldss WHERE selfid IS NULL OR people.id = _self_id))
             FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id)
         ) alias (object) WHERE object IS NOT NULL;
     IF people_id = -1 THEN
@@ -228,8 +228,8 @@ BEGIN
     _data = remove_base(jsonb_merge(
         base := people_get(token, people_id),
         update := _data,
-        read := get_field_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, people_id),
-        write := get_field_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, people_id)
+        read := get_fields_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, people_id),
+        write := get_fields_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, people_id)
     ));
 
     UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
@@ -255,8 +255,8 @@ BEGIN
     self_id = parse_jwt(token)->'user';
     _data = remove_base(jsonb_merge(
         update := _data,
-        read := get_field_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, -1),
-        write := get_field_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, -1)
+        read := get_fields_permissions('read'::PERMISSIONS_TYPE, 'people', self_id, -1),
+        write := get_fields_permissions('write'::PERMISSIONS_TYPE, 'people', self_id, -1)
     ));
 
     INSERT INTO people (email, phone, modified_by, data)

@@ -86,7 +86,7 @@ SELECT people.id, roles.id, -1 FROM
     JOIN people ON people.valid_till IS NULL AND people.email = alias.people_email
     JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names));
 
-INSERT INTO fields (ref_type, name, data, modified_by)
+INSERT INTO fields (ref_table, name, data, modified_by)
 VALUES
     ('people','gid', '{}', -1),
     ('people','id', '{}', -1),
@@ -129,10 +129,10 @@ VALUES
     ('people','frontdoor', '{}', -1),
     ('people','directdebit', '{}', -1);
 
-INSERT INTO permissions (type, ref_type, ref_key, ref_value, modified_by)
-SELECT unnest(array['read','write'])::permissions_type AS type, ref_type, 'field' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_type = 'people' UNION
-SELECT 'create' AS type, 'people_roles' AS ref_type, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
-SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_type, '*' AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
+INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
+SELECT unnest(array['read','write'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table = 'people' UNION
+SELECT 'create' AS type, 'people_roles' AS ref_table, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
+SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_table, '*' AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
 VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1);
 
 INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
@@ -149,7 +149,24 @@ SELECT DISTINCT roles.id, permissions.id, -1 FROM
     ) alias (types, roles_names, fields_names)
     JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names))
     JOIN fields ON fields.valid_till IS NULL AND fields.name IN (SELECT unnest(alias.fields_names))
-    JOIN permissions ON permissions.valid_till IS NULL AND permissions.type::TEXT IN (SELECT unnest(alias.types)) AND permissions.ref_type = fields.ref_type AND permissions.ref_key = 'field' AND permissions.ref_value = fields.id;
+    JOIN permissions ON
+        permissions.valid_till IS NULL
+        AND permissions.type::TEXT IN (SELECT unnest(alias.types))
+        AND permissions.ref_table = fields.ref_table
+        AND permissions.ref_key = 'fields'
+        AND permissions.ref_value = fields.id
         --('write', 'website',1,'{"part":"frontpage"}')
+    UNION
+SELECT DISTINCT roles.id, permissions.id, -1 FROM
+    (VALUES
+        (array['create'],        array['board'],        array['people','roles'])
+    ) alias (types, roles_names, table_names)
+    JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names))
+    JOIN permissions ON
+        permissions.valid_till IS NULL
+        AND permissions.type::TEXT IN (SELECT unnest(alias.types))
+        AND permissions.ref_table IN (SELECT unnest(alias.table_names))
+        AND permissions.ref_key = '*'
+        AND permissions.ref_value IS NULL;
 
 COMMIT;
