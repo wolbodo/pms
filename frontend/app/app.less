@@ -12,6 +12,20 @@
 .divider-color         { border-color: #B6B6B6; }
 
 
+.button-default {
+    background: #EEF3FD;
+    color: #286961;
+}
+.button-success {
+    background: #E7EE94;
+    color: #286961;
+}
+.button-error {
+	background-color: #FF3B00;
+    color: #FFF;
+}
+
+
 body {
 	display: flex;
 	overflow: hidden; // Since plugins might fuck up the flow (LastPass f.i.)
@@ -25,11 +39,14 @@ body {
 	}
 
 	.mdl-button {
-		.accent-color;
-		color: #00796B;
+		.button-default;
 
 		&.mdl-button--colored {
-			background-color: #FF3B00;
+			.button-error;
+		}
+
+		&.action {
+			.button-success;
 		}
 	}
 
@@ -41,14 +58,24 @@ body {
 		.mdl-layout__header {
 			z-index: inherit;
 			.mdl-layout__header-row {
-				display: flex;
 				width: 100%;
-				flex-direction: row;
-				align-items: center;
 				
-				> * {
-					align-self: flex-start;
-					margin: 5px;
+				.headerBar {
+					width: 100%;
+					display: flex;
+					flex-flow: row nowrap;
+
+					.spacer {
+						flex-grow: 1;
+					}
+
+					> * {
+						margin: 5px;
+					}
+
+					.end {
+						self-align: flex-end;
+					}
 				}
 
 				.breadcrumbs {

@@ -95,34 +95,54 @@ class HeaderBar extends React.Component {
     }
 
     render() {
-        let {people, groups, fields, auth, dispatch} = this.props
+        let {people, groups, fields, auth, dispatch, route} = this.props
         let changed = !_.isEmpty(people.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
-
-        let changedButtons = [(
+        
+        return (
+            <div className='headerBar'>
+            {changed && (
                 <mdl.Button 
                     ripple 
-                    key="save"
                     id="header-save-button" 
                     onClick={() => dispatch(actions.people.commit(auth.token))} >
                     Opslaan
                 </mdl.Button>
-            ), (
+            )}
+            {changed && (
                 <mdl.Button 
                     ripple 
                     colored
-                    key="cancel"
-                    onClick={() => dispatch(actions.people.revert())} 
-                    >
+                    onClick={() => dispatch(actions.people.revert())} >
                     Annuleren
                 </mdl.Button>
-            )
-        ]
+            )}
+            <div className="spacer"></div>
+            {route.name === "Mensen" && (
+                <mdl.Button 
+                    className="action end"
+                    ripple 
+                    onClick={() => dispatch(actions.people.create())} >
+                    Nieuw persoon
+                </mdl.Button>
+            )}
+            {route.name === "Groepen" && (
+                <mdl.Button 
+                    className="action end"
+                    ripple 
+                    onClick={() => dispatch(actions.groups.create())} >
+                    Nieuwe groep
+                </mdl.Button>
+            )}
+            {route.name === "Velden" && (
+                <mdl.Button 
+                    className="action end"
+                    ripple 
+                    onClick={() => dispatch(actions.fields.create())} >
+                    Nieuw veld
+                </mdl.Button>
+            )}
 
-        return (
-            <div className='headerBar'>
-                { changed && (
-                    changedButtons
-                )}
+
             </div>
         )
     }

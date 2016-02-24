@@ -42,17 +42,11 @@ class App extends React.Component {
 
     render() {
         var {main, header, auth, dispatch} = this.props;
-
-        let headerButtons
-        if (main.type.renderHeaderButtons) {
-            headerButtons = main.type.renderHeaderButtons(dispatch)
-        }
-
         return (
             <mdl.Layout fixedHeader fixedDrawer>
                 <mdl.Header >
                     <mdl.HeaderRow>
-                        {headerButtons}
+                        {header}
                     </mdl.HeaderRow>
                 </mdl.Header>
                 <mdl.Drawer>

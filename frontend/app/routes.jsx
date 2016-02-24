@@ -2,16 +2,13 @@ import React from 'react';
 import { Route, IndexRoute } from 'react-router'
 
 import {
-	HeaderBar
-} from 'containers'
-
-import {
 	group,
 	people,
 	fields,
 	permissions,
 	Auth,
-	App
+	App,
+	HeaderBar
 } from 'containers'
 
 import actions from 'actions'
@@ -66,11 +63,11 @@ export default (store) => {
 		<Route
 			name="Login"      
 			path="login"          
-			components={{main: Auth.Login, header: HeaderBar}} />
+			components={{main: Auth.Login}} />
 		<Route
 			name="Logout"
 			path="logout"
-			components={{main: Auth.Logout, header: HeaderBar}}
+			components={{main: Auth.Logout}}
 			onEnter={actions.auth.requireLogin(store)} />
 	</Route>
  )
