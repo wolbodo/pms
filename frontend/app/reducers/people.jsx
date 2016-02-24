@@ -1,9 +1,10 @@
-import {fromJS, Map} from 'immutable'
+import {fromJS, Map, List} from 'immutable'
 
 let CONSTRUCT,
     PEOPLE_RECEIVE,
     PEOPLE_UPDATE,
     PEOPLE_COMMIT_UPDATES,
+    PEOPLE_REVERT_UPDATES,
     PERSON_UPDATE_SUCCESS,
     PEOPLE_CREATE
 
@@ -16,28 +17,25 @@ CONSTRUCT = () => fromJS({
 PEOPLE_RECEIVE = (people, {data}) =>
   people.merge({
     items: fromJS(data.people)
-                    .reduce(
-                      (lookup, item) => lookup.set(item.get('id').toString(), item),
-                      Map()
-                    )
+            .reduce(
+              (lookup, item) => lookup.set(item.get('id').toString(), item),
+              Map()
+            )
   })
 
 PEOPLE_UPDATE = (people, {data}) => {
-  console.log("PEOPLE_UPDATE", people.toJS(), data)
-  if (!fromJS(data.person).equals(
-    people.getIn(['items', data.id])
-  )) {
-    // changed
-    return people.update('updates', updates => updates.mergeDeep({[data.id]: data.person}))
-  }
-  return people
+  return people.updateIn(['updates', data.id, data.key], () => data.value)
 }
+
 
 PERSON_UPDATE_SUCCESS = (people, {data}) =>
   people.updateIn(['items', data.id.toString()], 
-                  person => (person || Map()).mergeDeep(data))
+                  person => (person || Map()).merge(data))
 
 PEOPLE_COMMIT_UPDATES = people =>
+  people.set('updates', Map())
+
+PEOPLE_REVERT_UPDATES = people =>
   people.set('updates', Map())
   
 PEOPLE_CREATE = (people, {data}) =>
@@ -49,6 +47,7 @@ export {
   PEOPLE_RECEIVE,
   PEOPLE_UPDATE,
   PEOPLE_COMMIT_UPDATES,
+  PEOPLE_REVERT_UPDATES,
   PERSON_UPDATE_SUCCESS,
   PEOPLE_CREATE
 }

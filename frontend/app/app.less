@@ -27,28 +27,29 @@ body {
 	.mdl-button {
 		.accent-color;
 		color: #00796B;
+
+		&.mdl-button--colored {
+			background-color: #FF3B00;
+		}
 	}
 
 	.mdl-layout {
 		.mdl-layout__inner-container, .mdl-layout__header {
 			.dark-primary-color;
 		}
-
-		.headerBar {
-			display: flex;
-			width: 100%;
-			flex-direction: column;
-			
-			> * {
-				align-self: flex-start;
-			}
-		}
 		
 		.mdl-layout__header {
 			z-index: inherit;
 			.mdl-layout__header-row {
-				flex-direction: row-reverse;
+				display: flex;
+				width: 100%;
+				flex-direction: row;
 				align-items: center;
+				
+				> * {
+					align-self: flex-start;
+					margin: 5px;
+				}
 
 				.breadcrumbs {
 					a {
@@ -116,6 +117,13 @@ body {
 					width: 150px;
 				}
 			}
+
+			.mdl-card__title > div > div {
+			    font-size: 26px;
+			    line-height: 24px;
+			    font-weight: bold;
+			}
+
 			.mdl-card__form {
 				display: flex;
 				flex-direction: column;
@@ -167,7 +175,7 @@ body {
 
 			}
 			.mdl-card__supporting-text {
-				overflow-x: auto;
+				overflow: auto;
 				width: auto;
 			}
 		}
@@ -379,20 +387,15 @@ body {
 	}
 
 	> div {
-	    position: absolute;
-	    top: 0;
-	    left: 0;cancel
-	    right: 0;
-	    bottom: 0;
-		
-	    position: relative;
+	    display: flex;
+	    flex-wrap: wrap;
 	    font-size: 16px;
-	    display: inline-block;
 	    box-sizing: border-box;
 	    max-width: 100%;
 	    margin: 0;
-	    padding: 10px 0;
-	    border-bottom: 1px solid rgba(0,0,0, 0.12);
+	    padding: 10px 0 3px 0;
+	    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
 	}
 
 	p {
@@ -412,23 +415,20 @@ body {
 	}
 
 	.chip {
-	    font-size: 16px;
-	    display: inline-block;
+	    display: flex;
 	    font-size: 1em;
 	    border-radius: 2em;
 	    background-color: #E0E0E0;
-	    display: inline;
-	    padding: 0.2em 0.4em 0.2em 0.7em;
-	    margin-right: 5px;
-/* 	    height: 2em; */
-/* 	    margin: 1em; */
+	    padding: 0.1em 0.3em 0.1em 0.5em;
+	    margin: 0 5px 5px 0;
 
 		> i {
-			color: #9F9E9F;
+		    color: #9F9E9F;
 		    font-size: 18px;
 		    vertical-align: text-bottom;
-		    padding: 8px 0px 1px 6px;
-	    	cursor: pointer;
+		    cursor: pointer;
+		    padding-top: 1px;
+		    margin-left: 0.1em;
 		}
 	    &:hover {
 	    	background: #767577;

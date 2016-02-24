@@ -20,7 +20,7 @@ export default class PersonEdit extends React.Component {
         } = this.props;
 
         let person_id = params.id || auth.user.user
-        let item = _.merge(
+        let item = _.assign(
             people.items[person_id] || {},
             _.get(people, ['updates', person_id])
         );
@@ -30,9 +30,8 @@ export default class PersonEdit extends React.Component {
                 schema={fields.schemas.person}
                 item={item}
                 permissions={permissions.bestuur.person}
-                onChange={person => {
-                    console.log("Updating", person_id, person)
-                    dispatch(actions.people.update(person_id, person))
+                onChange={(value, key) => {
+                    dispatch(actions.people.update(person_id, value, key))
                 }} />
         );
     }

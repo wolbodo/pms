@@ -7,29 +7,29 @@ import {Chip} from 'components'
 
 export default class Array extends React.Component {
 	onChange(index) {
-		let {onChange, value} = this.props;
-		onChange(
+		let {onBlur, value} = this.props;
+		onBlur(
 			_.filter(value, (x, i) => i !== index)
 		)
 	}
 
 	addValue(e) {
 		let new_value = _.trim(e.target.textContent)
-		let {onChange, value} = this.props
+		let {onBlur, value} = this.props
 		value = value || []
 
 		e.target.textContent = undefined
 
 		if (!_.isEmpty(new_value)) {
-			onChange(
+			onBlur(
 				_(value).concat(new_value).value()
 			)
 		}
 	}
 	deleteValue() {
-		let {onChange, value} = this.props
+		let {onBlur, value} = this.props
 
-		onChange(_.slice(value, 0, -1))
+		onBlur(_.slice(value, 0, -1))
 		
 	}
 

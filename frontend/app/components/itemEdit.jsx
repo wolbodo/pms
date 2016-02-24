@@ -13,15 +13,14 @@ export default class ItemEdit extends React.Component {
 		this.handleChange = this.handleChange.bind(this);
 	}
 	handleChange(value, key) {
-		let {onChange} = this.props;
+		let {onChange, item} = this.props;
 
 		console.log("Setting store")
 
-		if (onChange) {
-			onChange({
-				[key]: value
-			})
-		}
+		// did value change?
+		if ((item[key] !== value) && onChange) {
+			onChange(value, key)
+		} 
 	}
 	render() {
 		const {schema, item, permissions } = this.props;

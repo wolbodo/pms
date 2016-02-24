@@ -23,8 +23,8 @@ class GroupEdit extends React.Component {
 				schema={fields.schemas.group}
 				item={groups.items[params.groep]}
                 permissions={permissions.leden.group}
-				onChange={group => {
-					dispatch(actions.groups.update(params.groep, group))
+				onChange={(value, key) => {
+					dispatch(actions.groups.update(params.groep, {[key]: value}))
 				}} />
 		);
 	}

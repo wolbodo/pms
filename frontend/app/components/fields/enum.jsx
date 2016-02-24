@@ -7,13 +7,16 @@ export default class Enum extends React.Component {
 
     render() {
         let { name, label, value, disabled, options,
-              onChange, onBlur } = this.props
+              onBlur, style } = this.props
+
+        style = style || {}
 
         return (
             <SelectField
                 className="selectfield"
                 floatingLabelText={label} 
                 value={value}
+                style={style}
                 onChange={(ev, i, option) => {
                     onBlur(option)
                 }}
@@ -21,6 +24,7 @@ export default class Enum extends React.Component {
             >
             {_.map(options, (field, key) => (
                 <MenuItem
+                    style={style}
                     key={key}
                     value={key}
                     primaryText={field}

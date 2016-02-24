@@ -20,8 +20,8 @@ class FieldsEdit extends React.Component {
 				schema={fields.schemas.field}
                 permissions={permissions.leden.field}
 				item={fields.schemas.person.fields[params.veld]}
-				onChange={field => {
-					dispatch(actions.fields.updateField('person', params.veld, field))
+				onChange={(value, key) => {
+					dispatch(actions.fields.updateField('person', params.veld, {[key]: value}))
 				}} />
 		);
 	}

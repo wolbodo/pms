@@ -24,6 +24,11 @@ export default (store) => {
 			components={{main: people.View, header: HeaderBar}}
 			onEnter={actions.auth.requireLogin(store)}/>
 		<Route
+			name="Mensen"
+			path="mensen(/:group_name)"
+			components={{main: people.View, header: HeaderBar}}
+			onEnter={actions.auth.requireLogin(store)}/>
+		<Route
 			name="Lid"
 			path="lid-:id"
 			components={{main: people.Edit, header: HeaderBar}}

@@ -29,6 +29,7 @@ class HeaderBar extends React.Component {
         })
     }
 
+    // Deprecated: but useful for modals and such
     renderDialog() {
         let {people, groups, fields, dispatch} = this.props
         let {dialogOpen} = this.state
@@ -93,25 +94,35 @@ class HeaderBar extends React.Component {
         )
     }
 
-    saveCurrent() {
-        let {people, groups, fields, auth, dispatch} = this.props
-        dispatch(actions.people.commit(auth.token))
-    }
-
     render() {
-        let {people, groups, fields, dispatch} = this.props
+        let {people, groups, fields, auth, dispatch} = this.props
         let changed = !_.isEmpty(people.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
+
+        let changedButtons = [(
+                <mdl.Button 
+                    ripple 
+                    key="save"
+                    id="header-save-button" 
+                    onClick={() => dispatch(actions.people.commit(auth.token))} >
+                    Opslaan
+                </mdl.Button>
+            ), (
+                <mdl.Button 
+                    ripple 
+                    colored
+                    key="cancel"
+                    onClick={() => dispatch(actions.people.revert())} 
+                    >
+                    Annuleren
+                </mdl.Button>
+            )
+        ]
 
         return (
             <div className='headerBar'>
                 { changed && (
-                    <mdl.Button 
-                        ripple 
-                        id="header-save-button" 
-                        onClick={() => this.saveCurrent()} >
-                        Opslaan
-                    </mdl.Button>
-                ) || (<div />)}
+                    changedButtons
+                )}
             </div>
         )
     }
