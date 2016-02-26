@@ -67,7 +67,7 @@ class Login extends React.Component {
               onChange={e => this.onChange('password', e.target.value)} 
               floatingLabel />
 
-          <mdl.Button primary raised colored>Verstuur</mdl.Button>
+          <mdl.Button primary raised>Verstuur</mdl.Button>
             {this.state.error && (
               <p>Bad login information</p>
             )}

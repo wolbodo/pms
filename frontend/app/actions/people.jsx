@@ -107,12 +107,18 @@ export function commit(token) {
   }
 }
 
-export function update(id, person) {
+export function revert() {
+  return {
+    name: 'PEOPLE_REVERT_UPDATES'
+  }
+}
+
+export function update(id, value, key) {
   return {
     name: constants.PEOPLE_UPDATE,
     data: {
       id: id.toString(), 
-      person
+      value, key
     }
   }
 }
