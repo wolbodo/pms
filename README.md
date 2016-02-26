@@ -84,7 +84,8 @@ CREATE EXTENSION pgcrypto;
 ```
 ```
 sudo -u pms psql -f database/create.sql
-sudo -u pms psql -f database/db-logic.sql
+<!--NOTE: psql variables don't work in CREATE FUNCTIONS?: sudo -u pms psql -f database/db-logic.sql -v "token_sha256_key=$(openssl rand -hex 64)"-->
+sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | sudo -u pms psql
 ```
 
 # Backup Cycle

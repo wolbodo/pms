@@ -37,7 +37,7 @@ BEGIN
     match = REGEXP_MATCHES(token, '^(([a-zA-Z0-9_=-]+)\.([a-zA-Z0-9_=-]+))\.([a-zA-Z0-9_=-]+)$');
     header = base64url_jsonb(match[2]);
     payload = base64url_jsonb(match[3]);
-    IF match IS NULL OR match[4] != TRANSLATE(ENCODE(HMAC(match[1], 'FIXME: this is a secret value that should better be replaced otherwise we are seriously fucked!', 'sha256'), 'base64'), '+/=', '-_') THEN
+    IF match IS NULL OR match[4] != TRANSLATE(ENCODE(HMAC(match[1], :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_') THEN
       RAISE EXCEPTION 'Invalid signature';
       RETURN NULL;
     END IF;
@@ -67,7 +67,7 @@ BEGIN
       JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
       WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
   content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
-  signature = TRANSLATE(ENCODE(HMAC(content, 'FIXME: this is a secret value that should better be replaced otherwise we are seriously fucked!', 'sha256'), 'base64'), '+/=', '-_');
+  signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
   RETURN content || '.' || signature;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
