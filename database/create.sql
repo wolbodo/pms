@@ -85,7 +85,7 @@ CREATE TRIGGER "fields_modified" BEFORE UPDATE ON "fields" FOR EACH ROW EXECUTE 
 
 DROP TABLE IF EXISTS "permissions" CASCADE;
 DROP TYPE IF EXISTS "permissions_type" CASCADE;
-CREATE TYPE "permissions_type" AS ENUM ('read', 'write', 'create', 'custom');
+CREATE TYPE "permissions_type" AS ENUM ('view', 'edit', 'create', 'custom');
 
 CREATE TABLE "permissions"
 (
@@ -94,9 +94,9 @@ CREATE TABLE "permissions"
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
     "ref_table"         VARCHAR(255) NOT NULL,
-    "ref_key"           VARCHAR(255) NOT NULL,
+    "ref_key"           VARCHAR(255),
     "ref_value"         INT,
-    "type"              permissions_type NOT NULL DEFAULT 'read',
+    "type"              permissions_type NOT NULL DEFAULT 'view',
     "data"              JSONB NOT NULL DEFAULT '{}',
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL

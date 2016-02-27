@@ -6,11 +6,11 @@ DECLARE
   debug1 TEXT;
 BEGIN
     RETURN CONVERT_FROM(DECODE(TRANSLATE(json || REPEAT('=', LENGTH(json) * 6 % 8 / 2), '-_',''), 'base64'), 'UTF-8')::JSONB;
-    EXCEPTION
-        WHEN invalid_parameter_value THEN
-            GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
-            RAISE EXCEPTION  'E: % %', info, debug1;
-            RETURN NULL;
+EXCEPTION
+    WHEN invalid_parameter_value THEN
+        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
+        RAISE EXCEPTION  'E: % %', info, debug1;
+        RETURN NULL;
 END
 $function$;
 
@@ -38,12 +38,12 @@ BEGIN
     header = base64url_jsonb(match[2]);
     payload = base64url_jsonb(match[3]);
     IF match IS NULL OR match[4] != TRANSLATE(ENCODE(HMAC(match[1], :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_') THEN
-      RAISE EXCEPTION 'Invalid signature';
-      RETURN NULL;
+        RAISE EXCEPTION 'Invalid signature';
+        RETURN NULL;
     END IF;
     IF NOT payload ? 'exp' OR (payload->>'exp')::INT < FLOOR(EXTRACT(EPOCH FROM NOW())) THEN
-      RAISE EXCEPTION 'Expired';
-      RETURN NULL;
+        RAISE EXCEPTION 'Expired';
+        RETURN NULL;
     END IF;
     RETURN payload;
 END
@@ -60,22 +60,22 @@ DECLARE
   content TEXT;
   signature TEXT;
 BEGIN
-  header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
-  SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO STRICT payload
-      FROM people p
-      JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
-      JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
-      WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
-  content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
-  signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
-  RETURN content || '.' || signature;
+    header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
+    SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO STRICT payload
+        FROM people p
+            JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
+            JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
+        WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
+    content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
+    signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
+    RETURN content || '.' || signature;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-      RAISE EXCEPTION 'Username or password wrong.';
-      RETURN NULL;
+        RAISE EXCEPTION 'Username or password wrong.';
+        RETURN NULL;
     WHEN TOO_MANY_ROWS THEN
-      RAISE EXCEPTION 'More than one entry found, please contact an admin or board member to fix this.';
-      RETURN NULL;
+        RAISE EXCEPTION 'More than one entry found, please contact an admin or board member to fix this.';
+        RETURN NULL;
 END
 $function$;
 
@@ -85,14 +85,14 @@ CREATE OR REPLACE FUNCTION public.has_role(self_id INT, role_name VARCHAR)
  LANGUAGE plpgsql
 AS $function$
 BEGIN
-  PERFORM FROM roles r
-               JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL AND r.valid_till IS NULL
-               JOIN people p ON pr.people_id = p.id AND r.name != 'self' AND p.valid_till IS NULL
-      WHERE p.id = self_id AND r.name = role_name;
-  IF NOT FOUND THEN
-      RETURN FALSE;
-  END IF;
-  RETURN TRUE;
+    PERFORM FROM roles r
+                JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL AND r.valid_till IS NULL
+                JOIN people p ON pr.people_id = p.id AND r.name != 'self' AND p.valid_till IS NULL
+            WHERE p.id = self_id AND r.name = role_name;
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+    RETURN TRUE;
 END;
 $function$;
 
@@ -113,7 +113,6 @@ DECLARE
     permissions JSONB;
 BEGIN
     payload = parse_jwt(token);
-
     SELECT JSONB_OBJECT_AGG(ref_table, json) INTO permissions FROM (
         SELECT
             ref_table,
@@ -125,12 +124,12 @@ BEGIN
         FROM (
             SELECT pm.ref_table,
                 CASE
-                    WHEN NOT (r.name = 'self') AND type IN ('read'::permissions_type, 'write'::permissions_type) THEN
-                        JSONB_BUILD_OBJECT(type, jsonb_agg(DISTINCT f.name))
-                    WHEN type IN ('read'::permissions_type, 'write'::permissions_type) THEN
-                        JSONB_BUILD_OBJECT('self', JSONB_BUILD_OBJECT(type, jsonb_agg(DISTINCT f.name)))
+                    WHEN NOT (r.name = 'self') AND type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
+                        JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name))
+                    WHEN type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
+                        JSONB_BUILD_OBJECT('self', JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name)))
                     WHEN type = 'create'::permissions_type THEN
-                        JSONB_BUILD_OBJECT(type, JSONB_BUILD_OBJECT(ref_key, COALESCE(NULLIF(JSONB_AGG(ref_value),'[null]'),'true'::JSONB)))
+                        JSONB_BUILD_OBJECT(type, CASE WHEN ref_key IS NULL THEN '{}'::JSONB ELSE JSONB_BUILD_OBJECT(ref_key, CASE WHEN JSONB_AGG(ref_value) @> 'null'::JSONB THEN '"*"'::JSONB ELSE JSONB_AGG(ref_value) END) END)
                     WHEN type = 'custom'::permissions_type THEN
                         JSONB_BUILD_OBJECT(ref_key, COALESCE(NULLIF(JSONB_AGG(ref_value),'[null]'),'true'::JSONB))
                 END AS json
@@ -142,12 +141,117 @@ BEGIN
                 LEFT JOIN fields f ON pm.ref_key = 'fields' AND pm.ref_value = f.id AND f.valid_till IS NULL
             WHERE pr.people_id = (payload->>'user')::INT
             GROUP BY pm.ref_table, pm.type, pm.ref_key, r.name = 'self'
+            ORDER BY ref_key NULLS FIRST --so "create": {} will be overwritten by "create": {"key":[values]}
         ) rules
             LEFT JOIN JSONB_EACH(rules.json - 'self') rule ON TRUE
             LEFT JOIN JSONB_EACH(rules.json->'self') selfrule ON TRUE
         GROUP BY rules.ref_table
     ) alias;
     RETURN (payload, permissions);
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.data_merge(rights payload_permissions, ref_table VARCHAR, base JSONB = '{}'::JSONB, update JSONB = '{}'::JSONB, remove BOOL DEFAULT FALSE)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    kv record;
+    viewfields JSONB;
+    editfields JSONB;
+    createfields JSONB;
+    changed BOOL;
+BEGIN
+    --OK construct: this construct is chosen because a IF NOT(NULL) => NULL,
+    -- since we resolve quite some JSONB paths (which resolves to NULL if the key/path doesn't exist)
+    -- this IF OK ELSE ERROR construct is way less verbose than checking explicitly for NULL or key exists.
+    changed = FALSE;
+    viewfields = rights.permissions->ref_table->'view';
+    editfields = rights.permissions->ref_table->'edit';
+    createfields = rights.permissions->ref_table->'create';
+    IF ref_table = 'people' AND (base->>'id')::INT = (rights.payload->>'user')::INT THEN
+        viewfields = COALESCE(viewfields, '[]'::JSONB) || COALESCE(rights.permissions->ref_table->'self'->'view', '[]'::JSONB);
+        editfields = COALESCE(editfields, '[]'::JSONB) || COALESCE(rights.permissions->ref_table->'self'->'edit', '[]'::JSONB);
+    END IF;
+    IF base = '{}'::JSONB THEN
+        IF rights.permissions->ref_table ? 'create' THEN
+            --OK construct
+        ELSE
+            RAISE EXCEPTION 'creating "%" not allowed', ref_table;
+            RETURN NULL;
+        END IF;
+    END IF;
+    IF remove THEN
+        IF rights.permissions->ref_table ? 'create' THEN
+            --OK construct
+            FOR kv IN (SELECT * FROM JSONB_EACH(createfields))
+            LOOP
+                IF createfields->kv.key = '*' OR base ? kv.key AND base->kv.key @> kv.value THEN
+                    --OK construct
+                ELSE
+                    RAISE EXCEPTION 'removing "%" value % not allowed', kv.key, kv.value;
+                    RETURN NULL;
+                END IF;
+            END LOOP;
+        ELSE
+            RAISE EXCEPTION 'removing "%" not allowed', ref_table;
+            RETURN NULL;
+        END IF;
+    END IF;
+    FOR kv IN (SELECT * FROM JSONB_EACH(update))
+    LOOP
+        IF editfields ? kv.key THEN
+            --OK construct
+            IF viewfields ? kv.key THEN
+                IF base->kv.key != kv.value THEN
+                    changed = TRUE;
+                END IF;
+            ELSE
+                changed = TRUE;
+            END IF;
+        ELSEIF viewfields ? kv.key AND base->kv.key = kv.value THEN
+            --OK construct
+        ELSEIF base = '{}'::JSONB THEN
+            IF createfields ? kv.key THEN
+                IF createfields->kv.key = '*' OR createfields->kv.key <@ kv.value THEN
+                    --OK construct
+                ELSE
+                    RAISE EXCEPTION 'creating "%" with value % is not allowed', kv.key, kv.value;
+                    RETURN NULL;
+                END IF;
+            ELSE
+                RAISE EXCEPTION 'creating "%" is not allowed', kv.key;
+                RETURN NULL;
+            END IF;
+        ELSE
+            RAISE EXCEPTION 'editing "%" is not allowed', kv.key;
+            RETURN NULL;
+        END IF;
+    END LOOP;
+    IF NOT remove AND base != '{}'::JSONB AND NOT changed THEN
+        RAISE EXCEPTION 'editing nothing is not allowed';
+        RETURN NULL;
+    ELSEIF NOT remove AND update = '{}'::JSONB THEN
+        RAISE EXCEPTION 'creating nothing is not allowed';
+        RETURN NULL;
+    END IF;
+    RETURN base || update;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.remove_base(base JSONB)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    field VARCHAR;
+BEGIN
+    FOREACH field IN ARRAY ARRAY['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
+        base = base -field;
+    END LOOP;
+    RETURN base;
 END;
 $function$;
 
@@ -179,10 +283,10 @@ BEGIN
                         ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
                 ) alias
                 WHERE
-                    rights.permissions->'people'->'read' ? key
+                    rights.permissions->'people'->'view' ? key
                     OR (
                         people.id = (rights.payload->>'user')::INT
-                        AND rights.permissions->'people'->'self'->'read' ? key
+                        AND rights.permissions->'people'->'self'->'view' ? key
                     )
             )
             FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id)
@@ -203,62 +307,10 @@ AS $function$
 BEGIN
     RETURN people_get(rights := permissions_get(token), people_id := people_id);
 END;
+
+
 $function$;
-
---TODO: count(writeonly OR write & !current value) > 0 else RAISE EXCEPTION 'no empty updates please'
-CREATE OR REPLACE FUNCTION public.data_merge(rights payload_permissions, ref_table VARCHAR, base JSONB = '{}'::JSONB, update JSONB = '{}'::JSONB)
- RETURNS JSONB
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-    kv record;
-    readfields JSONB;
-    writefields JSONB;
-BEGIN
-    readfields = rights.permissions->ref_table->'read';
-    writefields = rights.permissions->ref_table->'write';
-    IF ref_table = 'people' AND (base->>'id')::INT = (rights.payload->>'user')::INT THEN
-        readfields = COALESCE(readfields, '[]'::JSONB) || COALESCE(rights.permissions->ref_table->'self'->'read', '[]'::JSONB);
-        writefields = COALESCE(writefields, '[]'::JSONB) || COALESCE(rights.permissions->ref_table->'self'->'write', '[]'::JSONB);
-    END IF;
-    IF base = '{}'::JSONB THEN
-        --support create { key1->[value1], key2->[value2, value3] }
-        IF rights.permissions->ref_table->'create'->'*' THEN
-            --OK, this construct is chosen because missing JSON objects resolve in NULL, which are way more tricky to handle correctly in one IF.
-        ELSE
-            RAISE EXCEPTION 'creating "%" not allowed', ref_table;
-            RETURN NULL;
-        END IF;
-    END IF;
-    FOR kv IN (SELECT * FROM JSONB_EACH(update))
-    LOOP
-        IF writefields ? kv.key OR (readfields ? kv.key AND base->kv.key = update->kv.key) THEN
-            --OK, this construct is chosen because NULL in write, read and base->kv.key is way more tricky to handle correctly in one IF.
-        ELSE
-            RAISE EXCEPTION 'writing "%" not allowed', kv.key;
-            RETURN NULL;
-        END IF;
-    END LOOP;
-    RETURN base || update;
-END;
-$function$;
-
-
-CREATE OR REPLACE FUNCTION public.remove_base(base JSONB)
- RETURNS JSONB
- LANGUAGE plpgsql
-AS $function$
-DECLARE
-    field VARCHAR;
-BEGIN
-    FOREACH field IN ARRAY ARRAY['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
-        base = base -field;
-    END LOOP;
-    RETURN base;
-END;
-$function$;
-
-CREATE OR REPLACE FUNCTION public.person_set(token TEXT, people_id INT, data JSONB)
+CREATE OR REPLACE FUNCTION public.people_set(token TEXT, people_id INT, data JSONB)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -285,7 +337,7 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.person_add(token TEXT, data JSONB)
+CREATE OR REPLACE FUNCTION public.people_add(token TEXT, data JSONB)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -305,5 +357,29 @@ BEGIN
         VALUES (_data->>'email', _data->>'phone', (rights.payload->>'user')::INT, _data -'email' -'phone') RETURNING id INTO people_id;
 
     RETURN people_get(rights, people_id);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.people_del(token TEXT, people_id INT)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    rights payload_permissions;
+BEGIN
+    rights = permissions_get(token);
+    PERFORM data_merge(
+        rights := rights,
+        ref_table := 'people',
+        base := people_get(rights, people_id),
+        remove := TRUE
+    );
+
+    UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'no active person with id=% found', people_id;
+        RETURN NULL;
+    END IF;
+    RETURN 'true'::JSONB;--people_get(rights, people_id);
 END;
 $function$;

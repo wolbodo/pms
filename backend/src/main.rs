@@ -53,6 +53,10 @@ macro_rules! badrequest {
     ($msg:expr) => (return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
+macro_rules! internalerror {
+    ($msg:expr) => (return Ok(Response::with((status::InternalServerError, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
+}
+
 macro_rules! notfound {
     ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
@@ -149,7 +153,7 @@ fn handle_person_set(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string())
     };
 
-    let stmt = db.prepare(sql!("SELECT person_set(token := $1, people_id := $2, data := $3);")).unwrap();
+    let stmt = db.prepare(sql!("SELECT people_set(token := $1, people_id := $2, data := $3);")).unwrap();
 
     let rows = match stmt.query(&[&token, &people_id, &data]) {
         Ok(rows) => rows,
@@ -160,7 +164,7 @@ fn handle_person_set(req: &mut Request) -> IronResult<Response> {
     let people = match rows.get(0).get(0) {
         value@ Value::Array(_) => value,
         value@Value::Object(_) => value,
-        Value::Null | _ => badrequest!("don't touch that".to_string())
+        Value::Null | _ => internalerror!("unexpected response from database".to_string())
     };
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
@@ -185,7 +189,7 @@ fn handle_person_add(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string())
     };
 
-    let stmt = db.prepare(sql!("SELECT person_add(token := $1, data := $2);")).unwrap();
+    let stmt = db.prepare(sql!("SELECT people_add(token := $1, data := $2);")).unwrap();
 
     let rows = match stmt.query(&[&token, &data]) {
         Ok(rows) => rows,
@@ -196,7 +200,7 @@ fn handle_person_add(req: &mut Request) -> IronResult<Response> {
     let people = match rows.get(0).get(0) {
         value@ Value::Array(_) => value,
         value@Value::Object(_) => value,
-        Value::Null | _ => badrequest!("don't touch that".to_string())
+        Value::Null | _ => internalerror!("unexpected response from database".to_string())
     };
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))

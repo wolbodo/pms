@@ -130,28 +130,29 @@ VALUES
     ('people','directdebit', '{}', -1);
 
 INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
-SELECT unnest(array['read','write'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table = 'people' UNION
+SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table = 'people' UNION
 SELECT 'create' AS type, 'people_roles' AS ref_table, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
-SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_table, '*' AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
+SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_table, NULL AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
 VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1),
        ('custom'::permissions_type, 'website', 'createEvents', NULL::INT, -1),
        ('custom'::permissions_type, 'website', 'maxValueForSomething', 5, -1),
        ('custom'::permissions_type, 'website', 'editTemplateIds', 2100, -1),
        ('custom'::permissions_type, 'website', 'editTemplateIds', 2500, -1),
-       ('custom'::permissions_type, 'website', 'viewLogs', NULL, -1) UNION
-SELECT 'create'::permissions_type, 'people_roles', 'roles_id', id, -1 FROM roles WHERE name IN ('board','member','keymanager','keyobserver');
+       ('custom'::permissions_type, 'website', 'viewLogs', NULL, -1),
+       ('create'::permissions_type, 'people_roles', 'roles_id', NULL, -1) UNION
+SELECT 'create'::permissions_type, 'people_roles', 'roles_id', id, -1 FROM roles WHERE name IN ('board','member','keymanager','keyobserver','admin');
 
 INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
-        (array['read'],          array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
-        (array['read'],          array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
-        (array['read','write'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
-        (array['write'],         array['self','admin'], array['password_hash']),
-        (array['read', 'write'], array['self','board'], array['email','phone','mobile','street','housenumber','zipcode','city','state','country','iban','directdebit','gender','emergencyinfo','notes']),
-        (array['read', 'write'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','peoplesince','frontdoor','cashregister']),
-        (array['read', 'write'], array['keymanager'],   array['keycode','frontdoor','cashregister']),
-        (array['read'],          array['keyobserver'],  array['keycode','frontdoor','cashregister'])
+        (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
+        (array['view'],         array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
+        (array['view','edit'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
+        (array['edit'],         array['self','admin'], array['password_hash']),
+        (array['view', 'edit'], array['self','board'], array['email','phone','mobile','street','housenumber','zipcode','city','state','country','iban','directdebit','gender','emergencyinfo','notes']),
+        (array['view', 'edit'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','peoplesince','frontdoor','cashregister']),
+        (array['view', 'edit'], array['keymanager'],   array['keycode','frontdoor','cashregister']),
+        (array['view'],         array['keyobserver'],  array['keycode','frontdoor','cashregister'])
     ) alias (types, roles_names, fields_names)
     JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names))
     JOIN fields ON fields.valid_till IS NULL AND fields.name IN (SELECT unnest(alias.fields_names))
@@ -161,7 +162,6 @@ SELECT DISTINCT roles.id, permissions.id, -1 FROM
         AND permissions.ref_table = fields.ref_table
         AND permissions.ref_key = 'fields'
         AND permissions.ref_value = fields.id
-        --('write', 'website',1,'{"part":"frontpage"}')
     UNION
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
@@ -172,10 +172,12 @@ SELECT DISTINCT roles.id, permissions.id, -1 FROM
         permissions.valid_till IS NULL
         AND permissions.type::TEXT IN (SELECT unnest(alias.types))
         AND permissions.ref_table IN (SELECT unnest(alias.table_names))
-        AND permissions.ref_key = '*'
+        AND permissions.ref_key IS NULL
         AND permissions.ref_value IS NULL
     UNION
-SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'people_roles' AND ref_value IS NOT NULL
+SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'people_roles' AND ref_value IN (SELECT id FROM roles WHERE name IN ('board','member','keymanager','keyobserver'))
+    UNION
+SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'admin' AND ref_table = 'people_roles' AND (ref_value IN (SELECT id FROM roles WHERE name IN ('board','admin')) OR ref_value IS NULL)
     UNION
 SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'website';
 
