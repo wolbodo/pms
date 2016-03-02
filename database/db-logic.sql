@@ -289,7 +289,7 @@ BEGIN
                         AND rights.permissions->'people'->'self'->'view' ? key
                     )
             )
-            FROM people WHERE valid_till IS NULL AND (people.id = people_id OR -1 = people_id)
+            FROM people p WHERE valid_till IS NULL AND (id = people_id OR -1 = people_id)
         ) alias (object) WHERE object IS NOT NULL;
     IF people_id = -1 THEN
         RETURN people;
@@ -383,3 +383,58 @@ BEGIN
     RETURN 'true'::JSONB;--people_get(rights, people_id);
 END;
 $function$;
+
+
+--NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
+CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT '-1'::INT)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    roles JSONB;
+    _roles_id ALIAS FOR roles_id;
+BEGIN
+    SELECT JSONB_AGG(object) INTO roles
+        FROM (
+            SELECT (
+                SELECT JSONB_OBJECT_AGG(key, value)
+                FROM (SELECT key, value FROM JSONB_EACH(r.data)
+                    UNION
+                    VALUES
+                        ('gid'::TEXT, TO_JSON(r.gid)::JSONB),
+                        ('id', TO_JSON(r.id)::JSONB),
+                        ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.valid_from)))::JSONB),
+                        ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.valid_till))), 'null')::JSONB),
+                        ('name', COALESCE(TO_JSON(r.name), 'null')::JSONB),
+                        ('modified_by', TO_JSON(r.modified_by)::JSONB),
+                        ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.modified))), 'null')::JSONB),
+                        ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.created)))::JSONB),
+                        ('people_ids', TO_JSON(COALESCE(JSONB_AGG(pr.people_id) FILTER (WHERE pr.people_id IS NOT NULL), '[]'))::JSONB)
+                ) alias
+                WHERE
+                    rights.permissions->'roles'->'view' ? key AND r.name != 'self'
+            )
+            FROM roles r
+                LEFT JOIN people_roles pr ON pr.valid_till IS NULL AND pr.roles_id = r.id
+            WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
+            GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
+        ) alias (object) WHERE object IS NOT NULL;
+    IF roles_id = -1 THEN
+        RETURN roles;
+    ELSE
+        RETURN roles->0;
+    END IF;
+END;
+$function$;
+
+
+
+CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT '-1'::INT)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN roles_get(rights := permissions_get(token), roles_id := roles_id);
+END;
+$function$;
+

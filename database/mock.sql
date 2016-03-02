@@ -127,10 +127,16 @@ VALUES
     ('people','coasters', '{}', -1),
     ('people','cashregister', '{}', -1),
     ('people','frontdoor', '{}', -1),
-    ('people','directdebit', '{}', -1);
+    ('people','directdebit', '{}', -1),
+    ('roles','gid', '{}', -1),
+    ('roles','id', '{}', -1),
+    ('roles','name', '{}', -1),
+    ('roles','people_ids', '{}', -1),
+    ('roles','valid_from', '{}', -1),
+    ('roles','valid_till', '{}', -1);
 
 INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
-SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table = 'people' UNION
+SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table IN ('people', 'roles') UNION
 SELECT 'create' AS type, 'people_roles' AS ref_table, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
 SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_table, NULL AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
 VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1),
@@ -146,6 +152,7 @@ INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
         (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
+        (array['view'],         array['login'],        array['name', 'people_ids']),
         (array['view'],         array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
         (array['view','edit'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
         (array['edit'],         array['self','admin'], array['password_hash']),
