@@ -438,3 +438,54 @@ BEGIN
 END;
 $function$;
 
+
+--NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
+CREATE OR REPLACE FUNCTION public.fields_get(rights payload_permissions, ref_table VARCHAR(255) DEFAULT NULL)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    fields JSONB;
+    _ref_table ALIAS FOR ref_table;
+BEGIN
+    SELECT JSONB_AGG(object) INTO fields
+        FROM (
+            SELECT JSONB_BUILD_OBJECT('name', f.ref_table) || JSONB_BUILD_OBJECT('type', 'object') || JSONB_BUILD_OBJECT('properties', JSONB_OBJECT_AGG(f.name, (
+                SELECT COALESCE(JSONB_OBJECT_AGG(key, value), '{}'::JSONB)
+                FROM (SELECT key, value FROM JSONB_EACH(f.data)
+                    UNION
+                    VALUES
+                        --('gid'::TEXT, TO_JSON(f.gid)::JSONB),
+                        ('id', TO_JSON(f.id)::JSONB)--,
+                        --('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.valid_from)))::JSONB),
+                        --('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.valid_till))), 'null')::JSONB),
+                        --('name', COALESCE(TO_JSON(f.name), 'null')::JSONB),
+                        --('modified_by', TO_JSON(f.modified_by)::JSONB),
+                        --('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.modified))), 'null')::JSONB),
+                        --('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.created)))::JSONB)
+                ) alias)
+            )) || COALESCE(fm.data, '{}'::JSONB)
+            FROM fields f
+                LEFT JOIN fields fm ON fm.valid_till IS NULL AND fm.name IS NULL AND fm.ref_table = f.ref_table
+            WHERE f.valid_till IS NULL AND (f.ref_table = _ref_table OR _ref_table IS NULL) AND f.name IS NOT NULL
+            GROUP BY f.ref_table, fm.data
+            --GROUP BY f.gid, f.id, f.valid_from, f.valid_till, f.name, f.modified_by, f.modified, f.created, f.data
+        ) alias (object);
+    IF _ref_table IS NULL THEN
+        RETURN fields;
+    ELSE
+        RETURN fields->0;
+    END IF;
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.fields_get(token TEXT, ref_table VARCHAR(255) DEFAULT NULL)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN fields_get(rights := permissions_get(token), ref_table := ref_table);
+END;
+$function$;
+

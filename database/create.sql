@@ -72,7 +72,7 @@ CREATE TABLE "fields"
     "valid_from"        TIMESTAMPTZ DEFAULT NOW() NOT NULL CHECK ("valid_from" < "valid_till"),
     "valid_till"        TIMESTAMPTZ,
     "ref_table"         VARCHAR(255) NOT NULL,
-    "name"              VARCHAR(255) NOT NULL,
+    "name"              VARCHAR(255),
     "data"              JSONB NOT NULL DEFAULT '{}',
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
@@ -82,6 +82,9 @@ WITH (
     OIDS=FALSE
 );
 CREATE TRIGGER "fields_modified" BEFORE UPDATE ON "fields" FOR EACH ROW EXECUTE PROCEDURE update_timestamp();
+
+CREATE UNIQUE INDEX ON "fields" ("ref_table") WHERE "valid_till" IS NULL AND "name" IS NULL;
+CREATE UNIQUE INDEX ON "fields" ("ref_table", "name") WHERE "valid_till" IS NULL;-- AND "name" IS NOT NULL;
 
 DROP TABLE IF EXISTS "permissions" CASCADE;
 DROP TYPE IF EXISTS "permissions_type" CASCADE;
