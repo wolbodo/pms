@@ -285,7 +285,7 @@ BEGIN
                 WHERE
                     rights.permissions->'people'->'view' ? key
                     OR (
-                        people.id = (rights.payload->>'user')::INT
+                        p.id = (rights.payload->>'user')::INT
                         AND rights.permissions->'people'->'self'->'view' ? key
                     )
             )
