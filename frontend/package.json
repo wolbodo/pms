@@ -1,5 +1,5 @@
 {
-  "name": "mms-frontend",
+  "name": "pms-frontend",
   "version": "1.0.0",
   "description": "The react frontend for the membership management system",
   "main": "index.jsx",

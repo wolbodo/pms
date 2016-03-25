@@ -1,4 +1,56 @@
 # People Management System
+=======
+
+
+# Fully dynamic frontend configuration and state management.
+![Drag and drop functionality demoed](https://raw.githubusercontent.com/wolbodo/pms/master/drag.gif)
+
+
+# Authentication and access control in database layer. 
+Thats why there's a minimal backend.
+
+```sql
+SELECT people_get(login('sammy@example.com', '1234'), 2);
+```
+
+returns
+
+```json
+{
+    "id": 2,
+    "gid": 586,
+    "city": "Delft",
+    "iban": "NL12NOBANK123123123132",
+    "email": "wikkert@example.com",
+    "notes": "Al 60 jaar stand-bye!",
+    "phone": "+31600000001",
+    "gender": "trans",
+    "mobile": "+31600000001",
+    "street": "Verwersdijk",
+    "country": "The Netherlands",
+    "created": 1455006259,
+    "zipcode": "2611NK",
+    "lastname": "Anonymous",
+    "modified": null,
+    "nickname": "Wikkert",
+    "functions": [
+        "boardmember",
+        "eettafel"
+    ],
+    "membertype": "member",
+    "valid_from": 1455006259,
+    "valid_till": null,
+    "directdebit": [
+        "contribution"
+    ],
+    "housenumber": "104",
+    "modified_by": 3,
+    "peoplesince": "2010-01-01",
+    "emergencyinfo": "Niet reanimeren!",
+    "favoritenumber": 42
+}
+```
+
 
 # Frontend setup
 
