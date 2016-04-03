@@ -3,7 +3,7 @@ import * as mdl from 'react-mdl'
 
 import { PropTypes } from 'react-router';
 import { connect } from 'react-redux';
-import { routeActions } from 'react-router-redux'
+import { push } from 'react-router-redux'
 
 import actions from 'actions';
 
@@ -88,7 +88,7 @@ class Logout extends React.Component {
     const {dispatch} = this.props;
 
     dispatch(actions.auth.logout());
-    dispatch(routeActions.push('/login'))
+    dispatch(push('/login'))
   }
 
   render() {

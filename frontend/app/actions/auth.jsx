@@ -1,16 +1,16 @@
 import $fetch from 'isomorphic-fetch'
-import { routeActions } from 'react-router-redux'
+import { push } from 'react-router-redux'
 import constants from 'constants'
 
 function login_request() {
   return {
-    name: constants.AUTH_LOGIN_REQUEST
+    type: constants.AUTH_LOGIN_REQUEST
   }
 }
 
 function login_success(token) {
   return {
-    name: constants.AUTH_LOGIN_SUCCESS,
+    type: constants.AUTH_LOGIN_SUCCESS,
     data: {
       token: token
     }
@@ -19,7 +19,7 @@ function login_success(token) {
 }
 function login_error(err) {
   return {
-    name: constants.AUTH_LOGIN_ERROR,
+    type: constants.AUTH_LOGIN_ERROR,
     error: {
       message: err.toString(),
       err: err
@@ -28,7 +28,7 @@ function login_error(err) {
 }
 function login_request(username, password) {
   return {
-    name: constants.AUTH_LOGIN_REQUEST,
+    type: constants.AUTH_LOGIN_REQUEST,
     data: {
       username: username,
       password: password
@@ -59,7 +59,7 @@ export function login(username, password) {
         dispatch(login_success(token))
     })
     .then(() => {
-      dispatch(routeActions.push('/'))
+      dispatch(push('/'))
     })
     .catch(err => dispatch(login_error(err)));
             
@@ -68,7 +68,7 @@ export function login(username, password) {
 
 export function logout() {
   return {
-    name: constants.AUTH_LOGOUT_REQUEST
+    type: constants.AUTH_LOGOUT_REQUEST
   }
 }
 
@@ -76,7 +76,7 @@ export function requireLogin(store) {
   return (nextState, replaceState) => {
     const state = store.getState()
 
-    if (!state.getIn(['app', 'auth', 'loggedIn'])) {
+    if (!state.getIn(['auth', 'loggedIn'])) {
       replaceState('/login')
     }
 

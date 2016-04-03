@@ -3,7 +3,7 @@ import React from 'react';
 import * as mdl from 'react-mdl';
 import _ from 'lodash'
 import { connect } from 'react-redux';
-import { routeActions } from 'react-router-redux'
+import { push } from 'react-router-redux'
 import actions from 'actions'
 
 

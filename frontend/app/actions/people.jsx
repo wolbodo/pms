@@ -1,12 +1,12 @@
 import $fetch from 'isomorphic-fetch'
 import constants from 'constants'
-import { routeActions } from 'react-router-redux'
+import { push } from 'react-router-redux'
 import _ from 'lodash'
 
 
 function receive(people) {
   return {
-    name: constants.PEOPLE_RECEIVE,
+    type: constants.PEOPLE_RECEIVE,
     data: {
       people: people,
       receivedAt: Date.now()
@@ -50,7 +50,7 @@ export function fetch(token) {
 
 function update_success(body) {
   return {
-    name: 'PERSON_UPDATE_SUCCESS',
+    type: 'PERSON_UPDATE_SUCCESS',
     data: body
   }
 }
@@ -102,20 +102,20 @@ export function commit(token) {
         )
     )
     .then(dispatch({
-      name: 'PEOPLE_COMMIT_UPDATES'
+      type: 'PEOPLE_COMMIT_UPDATES'
     }))
   }
 }
 
 export function revert() {
   return {
-    name: 'PEOPLE_REVERT_UPDATES'
+    type: 'PEOPLE_REVERT_UPDATES'
   }
 }
 
 export function update(id, value, key) {
   return {
-    name: constants.PEOPLE_UPDATE,
+    type: constants.PEOPLE_UPDATE,
     data: {
       id: id.toString(), 
       value, key
@@ -127,11 +127,11 @@ export function create() {
   return dispatch => {
     let id = Date.now()
     dispatch({
-      name: constants.PEOPLE_CREATE,
+      type: constants.PEOPLE_CREATE,
       data: {
         id: id.toString()
       }
     })
-    dispatch(routeActions.push(`/lid-${id}`))
+    dispatch(push(`/lid-${id}`))
   }
 }

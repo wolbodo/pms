@@ -8,14 +8,12 @@ import { compose, createStore, applyMiddleware } from 'redux'
 import {combineReducers } from 'redux-immutable'
 
 import { browserHistory } from 'react-router'
-import { syncHistoryWithStore } from 'react-router-redux'
+import { syncHistoryWithStore, routerMiddleware } from 'react-router-redux'
 
 // import persistState from 'redux-localstorage'
 import diffLogger from 'redux-diff-logger'
 import perfLogger from 'redux-perf-middleware'
 
-// Immutable reducers
-// import combineImmutableReducers from './combineImmutableReducers';
 
 
 function createAppReducers() {
@@ -36,8 +34,6 @@ function createAppReducers() {
 }
 
 let appReducer = createAppReducers();
-let initialState = Immutable.Map();
-
 
 const finalCreateStore = compose(
   // persistState(['app'], {
@@ -68,17 +64,17 @@ const finalCreateStore = compose(
 
 
 
-export default function configureStore(_initialState) {
+export default function configureStore() {
 
-  _initialState = _initialState || initialState;
+  const store = createStore(appReducer, 
+    applyMiddleware(
+      thunkMiddleware,
+      routerMiddleware(browserHistory)
+    ));
 
-  // var initstate = appReducer(_initialState);
-
-  const store = createStore(appReducer, _initialState);
-
-  const history = syncHistoryWithStore(browserHistory, store, {
-    selectLocationState: state => state.get('routing')
-  });
+  // const history = syncHistoryWithStore(browserHistory, store, {
+  //   selectLocationState: state => state.get('routing')
+  // });
 
   // historyMiddleware.listenForReplays(store, (state) => {
   //   return state.getIn(['routing', 'locationBeforeTransitions'])
@@ -91,6 +87,6 @@ export default function configureStore(_initialState) {
     );
   }
 
-  return {store, history};
+  return {store, history: browserHistory};
 }
 

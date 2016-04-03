@@ -7,7 +7,7 @@ import {List, Head, Row} from 'components/list'
 import { Link } from 'react-router'
 import { connect } from 'react-redux'
 import { Navigation } from 'react-router'
-import { routeActions } from 'react-router-redux'
+import { push } from 'react-router-redux'
 
 import _ from 'lodash'
 import fieldComponents from 'components/fields'
@@ -51,7 +51,7 @@ class PeopleView extends React.Component {
                 value={_.get(this.props, 'routeParams.group_name', 'leden')}
                 options={_.mapValues(groups.items, group => group.name)}
                 style={{fontSize:'22px', fontWeight:'bold', lineHeight:'34px'}}
-                onBlur={param => dispatch(routeActions.push('/mensen/' + param))}/>
+                onBlur={param => dispatch(push('/mensen/' + param))}/>
         )
 
         return (
