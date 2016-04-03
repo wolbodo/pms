@@ -75,10 +75,10 @@ function mapStateToProps(state) {
   const isFetching = false
 
   return {
-    people: state.app.get('people').toJS(),
-    auth: state.app.get('auth').toJS(),
-    fields: state.app.get('fields').toJS(),
-    groups: state.app.get('groups').toJS(),
+    people: state.get('people').toJS(),
+    auth: state.get('auth').toJS(),
+    fields: state.get('fields').toJS(),
+    groups: state.get('groups').toJS(),
     isFetching
   }
 }

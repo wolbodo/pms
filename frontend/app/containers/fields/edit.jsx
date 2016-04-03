@@ -30,8 +30,8 @@ class FieldsEdit extends React.Component {
 export default connect(
 	function mapStateToProps(state) {
 	  return {
-	    fields: state.app.get('fields').toJS(),
-	    permissions: state.app.get('permissions').toJS()
+	    fields: state.get('fields').toJS(),
+	    permissions: state.get('permissions').toJS()
 	  }
 	})
 	(FieldsEdit);

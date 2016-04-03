@@ -43,7 +43,7 @@ export default connect(
     function mapStateToProps(state) {
         const {
             people, fields, auth, permissions 
-        } = state.app.toJS()
+        } = state.toJS()
 
         return {
             people, fields, auth, permissions

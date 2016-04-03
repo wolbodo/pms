@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import initialState from './fields.state.json'
 import Immutable from 'immutable'
 
@@ -5,17 +6,6 @@ import Immutable from 'immutable'
 const FIELD = 2,
       SET   = 1,
       GROUP = 0;
-
-let CONSTRUCT,
-    FIELDS_MOVE_SCHEMAFIELD,
-    FIELDS_CREATE_FIELDSET,
-    FIELDS_UPDATE_FIELD
-
-CONSTRUCT = () => 
-  Immutable.fromJS(initialState)
-           .merge({updates: {}})
-
-
 
 function moveSchemaField(schema, fromIndex, toIndex) {
 
@@ -77,24 +67,30 @@ function createSchemaSet(schema, fromIndex, toIndex) {
   return schema;
 }
 
+const reducers = {
+  CONSTRUCT: () => 
+    Immutable.fromJS(initialState)
+             .merge({updates: {}}),
 
-FIELDS_MOVE_SCHEMAFIELD = (fields, {data}) =>
-  fields.setIn(['schemas', data.schema], 
-                  moveSchemaField(fields.getIn(['schemas', data.schema]), 
-                                  data.fromIndex, data.toIndex))
+  FIELDS_MOVE_SCHEMAFIELD: (fields, {data}) =>
+    fields.setIn(['schemas', data.schema], 
+                    moveSchemaField(fields.getIn(['schemas', data.schema]), 
+                                    data.fromIndex, data.toIndex)),
 
-FIELDS_CREATE_FIELDSET = (fields, {data}) =>
-  fields.setIn(['schemas', data.schema], 
-                  createSchemaSet(fields.getIn(['schemas', data.schema]), 
-                                  data.fromIndex, data.toIndex))
+  FIELDS_CREATE_FIELDSET: (fields, {data}) =>
+    fields.setIn(['schemas', data.schema], 
+                    createSchemaSet(fields.getIn(['schemas', data.schema]), 
+                                    data.fromIndex, data.toIndex)),
 
-FIELDS_UPDATE_FIELD = (fields, {data}) =>
-  fields.updateIn(['schemas', data.schema, 'fields', data.id], 
-                    field => field.merge(data.field))
+  FIELDS_UPDATE_FIELD: (fields, {data}) =>
+    fields.updateIn(['schemas', data.schema, 'fields', data.id], 
+                      field => field.merge(data.field))
+}
 
-export {
-  CONSTRUCT,
-  FIELDS_MOVE_SCHEMAFIELD,
-  FIELDS_CREATE_FIELDSET,
-  FIELDS_UPDATE_FIELD
+export default (state = reducers.CONSTRUCT(), action) => {
+  let reducer = _.get(reducers, action.type);
+  if (reducer) {
+    return reducer(state, action);
+  } 
+  return state;
 }

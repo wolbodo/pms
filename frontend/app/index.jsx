@@ -9,7 +9,7 @@ import { Router } from 'react-router'
 import injectTapEventPlugin from "react-tap-event-plugin";
 
 import routes from 'routes'
-import {history, configureStore} from 'configureStore'
+import configureStore from 'configureStore'
 
 // Reference static files so they are loaded with webpack.
 import 'file?name=[name].[ext]!../index.html'
@@ -24,7 +24,7 @@ import 'favicon.png'
 //https://github.com/zilverline/react-tap-event-plugin
 injectTapEventPlugin();
 
-const store = configureStore()
+const {store, history} = configureStore()
 
 
 ReactDOM.render((

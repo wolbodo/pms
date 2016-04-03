@@ -1,6 +1,7 @@
 
-export * as fields from './fields'
-export * as groups from './groups'
-export * as auth from './auth'
-export * as people from './people'
-export * as permissions from './permissions'
+export fields from './fields'
+export groups from './groups'
+export auth from './auth'
+export people from './people'
+export permissions from './permissions'
+export routing from './routing'

@@ -33,9 +33,9 @@ class GroupEdit extends React.Component {
 export default connect(
 	function mapStateToProps(state) {
 	  return {
-	    groups: state.app.get('groups').toJS(), 
-	    fields: state.app.get('fields').toJS(),
-	    permissions: state.app.get('permissions').toJS()
+	    groups: state.get('groups').toJS(), 
+	    fields: state.get('fields').toJS(),
+	    permissions: state.get('permissions').toJS()
 	  }
 	})
 	(GroupEdit);

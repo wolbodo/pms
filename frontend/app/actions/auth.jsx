@@ -76,8 +76,8 @@ export function requireLogin(store) {
   return (nextState, replaceState) => {
     const state = store.getState()
 
-    if (!state.app.getIn(['auth', 'loggedIn'])) {
-      replaceState({ nextPathname: nextState.location.pathname }, '/login')
+    if (!state.getIn(['app', 'auth', 'loggedIn'])) {
+      replaceState('/login')
     }
 
   }

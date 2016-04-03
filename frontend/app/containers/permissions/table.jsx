@@ -226,7 +226,7 @@ class PermissionsView extends React.Component {
 
 
 function mapStateToProps(state) {
-  const { people, groups, fields, permissions } = state.app.toJS()
+  const { people, groups, fields, permissions } = state.toJS()
 
   return {
     people, groups, fields, permissions

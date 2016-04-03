@@ -15,7 +15,7 @@ function receive(people) {
 }
 
 function shouldFetchPeople(state) {
-  if (state.app.getIn(['people', 'updates']).isEmpty()) {
+  if (state.getIn(['people', 'updates']).isEmpty()) {
     return true
   } else {
     // check timestamp?

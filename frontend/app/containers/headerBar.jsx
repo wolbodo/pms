@@ -150,7 +150,7 @@ class HeaderBar extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    ...state.app.toJS()
+    ...state.toJS()
   }
 }
 

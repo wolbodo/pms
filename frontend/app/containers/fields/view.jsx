@@ -353,7 +353,7 @@ class FieldsView extends React.Component {
 }
 
 function mapStateToProps(state) {
-  const fields = state.app.get('fields').toJS()
+  const fields = state.get('fields').toJS()
 
   return {
     fields
