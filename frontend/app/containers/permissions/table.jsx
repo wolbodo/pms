@@ -85,7 +85,10 @@ class PermissionsDialog extends React.Component {
 	}
 }
 
-class PermissionsView extends React.Component {
+@connect(state => ({...state.toJS()}), {
+	changePermission: actions.permissions.changePermission
+})
+export default class PermissionsView extends React.Component {
 
 	constructor(props) {
 		super(props);
@@ -108,8 +111,8 @@ class PermissionsView extends React.Component {
 	  	});
 	}
 	submitResult(result) {
-		const {dispatch} = this.props
-		dispatch(actions.permissions.changePermission(result))
+		const {changePermission} = this.props
+		changePermission(result)
 		this.closeDialog()
 	}
 
@@ -223,15 +226,3 @@ class PermissionsView extends React.Component {
 		)
 	}
 }
-
-
-function mapStateToProps(state) {
-  const { people, groups, fields, permissions } = state.toJS()
-
-  return {
-    people, groups, fields, permissions
-  }
-}
-
-export default connect(mapStateToProps)(PermissionsView);
-

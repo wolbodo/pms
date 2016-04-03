@@ -9,7 +9,15 @@ import actions from 'actions'
 
 import {Dialog, FlatButton, Divider} from 'material-ui';
 
-class HeaderBar extends React.Component {
+
+@connect(state => ({...state.toJS()}), {
+    peopleCommit: actions.people.commit,
+    peopleRevert: actions.people.revert,
+    peopleCreate: actions.people.create,
+    groupCreate: actions.groups.create,
+    fieldCreate: actions.fields.create
+})
+export default class HeaderBar extends React.Component {
     constructor(props) {
         super(props)
 
@@ -31,7 +39,7 @@ class HeaderBar extends React.Component {
 
     // Deprecated: but useful for modals and such
     renderDialog() {
-        let {people, groups, fields, dispatch} = this.props
+        let {people, groups, fields } = this.props
         let {dialogOpen} = this.state
 
         const actions = [
@@ -95,7 +103,9 @@ class HeaderBar extends React.Component {
     }
 
     render() {
-        let {people, groups, fields, auth, dispatch, route} = this.props
+        let {people, groups, fields, auth, 
+            peopleCommit, peopleRevert, peopleCreate, 
+            groupCreate, fieldCreate, route} = this.props
         let changed = !_.isEmpty(people.updates) || !_.isEmpty(groups.updates) || !_.isEmpty(fields.updates)
         
         return (
@@ -104,7 +114,7 @@ class HeaderBar extends React.Component {
                 <mdl.Button 
                     ripple 
                     id="header-save-button" 
-                    onClick={() => dispatch(actions.people.commit(auth.token))} >
+                    onClick={() => peopleCommit(auth.token)} >
                     Opslaan
                 </mdl.Button>
             )}
@@ -112,7 +122,7 @@ class HeaderBar extends React.Component {
                 <mdl.Button 
                     ripple 
                     colored
-                    onClick={() => dispatch(actions.people.revert())} >
+                    onClick={() => peopleRevert()} >
                     Annuleren
                 </mdl.Button>
             )}
@@ -121,7 +131,7 @@ class HeaderBar extends React.Component {
                 <mdl.Button 
                     className="action end"
                     ripple 
-                    onClick={() => dispatch(actions.people.create())} >
+                    onClick={() => peopleCreate()} >
                     Nieuw persoon
                 </mdl.Button>
             )}
@@ -129,7 +139,7 @@ class HeaderBar extends React.Component {
                 <mdl.Button 
                     className="action end"
                     ripple 
-                    onClick={() => dispatch(actions.groups.create())} >
+                    onClick={() => groupCreate()} >
                     Nieuwe groep
                 </mdl.Button>
             )}
@@ -137,7 +147,7 @@ class HeaderBar extends React.Component {
                 <mdl.Button 
                     className="action end"
                     ripple 
-                    onClick={() => dispatch(actions.fields.create())} >
+                    onClick={() => fieldCreate()} >
                     Nieuw veld
                 </mdl.Button>
             )}
@@ -147,13 +157,3 @@ class HeaderBar extends React.Component {
         )
     }
 }
-
-function mapStateToProps(state) {
-  return {
-    ...state.toJS()
-  }
-}
-
-
-
-export default connect(mapStateToProps)(HeaderBar);

@@ -9,18 +9,24 @@ import { connect } from 'react-redux'
 
 import actions from 'actions'
 
+@connect(state => ({
+	groups: state.get('groups').toJS(),
+	fields: state.get('fields').toJS()
+}), {
+	groups: actions.groups
+})
 export default class GroupView extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 
 	renderButtons() {
-		let {dispatch} = this.props;
+		let {groups} = this.props;
 
 		return (
 			<mdl.IconButton 
 				name="add"
-				onClick={() => dispatch(actions.groups.create())} />
+				onClick={() => groups.create()} />
 		)
 	}
 
@@ -40,14 +46,3 @@ export default class GroupView extends React.Component {
 		);
 	}
 }
-
-
-export default connect(
-	function mapStateToProps(state) {
-	  const { groups, fields } = state.toJS()
-
-	  return {
-	    groups, fields
-	  }
-	})
-	(GroupView);

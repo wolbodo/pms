@@ -7,6 +7,11 @@ import { push } from 'react-router-redux'
 
 import actions from 'actions';
 
+@connect(
+  state => ({
+    people: state.get('people').toJS()
+  }), 
+  { login: actions.auth.login })
 class Login extends React.Component {
   // mixins: [ History ],
   static contextTypes = {
@@ -25,24 +30,7 @@ class Login extends React.Component {
   handleSubmit(event) {
     event.preventDefault()
 
-
-    const {dispatch} = this.props
-
-    dispatch(actions.auth.login(this.state.name, this.state.password))
-
-    // auth.login(name, password, (loggedIn) => {
-
-    //   if (!loggedIn)
-    //     return this.setState({ error: true })
-
-    //   const { location } = this.props
-
-    //   if (location.state && location.state.nextPathname) {
-    //     this.context.history.replaceState(null, location.state.nextPathname)
-    //   } else {
-    //     this.context.history.replaceState(null, '/')
-    //   }
-    // })
+    this.props.login(this.state.name, this.state.password)
   }
 
   onChange(name, value) {
@@ -78,6 +66,14 @@ class Login extends React.Component {
   }
 }
 
+@connect(
+  state => ({
+    people: state.get('people').toJS()
+  }), 
+  {
+    push,
+    logout: actions.auth.logout
+  })
 class Logout extends React.Component {
   // mixins: [ History ],
   static contextTypes = {
@@ -85,10 +81,10 @@ class Logout extends React.Component {
   };
 
   componentDidMount() {
-    const {dispatch} = this.props;
+    const {push, logout} = this.props;
 
-    dispatch(actions.auth.logout());
-    dispatch(push('/login'))
+    logout();
+    push('/login')
   }
 
   render() {
@@ -96,19 +92,7 @@ class Logout extends React.Component {
   }
 }
 
-function mapStateToProps(state) {
-  const people = state.get('people').toJS()
-  const isFetching = false
-
-  return {
-    people,
-    isFetching
-  }
-}
-
-
 export default {
-  Login : connect(mapStateToProps)(Login),
-  Logout : connect(mapStateToProps)(Logout)
+  Login, Logout
 }
 

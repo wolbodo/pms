@@ -89,7 +89,7 @@ function add_person(token, dispatch, person) {
 export function commit(token) {
 
   return (dispatch, getState) => {
-    let people = getState().app.get('people')
+    let people = getState().get('people')
 
     return Promise.all(
       people.get('updates')

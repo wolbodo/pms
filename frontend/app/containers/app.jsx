@@ -5,12 +5,15 @@ import { connect } from 'react-redux';
 import * as mdl from 'react-mdl'
 import { Link } from 'react-router';
 
-import {people, auth} from 'actions'
+import {auth} from 'actions'
 
 import logo from 'img/logo.svg';
 
-
-class App extends React.Component {
+@connect(
+    state => ({
+        ...state.toJS()
+    }))
+export default class App extends React.Component {
 
     constructor(props) {
         super(props);
@@ -23,9 +26,8 @@ class App extends React.Component {
         this.setPage = this.setPage.bind(this);
     }
 
-    componentDidMount() {
-        const { dispatch } = this.props
-    }
+    // componentDidMount() {
+    // }
 
     handleTab(tab) {
         this.setState({
@@ -41,7 +43,7 @@ class App extends React.Component {
     }
 
     render() {
-        var {main, header, auth, dispatch} = this.props;
+        var {main, header, auth } = this.props;
         return (
             <mdl.Layout fixedHeader fixedDrawer>
                 <mdl.Header >
@@ -76,13 +78,3 @@ class App extends React.Component {
     }
 }
 
-
-function mapStateToProps(state) {
-  return {
-    ...state.toJS()
-  }
-}
-
-
-
-export default connect(mapStateToProps)(App);

@@ -187,6 +187,8 @@ function sourceCollect(connect, monitor) {
   };
 }
 
+@DragSource(ItemTypes.FIELD, fieldSource, sourceCollect)
+@DropTarget(ItemTypes.FIELD, fieldTarget, targetCollect)
 class Field extends React.Component{
   static propTypes = {
     // Injected by React DnD:
@@ -232,10 +234,8 @@ class Field extends React.Component{
     ));
   }
 }
-Field = DragSource(ItemTypes.FIELD, fieldSource, sourceCollect)(Field);
-Field = DropTarget(ItemTypes.FIELD, fieldTarget, targetCollect)(Field);
 
-
+@DropTarget(ItemTypes.FIELD, fieldSetTarget, targetCollect)
 class FieldSet extends React.Component {
   constructor(props) {
     super(props);
@@ -260,9 +260,9 @@ class FieldSet extends React.Component {
     );
   }
 }
-FieldSet = DropTarget(ItemTypes.FIELD, fieldSetTarget, targetCollect)(FieldSet);
 
-
+// @DragSource(ItemTypes.GROUP, groupSource, sourceCollect)
+@DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)
 class Group extends React.Component {
   constructor(props) {
     super(props);
@@ -306,11 +306,14 @@ class Group extends React.Component {
           </div>);
   }
 }
-// Group = DragSource(ItemTypes.GROUP, groupSource, sourceCollect)(Group);
-Group = DropTarget(ItemTypes.FIELD, groupTarget, targetCollect)(Group);
 
-
-class FieldsView extends React.Component {
+@connect(state => ({
+  fields: state.get('fields').toJS()
+}), {
+  ...actions.fields
+})
+@DragDropContext(Backend)
+export default class FieldsView extends React.Component {
   constructor(props) {
     super(props);
 
@@ -319,15 +322,15 @@ class FieldsView extends React.Component {
   }
 
   moveField(fromIndex, toIndex) {
-    const { dispatch} = this.props
+    const { moveField} = this.props
 
-    dispatch(actions.fields.moveField('person', fromIndex, toIndex))
+    moveField('person', fromIndex, toIndex)
   }
 
   addSet(fromIndex, toIndex) {
-    const { dispatch} = this.props
+    const { createSet} = this.props
 
-    dispatch(actions.fields.createSet('person', fromIndex, toIndex))
+    createSet('person', fromIndex, toIndex)
 
   }
 
@@ -351,15 +354,4 @@ class FieldsView extends React.Component {
     );
   } 
 }
-
-function mapStateToProps(state) {
-  const fields = state.get('fields').toJS()
-
-  return {
-    fields
-  }
-}
-
-
-export default connect(mapStateToProps)(DragDropContext(Backend)(FieldsView));
 

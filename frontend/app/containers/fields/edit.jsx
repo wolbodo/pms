@@ -7,31 +7,26 @@ import actions from 'actions'
 import { ItemEdit } from 'components'
 
 
-class FieldsEdit extends React.Component {
+@connect(state => ({
+	fields: state.get('fields').toJS(),
+	permissions: state.get('permissions').toJS()
+}),{
+	...actions.fields
+})
+export default class FieldsEdit extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 	render() {
 
-		const {params, fields, permissions, dispatch } = this.props;
+		const {params, fields, permissions, updateField } = this.props;
 
 		return (
 			<ItemEdit
 				schema={fields.schemas.field}
                 permissions={permissions.leden.field}
 				item={fields.schemas.person.fields[params.veld]}
-				onChange={(value, key) => {
-					dispatch(actions.fields.updateField('person', params.veld, {[key]: value}))
-				}} />
+				onChange={(value, key) => updateField('person', params.veld, {[key]: value}) } />
 		);
 	}
 }
-
-export default connect(
-	function mapStateToProps(state) {
-	  return {
-	    fields: state.get('fields').toJS(),
-	    permissions: state.get('permissions').toJS()
-	  }
-	})
-	(FieldsEdit);
