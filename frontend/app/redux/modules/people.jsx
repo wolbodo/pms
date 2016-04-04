@@ -67,7 +67,6 @@ export function revert() {
 export function commit() {
   return (dispatch, getState) => {
     let people = getState().get('people')
-
     // Save all updates
     people.get('updates')
           .map((person, i) => 
@@ -75,10 +74,10 @@ export function commit() {
               people.hasIn(['items', i, 'gid'])
                ? dispatch(API({
                   types: [UPDATE_START, UPDATE_SUCCESS, UPDATE_FAIL],
-                  uri: 'person',
+                  uri: `person/${i}`,
                   options: {
                     method: 'PUT',
-                    body: JSON.stringify(person)
+                    body: person
                   }
                 }))
                : dispatch(API({

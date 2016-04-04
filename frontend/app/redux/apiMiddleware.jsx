@@ -16,11 +16,16 @@ export default ({dispatch, getState}) => {
 
     // Check whether we're talking to the API, if so. add token to headers
     actionPromise.then(
-      (result) => result.json()
-                        .then(data => 
-                          next({...rest, data, type: SUCCESS})
-                        ),
-      (error) => next({...rest, error, type: FAILURE})
+      (result) =>
+        (result.status === 200)
+          ? result.json()
+                  .then(data => 
+                    next({...rest, data, type: SUCCESS})
+                  )
+          : result.json()
+                  .then(error => 
+                    next({...rest, error, type: FAILURE})
+                  )
     ).catch((error)=> {
       console.error('MIDDLEWARE ERROR:', error);
       next({...rest, error, type: FAILURE});
