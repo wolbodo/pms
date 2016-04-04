@@ -158,34 +158,34 @@ export default class PermissionsView extends React.Component {
 			</tr>)
 		].concat(
 			_.map(schema.fields, (field, i) => (
-				<tr key={i}>
+				<tr key={`${key}-${i}`}>
 					<th>
 						<Link to={`/velden/${field.name}`}>
 							{field.label}
 						</Link>
 					</th>
-					{_.map(groups.items, (group, i) => 
-						(<td key={i}>
+					{_.map(groups.items, (group, j) => 
+						(<td key={j}>
 							<span className='permission' onClick={() => this.showDialog({schema: key, group:group, field:field})}>
 							{ (({read, write}) => 
-								[read ? <i className='icon'>visibility</i>
-									  : <i className='icon dimmed'>visibility_off</i>,
-								  write ? <i className='icon'>edit</i> 
-								   		: <i className='icon dimmed'>edit</i>
+								[read ? <i key={'read'} className='icon'>visibility</i>
+									  : <i key={'read'} className='icon dimmed'>visibility_off</i>,
+								  write ? <i key={'write'} className='icon'>edit</i> 
+								   		: <i key={'write'} className='icon dimmed'>edit</i>
 								]
 							  )(this.getPermissions(group, key, field))
 						    }
 						    </span>
 						</td>)
 					)}
-					<td key='space'></td>
-					<td key='self'>
+					<td></td>
+					<td>
 						<span className='permission' onClick={() => this.showDialog({schema: key, group:'self', field:field})}>
 						{ (({read, write}) => 
-							[read ? <i className='icon'>visibility</i>
-								  : <i className='icon dimmed'>visibility_off</i>,
-							  write ? <i className='icon'>edit</i> 
-							   		: <i className='icon dimmed'>edit</i>
+							[read ? <i key="read" className='icon'>visibility</i>
+								  : <i key="read" className='icon dimmed'>visibility_off</i>,
+							  write ? <i key="write" className='icon'>edit</i> 
+							   		: <i key="write" className='icon dimmed'>edit</i>
 							]
 						  )(this.getPermissions('self', key, field))
 					    }

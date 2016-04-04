@@ -10,7 +10,7 @@ import {combineReducers } from 'redux-immutable'
 import { browserHistory } from 'react-router'
 import { syncHistoryWithStore, routerMiddleware } from 'react-router-redux'
 
-// import persistState from 'redux-localstorage'
+import persistState from 'redux-localstorage'
 import diffLogger from 'redux-diff-logger'
 import perfLogger from 'redux-perf-middleware'
 
@@ -21,32 +21,20 @@ function createAppReducers() {
   let appReducers = require('reducers')
 
   return combineReducers(appReducers);
-  
-  // Combine the appReducers into one appReducer.
-  // const appReducer = combineImmutableReducers(appReducers);
-
-  // // Wrap rootreducer to delete entire state when logging out
-  // return (reducers => (state, action) => 
-  //     ((action.type || action.name) === 'AUTH_LOGOUT_REQUEST')
-  //     ? reducers({}, {name: 'CONSTRUCT'})
-  //     : reducers(state, action)
-  //   )(combineReducers({routing: routeReducer, app: appReducer}))
 }
 
 let appReducer = createAppReducers();
 
 const finalCreateStore = compose(
-  // persistState(['app'], {
-  //   serialize: collection => 
-  //     JSON.stringify(collection.app.toJSON()),
-  //   deserialize: collectionJSON => 
-  //     collectionJSON ? {
-  //       app: Immutable.fromJS(JSON.parse(collectionJSON))
-  //     } : initialState
-  // }),
+  persistState(null, {
+    serialize: state => JSON.stringify(state.toJS()),
+    deserialize: string => Immutable.fromJS(JSON.parse(string)),
+    merge: (initial, newstate) => (initial || Immutable.Map()).merge(newstate)
+  }),
   // Middleware you want to use in development:
   applyMiddleware(
     thunkMiddleware,
+    routerMiddleware(browserHistory),
     // Wrap loggers in unpacking wrapper (to unpack ImmutableJS objects)
     // Unwrap action
     store => next => action => 
@@ -54,7 +42,7 @@ const finalCreateStore = compose(
     perfLogger,
     // Wrap store to change getState to unwrap :)
     store => diffLogger({
-      getState: getState => store.getState().app.toJS()
+      getState: getState => store.getState().toJS()
     }) 
   ),
   // Required! Enable Redux DevTools with the monitors you chose
@@ -66,11 +54,7 @@ const finalCreateStore = compose(
 
 export default function configureStore() {
 
-  const store = createStore(appReducer, 
-    applyMiddleware(
-      thunkMiddleware,
-      routerMiddleware(browserHistory)
-    ));
+  const store = finalCreateStore(appReducer);
 
   // const history = syncHistoryWithStore(browserHistory, store, {
   //   selectLocationState: state => state.get('routing')
