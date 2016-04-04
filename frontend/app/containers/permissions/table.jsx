@@ -2,7 +2,7 @@ import React from 'react';
 import * as mdl from 'react-mdl'
 import { connect } from 'react-redux';
 
-import actions from 'actions'
+import { change } from 'redux/modules/permissions';
 import {Dialog, FlatButton} from 'material-ui';
 
 import _ from 'lodash';
@@ -86,7 +86,7 @@ class PermissionsDialog extends React.Component {
 }
 
 @connect(state => ({...state.toJS()}), {
-	changePermission: actions.permissions.changePermission
+	change
 })
 export default class PermissionsView extends React.Component {
 
@@ -100,8 +100,8 @@ export default class PermissionsView extends React.Component {
 
 	  this.setState({
 	    dialogState:_.assign(state,  {
-	    	'read': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
-			'write': _.contains(this.props.permissions[state.group.id][state.schema].write, state.field.name)
+	    	'read': _.includes(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
+			'write': _.includes(this.props.permissions[state.group.id][state.schema].write, state.field.name)
 		})
 	  });
 	}
@@ -111,15 +111,14 @@ export default class PermissionsView extends React.Component {
 	  	});
 	}
 	submitResult(result) {
-		const {changePermission} = this.props
-		changePermission(result)
+		this.props.change(result)
 		this.closeDialog()
 	}
 
 	getPermissions(group, schema, field) {
 		const {permissions} = this.props
-		var read = _.contains(_.get(permissions, [group.id, schema, 'read']), field.name),
-			write = _.contains(_.get(permissions, [group.id, schema, 'write']), field.name);
+		var read = _.includes(_.get(permissions, [group.id, schema, 'read']), field.name),
+			write = _.includes(_.get(permissions, [group.id, schema, 'write']), field.name);
 
 		return {read: read, write: write};
 	}

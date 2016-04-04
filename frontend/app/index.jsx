@@ -9,7 +9,7 @@ import { Router } from 'react-router'
 import injectTapEventPlugin from "react-tap-event-plugin";
 
 import routes from 'routes'
-import configureStore from 'configureStore'
+import configureStore from 'redux/configureStore'
 
 // Reference static files so they are loaded with webpack.
 import 'file?name=[name].[ext]!../index.html'

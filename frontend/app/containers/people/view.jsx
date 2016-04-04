@@ -10,9 +10,9 @@ import { push } from 'react-router-redux'
 
 import _ from 'lodash'
 import fieldComponents from 'components/fields'
-import actions from 'actions'
 
-console.log(actions);
+import * as peopleActions from 'redux/modules/people';
+
 @connect(state => ({
     people: state.get('people').toJS(),
     auth: state.get('auth').toJS(),
@@ -20,7 +20,7 @@ console.log(actions);
     groups: state.get('groups').toJS()
     }), {
     push,
-    fetch: actions.people.fetch
+    fetch: peopleActions.fetch
 })
 export default class PeopleView extends React.Component {
 

@@ -1,6 +1,46 @@
 import _ from 'lodash'
-import initialState from './fields.state.json'
+import _initialState from './fields.state.json'
 import Immutable from 'immutable'
+
+const initialState = Immutable.fromJS(_initialState)
+                              .merge({updates: {}});
+
+const MOVE_SCHEMAFIELD = 'pms/fields/MOVE_SCHEMAFIELD';
+const CREATE_FIELDSET = 'pms/fields/CREATE_FIELDSET';
+const UPDATE_FIELD = 'pms/fields/UPDATE_FIELD';
+
+
+export function createSet(schema, fromIndex, toIndex) {
+  return {
+    type: CREATE_FIELDSET,
+    data: {
+      schema, fromIndex, toIndex
+    }
+  }
+}
+
+export function moveField(schema, fromIndex, toIndex) {
+  // Moves field in schema 
+  return {
+    type: MOVE_SCHEMAFIELD,
+    data: {
+      schema,
+      fromIndex,
+      toIndex
+    }
+  }
+}
+
+export function updateField(schema, id, field) {
+  return {
+    type: UPDATE_FIELD,
+    data: {
+      id: id.toString(), 
+      schema, 
+      field
+    }
+  }
+}
 
 // Index depths
 const FIELD = 2,
@@ -68,29 +108,24 @@ function createSchemaSet(schema, fromIndex, toIndex) {
 }
 
 const reducers = {
-  CONSTRUCT: () => 
-    Immutable.fromJS(initialState)
-             .merge({updates: {}}),
-
-  FIELDS_MOVE_SCHEMAFIELD: (fields, {data}) =>
+  [MOVE_SCHEMAFIELD]: (fields, {data}) =>
     fields.setIn(['schemas', data.schema], 
                     moveSchemaField(fields.getIn(['schemas', data.schema]), 
                                     data.fromIndex, data.toIndex)),
 
-  FIELDS_CREATE_FIELDSET: (fields, {data}) =>
+  [CREATE_FIELDSET]: (fields, {data}) =>
     fields.setIn(['schemas', data.schema], 
                     createSchemaSet(fields.getIn(['schemas', data.schema]), 
                                     data.fromIndex, data.toIndex)),
 
-  FIELDS_UPDATE_FIELD: (fields, {data}) =>
+  [UPDATE_FIELD]: (fields, {data}) =>
     fields.updateIn(['schemas', data.schema, 'fields', data.id], 
                       field => field.merge(data.field))
 }
 
-export default (state = reducers.CONSTRUCT(), action) => {
-  let reducer = _.get(reducers, action.type);
-  if (reducer) {
-    return reducer(state, action);
-  } 
-  return state;
-}
+export default (state=initialState, action) => 
+  _.get(
+    reducers, 
+    action.type,   // Get type reducer
+    state => state // Default passtrough
+  )(state, action)

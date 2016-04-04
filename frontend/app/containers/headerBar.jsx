@@ -4,18 +4,21 @@ import * as mdl from 'react-mdl';
 import _ from 'lodash'
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux'
-import actions from 'actions'
+
+import * as peopleActions from 'redux/modules/people';
+import {create as groupCreate} from 'redux/modules/groups';
+import {create as fieldCreate} from 'redux/modules/fields';
 
 
 import {Dialog, FlatButton, Divider} from 'material-ui';
 
 
 @connect(state => ({...state.toJS()}), {
-    peopleCommit: actions.people.commit,
-    peopleRevert: actions.people.revert,
-    peopleCreate: actions.people.create,
-    groupCreate: actions.groups.create,
-    fieldCreate: actions.fields.create
+    peopleCommit: peopleActions.commit,
+    peopleRevert: peopleActions.revert,
+    peopleCreate: peopleActions.create,
+    groupCreate: groupCreate,
+    fieldCreate: fieldCreate
 })
 export default class HeaderBar extends React.Component {
     constructor(props) {

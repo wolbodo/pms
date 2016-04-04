@@ -1,8 +1,6 @@
 import Immutable from 'immutable'
 import _ from 'lodash';
 
-// import { routeReducer, syncHistory } from 'react-router-redux'
-
 import thunkMiddleware from 'redux-thunk'
 import { compose, createStore, applyMiddleware } from 'redux'
 import {combineReducers } from 'redux-immutable'
@@ -14,13 +12,11 @@ import persistState from 'redux-localstorage'
 import diffLogger from 'redux-diff-logger'
 import perfLogger from 'redux-perf-middleware'
 
-
+import apiMiddleware from './apiMiddleware'
 
 function createAppReducers() {
-  // import * as appReducers from './reducers';
-  let appReducers = require('reducers')
-
-  return combineReducers(appReducers);
+  // Wrap in function for HMR reducer reloading
+  return require('redux/modules/reducers').default
 }
 
 let appReducer = createAppReducers();
@@ -33,6 +29,7 @@ const finalCreateStore = compose(
   }),
   // Middleware you want to use in development:
   applyMiddleware(
+    apiMiddleware,
     thunkMiddleware,
     routerMiddleware(browserHistory),
     // Wrap loggers in unpacking wrapper (to unpack ImmutableJS objects)
@@ -50,23 +47,13 @@ const finalCreateStore = compose(
   
 )(createStore);
 
-
-
 export default function configureStore() {
 
   const store = finalCreateStore(appReducer);
 
-  // const history = syncHistoryWithStore(browserHistory, store, {
-  //   selectLocationState: state => state.get('routing')
-  // });
-
-  // historyMiddleware.listenForReplays(store, (state) => {
-  //   return state.getIn(['routing', 'locationBeforeTransitions'])
-  // });
-
   // Hot reload reducers (requires Webpack or Browserify HMR to be enabled)
   if (module.hot) {
-    module.hot.accept('reducers', () =>
+    module.hot.accept('redux/modules/reducers', () =>
       store.replaceReducer(createAppReducers())
     );
   }

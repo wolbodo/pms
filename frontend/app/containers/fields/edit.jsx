@@ -2,7 +2,7 @@ import _ from 'lodash'
 import React from 'react'
 import { connect } from 'react-redux'
 
-import actions from 'actions'
+import * as fieldActions from 'redux/modules/fields'
 
 import { ItemEdit } from 'components'
 
@@ -11,7 +11,7 @@ import { ItemEdit } from 'components'
 	fields: state.get('fields').toJS(),
 	permissions: state.get('permissions').toJS()
 }),{
-	...actions.fields
+	...fieldActions
 })
 export default class FieldsEdit extends React.Component {
 	constructor(props) {

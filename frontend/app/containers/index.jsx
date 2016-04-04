@@ -5,7 +5,7 @@ import permissions from './permissions'
 import HeaderBar from './headerBar'
 
 import App from './app'
-import Auth from './auth'
+import Login from './login'
 
 export {
 	fields,
@@ -15,5 +15,5 @@ export {
 	permissions,
 
 	App,
-	Auth
+	Login
 }

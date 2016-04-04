@@ -8,13 +8,13 @@ import {Link} from 'react-router'
 import { connect } from 'react-redux'
 import { push } from 'react-router-redux'
 
-import actions from 'actions'
+import * as groupActions from 'redux/modules/groups';
 
 @connect(state => ({
 	groups: state.get('groups').toJS(),
 	fields: state.get('fields').toJS()
 }), {
-	groups: actions.groups,
+	create: groupActions.create,
 	push: push
 })
 export default class GroupView extends React.Component {
@@ -23,12 +23,12 @@ export default class GroupView extends React.Component {
 	}
 
 	renderButtons() {
-		let {groups} = this.props;
+		let {create} = this.props;
 
 		return (
 			<mdl.IconButton 
 				name="add"
-				onClick={() => groups.create()} />
+				onClick={() => create.create()} />
 		)
 	}
 

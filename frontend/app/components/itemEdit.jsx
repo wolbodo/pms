@@ -39,13 +39,13 @@ export default class ItemEdit extends React.Component {
 						fieldset,
 						field => (
 							// Readable and nonempty					// writable
-							(_.contains(permissions.read, field) && !_.isEmpty(item[field])) || _.contains(permissions.write, field)
+							(_.includes(permissions.read, field) && !_.isEmpty(item[field])) || _.includes(permissions.write, field)
 						) && {
 						 	// Then add the field, with all info zipped into an object.
 							schema: schema.fields[field],
 							value: item[field],
-							readable: _.contains(permissions.read, field),
-							writable: _.contains(permissions.write, field)
+							readable: _.includes(permissions.read, field),
+							writable: _.includes(permissions.write, field)
 						},
 						field => !!field
 					),
