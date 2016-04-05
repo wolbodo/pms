@@ -266,7 +266,7 @@ AS $function$
 DECLARE
     people JSONB;
 BEGIN
-    SELECT JSONB_AGG(object) INTO people
+    SELECT JSONB_OBJECT_AGG(object->>'id', object) INTO people
         FROM (
             SELECT (
                 SELECT JSONB_OBJECT_AGG(key, value)
@@ -396,7 +396,7 @@ DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
 BEGIN
-    SELECT JSONB_AGG(object) INTO roles
+    SELECT JSONB_OBJECT_AGG(object->>'id', object) INTO roles
         FROM (
             SELECT (
                 SELECT JSONB_OBJECT_AGG(key, value)
@@ -450,7 +450,7 @@ DECLARE
     fields JSONB;
     _ref_table ALIAS FOR ref_table;
 BEGIN
-    SELECT JSONB_AGG(object) INTO fields
+    SELECT JSONB_OBJECT_AGG(object->>'name', object) INTO fields
         FROM (
             SELECT JSONB_BUILD_OBJECT('name', f.ref_table) || JSONB_BUILD_OBJECT('type', 'object') || JSONB_BUILD_OBJECT('properties', JSONB_OBJECT_AGG(f.name, (
                 SELECT COALESCE(JSONB_OBJECT_AGG(key, value), '{}'::JSONB)
