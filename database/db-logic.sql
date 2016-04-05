@@ -419,7 +419,7 @@ BEGIN
             WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
             GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
         ) alias (object) WHERE object IS NOT NULL;
-    IF roles_id = -1 THEN
+    IF _roles_id = -1 THEN
         RETURN roles;
     ELSE
         RETURN roles->0;
