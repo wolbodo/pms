@@ -102,18 +102,18 @@ set RUST_BACKTRACE=1
 
 ```
 location /api/ {
-        proxy_pass       http://localhost:4242/;
+    proxy_pass       http://localhost:4242/;
 
-        proxy_http_version 1.1;
-        proxy_set_header Host      $host;
-        proxy_set_header X-Real-IP $remote_addr;
+    proxy_http_version 1.1;
+    proxy_set_header Host      $host;
+    proxy_set_header X-Real-IP $remote_addr;
 
-        proxy_set_header Connection "Keep-Alive";
-        proxy_set_header Proxy-Connection "Keep-Alive";
+    proxy_set_header Connection "Keep-Alive";
+    proxy_set_header Proxy-Connection "Keep-Alive";
 }
 
 location / {
-        try_files $uri /index.html; 
+    try_files $uri /index.html; 
 }
 
 ```
@@ -134,9 +134,10 @@ CREATE EXTENSION pgcrypto;
 ***
 \q
 ```
+
+<!--NOTE: psql variables don't work in CREATE FUNCTIONS?: sudo -u pms psql -f database/db-logic.sql -v "token_sha256_key=$(openssl rand -hex 64)"-->
 ```
 sudo -u pms psql -f database/create.sql
-<!--NOTE: psql variables don't work in CREATE FUNCTIONS?: sudo -u pms psql -f database/db-logic.sql -v "token_sha256_key=$(openssl rand -hex 64)"-->
 sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | sudo -u pms psql
 ```
 
@@ -164,9 +165,10 @@ bzcat backups/YYYYmmddTHHMMSS+ZZZZ.sql.bz2 | sudo -u pms psql
     -> returns the current user.
 
 ## People
-* GET  /api/people                  ; returns a list of all members
-* POST /api/person                  ; creates a new member
-* PUT  /api/person/:id              ; updates a member
+* GET  /api/people                  ; returns a list of all people
+* GET  /api/people/:id              ; returns a person
+* POST /api/people                  ; creates a new person
+* PUT  /api/people/:id              ; updates a person
 
 ## Fields
 * GET  /api/fields                  ; returns all fields available for current user

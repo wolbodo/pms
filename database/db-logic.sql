@@ -204,7 +204,9 @@ BEGIN
         IF editfields ? kv.key THEN
             --OK construct
             IF viewfields ? kv.key THEN
-                IF base->kv.key != kv.value THEN
+                IF base->kv.key = kv.value THEN
+                    --OK construct / nothing changed
+                ELSE
                     changed = TRUE;
                 END IF;
             ELSE
@@ -384,7 +386,7 @@ BEGIN
 END;
 $function$;
 
-
+--NOTE: fix self id
 --NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
 CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT '-1'::INT)
  RETURNS JSONB
@@ -419,7 +421,7 @@ BEGIN
             WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
             GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
         ) alias (object) WHERE object IS NOT NULL;
-    IF roles_id = -1 THEN
+    IF _roles_id = -1 THEN
         RETURN roles;
     ELSE
         RETURN roles->0;
