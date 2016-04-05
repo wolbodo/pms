@@ -2,7 +2,7 @@ import React from 'react';
 import * as mdl from 'react-mdl'
 import { connect } from 'react-redux';
 
-import actions from 'actions'
+import { change } from 'redux/modules/permissions';
 import {Dialog, FlatButton} from 'material-ui';
 
 import _ from 'lodash';
@@ -86,7 +86,7 @@ class PermissionsDialog extends React.Component {
 }
 
 @connect(state => ({...state.toJS()}), {
-	changePermission: actions.permissions.changePermission
+	change
 })
 export default class PermissionsView extends React.Component {
 
@@ -100,8 +100,8 @@ export default class PermissionsView extends React.Component {
 
 	  this.setState({
 	    dialogState:_.assign(state,  {
-	    	'read': _.contains(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
-			'write': _.contains(this.props.permissions[state.group.id][state.schema].write, state.field.name)
+	    	'read': _.includes(this.props.permissions[state.group.id][state.schema].read, state.field.name), 
+			'write': _.includes(this.props.permissions[state.group.id][state.schema].write, state.field.name)
 		})
 	  });
 	}
@@ -111,15 +111,14 @@ export default class PermissionsView extends React.Component {
 	  	});
 	}
 	submitResult(result) {
-		const {changePermission} = this.props
-		changePermission(result)
+		this.props.change(result)
 		this.closeDialog()
 	}
 
 	getPermissions(group, schema, field) {
 		const {permissions} = this.props
-		var read = _.contains(_.get(permissions, [group.id, schema, 'read']), field.name),
-			write = _.contains(_.get(permissions, [group.id, schema, 'write']), field.name);
+		var read = _.includes(_.get(permissions, [group.id, schema, 'read']), field.name),
+			write = _.includes(_.get(permissions, [group.id, schema, 'write']), field.name);
 
 		return {read: read, write: write};
 	}
@@ -158,34 +157,34 @@ export default class PermissionsView extends React.Component {
 			</tr>)
 		].concat(
 			_.map(schema.fields, (field, i) => (
-				<tr key={i}>
+				<tr key={`${key}-${i}`}>
 					<th>
 						<Link to={`/velden/${field.name}`}>
 							{field.label}
 						</Link>
 					</th>
-					{_.map(groups.items, (group, i) => 
-						(<td key={i}>
+					{_.map(groups.items, (group, j) => 
+						(<td key={j}>
 							<span className='permission' onClick={() => this.showDialog({schema: key, group:group, field:field})}>
 							{ (({read, write}) => 
-								[read ? <i className='icon'>visibility</i>
-									  : <i className='icon dimmed'>visibility_off</i>,
-								  write ? <i className='icon'>edit</i> 
-								   		: <i className='icon dimmed'>edit</i>
+								[read ? <i key={'read'} className='icon'>visibility</i>
+									  : <i key={'read'} className='icon dimmed'>visibility_off</i>,
+								  write ? <i key={'write'} className='icon'>edit</i> 
+								   		: <i key={'write'} className='icon dimmed'>edit</i>
 								]
 							  )(this.getPermissions(group, key, field))
 						    }
 						    </span>
 						</td>)
 					)}
-					<td key='space'></td>
-					<td key='self'>
+					<td></td>
+					<td>
 						<span className='permission' onClick={() => this.showDialog({schema: key, group:'self', field:field})}>
 						{ (({read, write}) => 
-							[read ? <i className='icon'>visibility</i>
-								  : <i className='icon dimmed'>visibility_off</i>,
-							  write ? <i className='icon'>edit</i> 
-							   		: <i className='icon dimmed'>edit</i>
+							[read ? <i key="read" className='icon'>visibility</i>
+								  : <i key="read" className='icon dimmed'>visibility_off</i>,
+							  write ? <i key="write" className='icon'>edit</i> 
+							   		: <i key="write" className='icon dimmed'>edit</i>
 							]
 						  )(this.getPermissions('self', key, field))
 					    }

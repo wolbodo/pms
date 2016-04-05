@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 
 import {ItemEdit} from 'components';
 
-import actions from 'actions'
+import * as groupActions from 'redux/modules/groups';
 
 
 @connect(state => ({
@@ -15,7 +15,7 @@ import actions from 'actions'
   fields: state.get('fields').toJS(),
   permissions: state.get('permissions').toJS()
 }), {
-	update: actions.groups.update
+	update: groupActions.update
 })
 export default class GroupEdit extends React.Component {
 	constructor(props) {

@@ -7,7 +7,7 @@ import {ItemEdit} from 'components';
 
 import { connect } from 'react-redux';
 
-import actions from 'actions'
+import * as peopleActions from 'redux/modules/people';
 
 @connect(state => ({
     people: state.get('people').toJS(),
@@ -15,7 +15,7 @@ import actions from 'actions'
     auth: state.get('auth').toJS(),
     permissions: state.get('permissions').toJS()
 }), {
-    update: actions.people.update
+    update: peopleActions.update
 })
 export default class PersonEdit extends React.Component {
     constructor(props) {

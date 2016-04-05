@@ -13,14 +13,12 @@ import { DragSource, DropTarget, DragDropContext } from 'react-dnd';
 // import Backend from 'react-dnd-touch-backend';
 import Backend from 'react-dnd-html5-backend';
 
-
-import actions from 'actions'
+import * as fieldActions from 'redux/modules/fields';
 
 const ItemTypes = {
   FIELD: Symbol('field'),
   GROUP: Symbol('group')
 };
-
 
 function getDragDirection(component, monitor) {
 
@@ -52,8 +50,6 @@ function getDragDirection(component, monitor) {
 const FIELD = 2,
       SET   = 1,
       GROUP = 0;
-
-
 
 /**
  * Implements the drag source contract.
@@ -310,7 +306,7 @@ class Group extends React.Component {
 @connect(state => ({
   fields: state.get('fields').toJS()
 }), {
-  ...actions.fields
+  ...fieldActions
 })
 @DragDropContext(Backend)
 export default class FieldsView extends React.Component {

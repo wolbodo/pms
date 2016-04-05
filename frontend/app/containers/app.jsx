@@ -5,8 +5,6 @@ import { connect } from 'react-redux';
 import * as mdl from 'react-mdl'
 import { Link } from 'react-router';
 
-import {auth} from 'actions'
-
 import logo from 'img/logo.svg';
 
 @connect(

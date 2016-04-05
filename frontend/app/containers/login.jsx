@@ -5,14 +5,14 @@ import { PropTypes } from 'react-router';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux'
 
-import actions from 'actions';
+import * as authActions from 'redux/modules/auth';
 
 @connect(
   state => ({
     people: state.get('people').toJS()
   }), 
-  { login: actions.auth.login })
-class Login extends React.Component {
+  { login: authActions.login })
+export default class Login extends React.Component {
   // mixins: [ History ],
   static contextTypes = {
     history: PropTypes.history
@@ -65,34 +65,3 @@ class Login extends React.Component {
     )
   }
 }
-
-@connect(
-  state => ({
-    people: state.get('people').toJS()
-  }), 
-  {
-    push,
-    logout: actions.auth.logout
-  })
-class Logout extends React.Component {
-  // mixins: [ History ],
-  static contextTypes = {
-    history: PropTypes.history
-  };
-
-  componentDidMount() {
-    const {push, logout} = this.props;
-
-    logout();
-    push('/login')
-  }
-
-  render() {
-    return <p>You are now logged out</p>
-  }
-}
-
-export default {
-  Login, Logout
-}
-
