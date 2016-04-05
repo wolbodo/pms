@@ -64,7 +64,7 @@ export class Head extends React.Component {
 		return (
 			<tr>
 				{fields
-					.map(fieldname => schema.fields[fieldname]) // get fields from the fieldname
+					.map(fieldname => schema.properties[fieldname]) // get fields from the fieldname
 					.map(field => (
 					<th key={field.name} className='mdl-data-table__cell--non-numeric'>
 					{

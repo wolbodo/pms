@@ -8,14 +8,17 @@ import {Link} from 'react-router'
 import { connect } from 'react-redux'
 import { push } from 'react-router-redux'
 
-import * as groupActions from 'redux/modules/groups';
+import * as groupsActions from 'redux/modules/groups';
+import * as fieldsActions from 'redux/modules/fields';
 
 @connect(state => ({
 	groups: state.get('groups').toJS(),
 	fields: state.get('fields').toJS()
 }), {
-	create: groupActions.create,
-	push: push
+	create: groupsActions.create,
+	push: push,
+  fieldsFetch: fieldsActions.fetch,
+  groupsFetch: groupsActions.fetch
 })
 export default class GroupView extends React.Component {
 	constructor(props) {
@@ -31,6 +34,11 @@ export default class GroupView extends React.Component {
 				onClick={() => create.create()} />
 		)
 	}
+
+  componentDidMount() {
+    this.props.fieldsFetch()
+    this.props.groupsFetch()
+  }
 
 	render() {
 		var header_fields = ['name', 'description'];

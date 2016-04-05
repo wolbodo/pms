@@ -5,12 +5,27 @@ import { connect } from 'react-redux';
 import * as mdl from 'react-mdl'
 import { Link } from 'react-router';
 
+import {fetch as peopleFetch} from 'redux/modules/people';
+import {fetch as groupsFetch} from 'redux/modules/groups';
+import {fetch as fieldsFetch} from 'redux/modules/fields';
+
+// Action imports
+import { push } from 'react-router-redux'
+
 import logo from 'img/logo.svg';
 
 @connect(
     state => ({
-        ...state.toJS()
-    }))
+        auth: state.get('auth').toJS(),
+        people: state.get('people').toJS(),
+        fields: state.get('fields').toJS(),
+        groups: state.get('groups').toJS()
+    }), {
+        push: push,
+        peopleFetch,
+        groupsFetch,
+        fieldsFetch
+    })
 export default class App extends React.Component {
 
     constructor(props) {
@@ -24,8 +39,22 @@ export default class App extends React.Component {
         this.setPage = this.setPage.bind(this);
     }
 
-    // componentDidMount() {
-    // }
+    componentWillReceiveProps(nextProps) {
+
+        if (!this.props.auth.loggedIn && nextProps.auth.loggedIn) {
+            // login
+            this.props.push('/');
+
+            // Trigger fetch
+            this.props.peopleFetch()
+            this.props.groupsFetch()
+            this.props.fieldsFetch()
+
+        } else if (this.props.auth.loggedIn && !nextProps.auth.loggedIn) {
+            // logout
+            this.props.push('/login');
+        }
+    }
 
     handleTab(tab) {
         this.setState({
@@ -42,6 +71,7 @@ export default class App extends React.Component {
 
     render() {
         var {main, header, auth } = this.props;
+
         return (
             <mdl.Layout fixedHeader fixedDrawer>
                 <mdl.Header >

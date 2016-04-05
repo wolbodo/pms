@@ -2,30 +2,33 @@ import _ from 'lodash'
 import { push } from 'react-router-redux'
 import Immutable from 'immutable'
 
+import API from 'redux/apiWrapper'
+import {CLEAR} from './clearState'
+
+const FETCH = 'pms/groups/FETCH';
+const FETCH_SUCCESS = 'pms/groups/FETCH_SUCCESS';
+const FETCH_FAIL = 'pms/groups/FETCH_FAIL';
+
+const PUSH = 'pms/groups/PUSH';
+const PUSH_SUCCESS = 'pms/groups/PUSH_SUCCESS';
+const PUSH_FAIL = 'pms/groups/PUSH_FAIL';
+
+const UPDATE = 'pms/groups/UPDATE'
+const REVERT = 'pms/groups/REVERT';
 const CREATE = 'pms/groups/CREATE';
-const UPDATE = 'pms/groups/UPDATE';
+
+const COMMIT_FINISHED = 'pms/groups/COMMIT_FINISHED';
 
 const initialState = Immutable.fromJS({
-  items: {
-      bestuur: {
-        "id": "bestuur",
-        "name": "Bestuur",
-        "description": "Alle bestuursleden"
-      },
-      leden: {
-        "id": "leden",
-        "name": "Leden",
-        "description": "Alle leden"
-      },
-      oudleden: {
-        "id": "oudleden",
-        "name": "Oud Leden",
-        "description": "Alle oud leden"
-      }
-  },
-  updates: {},
-  dirty: false
+  loading: false
 });
+
+export function fetch(username, password) {
+  return API({
+    types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
+    uri: 'roles'
+  });
+}
 
 export function update(id, group) {
   return {
@@ -52,22 +55,38 @@ export function create() {
 
 
 const reducers = {
+
+  // Api handling states.
+  [FETCH]: (groups) => 
+    groups.merge({loading: true}),
+
+  [FETCH_SUCCESS]: (groups, {data}) =>
+    groups.merge({
+      fetching: false,
+      loaded: true, // Only set initially, So the ui know it has data.
+      items: data
+    }),
+
+  [FETCH_FAIL]: (groups, {error}) =>
+    groups.merge({loading: false, error}),
+
+
+  // Local changes and push
   [CREATE]: (groups, {data}) => 
       groups.mergeDeep({
-          items: {
+          updates: {
               [data.id]: {}
           }
       }),
 
   [UPDATE]: (groups, {data}) => 
       groups.mergeDeep({
-          items: {
-              [data.id]: data.group
-          },
           updates: {
             [data.id]: data.group
           }
-      })
+      }),
+
+  [CLEAR]: state => initialState
 }
 
 export default (state=initialState, action) => 

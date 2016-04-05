@@ -99,7 +99,10 @@ class FieldsHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+                self.write({
+                    field['name']: field 
+                    for field in row[0]
+                })
             finally:
                 cur.close()
 
@@ -118,7 +121,10 @@ class RolesHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+                self.write({
+                    role['id']: role
+                    for role in row[0]
+                })
             finally:
                 cur.close()
 
@@ -155,7 +161,11 @@ class PeopleHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+
+                self.write({
+                    person['id']: person
+                    for person in row[0]
+                })
             finally:
                 cur.close()
 
@@ -188,7 +198,7 @@ class PeopleHandler(DatabaseHandler):
                     'body': self.request.body.decode('utf-8')
                 })
                 row = yield from cur.fetchone()
-                self.write(row[0])  # Normally tornado transforms objects into JSON, except for lists.
+                self.write(row[0])
             finally:
                 cur.close()
 

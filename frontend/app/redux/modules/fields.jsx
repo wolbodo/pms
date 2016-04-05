@@ -1,14 +1,34 @@
 import _ from 'lodash'
-import _initialState from './fields.state.json'
+// import _initialState from './fields.state.json'
 import Immutable from 'immutable'
+import {CLEAR} from './clearState'
+import API from 'redux/apiWrapper'
 
-const initialState = Immutable.fromJS(_initialState)
-                              .merge({updates: {}});
+const initialState = Immutable.Map();
 
 const MOVE_SCHEMAFIELD = 'pms/fields/MOVE_SCHEMAFIELD';
 const CREATE_FIELDSET = 'pms/fields/CREATE_FIELDSET';
 const UPDATE_FIELD = 'pms/fields/UPDATE_FIELD';
 
+
+const FETCH = 'pms/fields/FETCH';
+const FETCH_SUCCESS = 'pms/fields/FETCH_SUCCESS';
+const FETCH_FAIL = 'pms/fields/FETCH_FAIL';
+
+const PUSH = 'pms/fields/PUSH';
+const PUSH_SUCCESS = 'pms/fields/PUSH_SUCCESS';
+const PUSH_FAIL = 'pms/fields/PUSH_FAIL';
+
+const UPDATE = 'pms/fields/UPDATE'
+const REVERT = 'pms/fields/REVERT';
+const CREATE = 'pms/fields/CREATE';
+
+export function fetch(username, password) {
+  return API({
+    types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
+    uri: 'fields'
+  });
+}
 
 export function createSet(schema, fromIndex, toIndex) {
   return {
@@ -108,6 +128,22 @@ function createSchemaSet(schema, fromIndex, toIndex) {
 }
 
 const reducers = {
+
+  [FETCH]: fields => 
+    fields.merge({fetching: true}),
+
+  [FETCH_SUCCESS]: (fields, {data}) =>
+    // Create an indexed object with key = Object id
+    fields.mergeDeep({
+      fetching: false,
+      loaded: true, // Only set initially, So the ui know it has data.
+      items: data
+    }),
+
+  [FETCH_FAIL]: (fields, {error}) =>
+    fields.merge({fetching: false, error}),
+
+
   [MOVE_SCHEMAFIELD]: (fields, {data}) =>
     fields.setIn(['schemas', data.schema], 
                     moveSchemaField(fields.getIn(['schemas', data.schema]), 
@@ -120,7 +156,10 @@ const reducers = {
 
   [UPDATE_FIELD]: (fields, {data}) =>
     fields.updateIn(['schemas', data.schema, 'fields', data.id], 
-                      field => field.merge(data.field))
+                      field => field.merge(data.field)),
+    
+  [CLEAR]: state => initialState
+
 }
 
 export default (state=initialState, action) => 

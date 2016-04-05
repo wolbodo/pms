@@ -4,9 +4,11 @@ import { push } from 'react-router-redux'
 
 import API from 'redux/apiWrapper'
 
+import {CLEAR} from './clearState'
 
 const initialState = Immutable.fromJS({
-  loggedIn: false
+  loggedIn: false,
+  loading: false
 });
 
 const START = 'pms/auth/LOGIN_START';
@@ -64,9 +66,9 @@ const reducers = {
     auth.merge({
       loading: false
     }),
+    
+  [CLEAR]: state => initialState
 
-  [LOGOUT]: (auth) => 
-    reducers.CONSTRUCT()
 }
 
 export default (state=initialState, action) => 

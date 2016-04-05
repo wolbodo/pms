@@ -11,17 +11,16 @@ import { push } from 'react-router-redux'
 import _ from 'lodash'
 import fieldComponents from 'components/fields'
 
-import * as peopleActions from 'redux/modules/people';
-
 @connect(state => ({
-    people: state.get('people').toJS(),
-    auth: state.get('auth').toJS(),
-    fields: state.get('fields').toJS(),
-    groups: state.get('groups').toJS()
-    }), {
-    push,
-    fetch: peopleActions.fetch
-})
+        people: state.get('people').toJS(),
+        auth: state.get('auth').toJS(),
+        fields: state.get('fields').toJS(),
+        groups: state.get('groups').toJS()
+    }), 
+    {
+        push
+    }
+)
 export default class PeopleView extends React.Component {
 
     static renderHeaderButtons(actions) {
@@ -35,17 +34,22 @@ export default class PeopleView extends React.Component {
     static defaultProps = {
         people: []
     };
+
+    loaded() {
+        const {fields, groups} = this.props
+
+        return fields.loaded && groups.loaded
+    }
     
     constructor(props) {
         super(props)
     }
 
-    componentDidMount() {
-        var { fetch, auth } =  this.props;
-        fetch(auth.token)
-    }
-
     render() {
+        if (!this.loaded()) {
+            return (<h1>Loading</h1>)
+        }
+
         var headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
                         'mobile', 'email'];
 
@@ -65,7 +69,7 @@ export default class PeopleView extends React.Component {
 
         return (
             <List title={title}>
-                <Head schema={fields.schemas.person} fields={headerfields} editLink/>
+                <Head schema={fields.items.people} fields={headerfields} editLink/>
                 {_.map(items, (row, i) => (
                     <Row 
                         className="click"

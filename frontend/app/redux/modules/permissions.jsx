@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import _initialState from './permissions.state.json'
 import Immutable from 'immutable'
+import {CLEAR} from './clearState'
 
 const initialState = Immutable.fromJS(_initialState);
 
@@ -28,7 +29,9 @@ const reducers = {
 			writeperms => data.write ? 
 				Immutable.Set(writeperms).add(data.field.name)
 			  : Immutable.Set(writeperms).remove(data.field.name)
-			)
+			),
+    
+  [CLEAR]: state => initialState
 }
 
 
