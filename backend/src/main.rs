@@ -126,7 +126,7 @@ fn handle_people_get(req: &mut Request) -> IronResult<Response> {
 
 
 
-fn handle_person_set(req: &mut Request) -> IronResult<Response> {
+fn handle_people_set(req: &mut Request) -> IronResult<Response> {
     // Update an existing person.
 
     let people_id;
@@ -172,7 +172,7 @@ fn handle_person_set(req: &mut Request) -> IronResult<Response> {
 
 }
 
-fn handle_person_add(req: &mut Request) -> IronResult<Response> {
+fn handle_people_add(req: &mut Request) -> IronResult<Response> {
     // Create a new person. 
 
     let db = req.db_conn();
@@ -231,15 +231,30 @@ impl AfterMiddleware for JsonResponse {
 fn main() {
 
     let router = router!(
-        post "/login" => handle_login,
+        post "/login"      => handle_login,
 
-        get "/people" => handle_people_get,
-        post "/people" => handle_person_add,
-        get "/person/:id" => handle_people_get,
-        put "/person/:id" => handle_person_set,
+        post "/people"     => handle_people_add,
+        get  "/people"     => handle_people_get,
+        get  "/people/:id" => handle_people_get,
+        put  "/people/:id" => handle_people_set,
 
-        get "/fields" => handle_fields,
-        put "/fields" => handle_fields_edit
+        // post "/groups"     => handle_groups_add,
+        // get  "/groups"     => handle_groups_get,
+        // get  "/groups/:id" => handle_groups_get,
+        // put  "/groups/:id" => handle_groups_set,
+
+        // post "/permissions"     => handle_permissions_add,
+        // get  "/permissions"     => handle_permissions_get,
+        // get  "/permissions/:id" => handle_permissions_get,
+        // put  "/permissions/:id" => handle_permissions_set,
+
+        // post "/link"     => handle_link_add,
+        // get  "/link"     => handle_link_get,
+        // get  "/link/:id" => handle_link_get,
+        // put  "/link/:id" => handle_link_set,
+
+        get  "/fields"     => handle_fields,
+        put  "/fields"     => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
