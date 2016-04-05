@@ -2,10 +2,11 @@ import fields from './fields'
 import group from './group'
 import people from './people'
 import permissions from './permissions'
-import HeaderBar from './headerBar'
 
-import App from './app'
-import Login from './login'
+import App from './app/app'
+import HeaderBar from './app/headerBar'
+
+import Login from './login/login'
 
 export {
 	fields,

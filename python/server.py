@@ -12,7 +12,7 @@ import json
 
 DSN = 'dbname=pms user=pms'
 HOSTNAME = 'localhost'
-PORT = 8080
+PORT = 4242
 
 pool = None
 

@@ -1,7 +1,5 @@
 import _ from 'lodash'
 import Immutable from 'immutable'
-
-import fetch from 'isomorphic-fetch'
 import { push } from 'react-router-redux'
 
 import API from 'redux/apiWrapper'
