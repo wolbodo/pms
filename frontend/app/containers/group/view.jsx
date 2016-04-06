@@ -44,8 +44,7 @@ export default class GroupView extends React.Component {
   }
 
   render() {
-    const headerFields = ['name'];
-    // const headerFields = ['name', 'description'];
+    const headerFields = ['name', 'description'];
     const { groups, fields, pushState } = this.props;
 
     return (
