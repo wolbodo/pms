@@ -6,6 +6,8 @@ export default class Field extends React.Component {
   static propTypes = {
     value: PropTypes.oneOfType([
       React.PropTypes.object,
+      React.PropTypes.array,
+      React.PropTypes.bool,
       React.PropTypes.string,
       React.PropTypes.number,
     ]),
@@ -61,7 +63,7 @@ export default class Field extends React.Component {
         {...field}
         disabled={disabled}
         value={value}
-        onChange={(_value) => this.setState({ _value }) }
+        onChange={(_value) => this.setState({ value: _value }) }
         onBlur={(_value) => onChange(_value, field.name)}
       />
     );

@@ -5,7 +5,7 @@ import * as mdl from 'react-mdl';
 export default class Boolean extends React.Component {
   static propTypes = {
     title: PropTypes.string,
-    value: PropTypes.array,
+    value: PropTypes.bool,
     disabled: PropTypes.bool,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired

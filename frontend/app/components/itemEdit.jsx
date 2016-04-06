@@ -48,7 +48,10 @@ export default class ItemEdit extends React.Component {
                 || _.includes(permissions.edit, field)
             ) && {
               // Then add the field, with all info zipped into an object.
-              schema: schema.properties[field],
+              schema: {
+                name: field,
+                ...schema.properties[field]
+              },
               value: item[field],
               writable: _.includes(permissions.edit, field)
             },

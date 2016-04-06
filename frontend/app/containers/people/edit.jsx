@@ -8,8 +8,10 @@ import * as peopleActions from 'redux/modules/people';
 
 function PersonEdit({ params, people, fields, auth, update }) {
   const personId = params.id || auth.user.user;
+
+  // Find peson
   const item = _.assign(
-    people.items[personId] || {},
+    _.get(people, ['items', personId], {}),
     _.get(people, ['updates', personId])
   );
 

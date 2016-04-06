@@ -3,7 +3,7 @@ import React, { PropTypes } from 'react';
 const style = {};
 
 
-export function Chip({ children }) {
+export default function Chip({ children }) {
   return (
     <div className="chip" style={style}>
       {children}

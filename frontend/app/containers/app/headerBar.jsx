@@ -117,7 +117,7 @@ export default class HeaderBar extends React.Component {
 
   render() {
     const {
-      people, groups, fields, auth,
+      people, groups, fields,
       peopleCommit, peopleRevert, peopleCreate,
       groupCreate, fieldCreate, route
     } = this.props;
@@ -133,7 +133,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           ripple
           id="header-save-button"
-          onClick={() => peopleCommit(auth.token)}
+          onClick={() => peopleCommit()}
         >
           Opslaan
         </mdl.Button>
