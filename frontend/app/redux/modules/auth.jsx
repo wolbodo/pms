@@ -1,10 +1,9 @@
-import _ from 'lodash'
-import Immutable from 'immutable'
-import { push } from 'react-router-redux'
+import _ from 'lodash';
+import Immutable from 'immutable';
 
-import API from 'redux/apiWrapper'
+import API from 'redux/apiWrapper';
 
-import {CLEAR} from './clearState'
+import { CLEAR } from './clearState';
 
 const initialState = Immutable.fromJS({
   loggedIn: false,
@@ -19,11 +18,11 @@ const LOGOUT = 'pms/auth/LOGOUT';
 export function login(username, password) {
   return API({
     types: [START, SUCCESS, FAIL],
-    uri: 'login', 
+    uri: 'login',
     options: {
       body: {
         user: username,
-        password: password
+        password
       }
     }
   });
@@ -37,43 +36,43 @@ export function logout() {
 
 const reducers = {
 
-  [START]: (auth) => 
+  [START]: (auth) =>
     auth.merge({
       loggedIn: false,
       loading: true
     }),
 
-  [SUCCESS]: (auth, {data}) => {
+  [SUCCESS]: (auth, { data: { token, permissions } }) => {
     // get the userinfo from the token.
-    let user = JSON.parse(
+    const user = JSON.parse(
       atob(
-        data.token
+        token
             .split('.')[1]
             .replace(/-/g, '+')
             .replace(/_/g, '/')
       )
-    )
+    );
 
     return auth.merge({
       loggedIn: true,
       loading: false,
-      token: data.token,
-      user: user
-    })
+      token,
+      permissions,
+      user
+    });
   },
 
-  [FAIL]: (auth) => 
+  [FAIL]: (auth) =>
     auth.merge({
       loading: false
     }),
-    
-  [CLEAR]: state => initialState
 
-}
+  [CLEAR]: () => initialState
+};
 
-export default (state=initialState, action) => 
+export default (state = initialState, action) =>
   _.get(
-    reducers, 
+    reducers,
     action.type,   // Get type reducer
-    state => state // Default passtrough
-  )(state, action)
+    (_state) => _state // Default passtrough
+  )(state, action);

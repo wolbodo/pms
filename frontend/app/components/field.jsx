@@ -1,63 +1,69 @@
-import React from 'react';
-
-
-import * as mdl from 'react-mdl'
-
-import fields from './fields'
+import _ from 'lodash';
+import React, { PropTypes } from 'react';
+import fields from './fields';
 
 export default class Field extends React.Component {
-	constructor(props) {
-		super(props);
+  static propTypes = {
+    value: PropTypes.oneOfType([
+      React.PropTypes.object,
+      React.PropTypes.string,
+      React.PropTypes.number,
+    ]),
+    field: PropTypes.object,
+    disabled: PropTypes.bool,
+    onChange: PropTypes.func,
+  };
+  constructor(props) {
+    super(props);
 
-		this.handleChange = this.handleChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);
 
-		this.state = {
-			value : this.props.value
-		};
-	}
-	handleChange(e) {
-		// triggers on onBlur of element,
-		let value = e.target.value
-		this.setState({
-			value: value
-		});
+    this.state = {
+      value: this.props.value
+    };
+  }
 
-        this.props.onChange(value, this.props.field.name);
+  componentWillReceiveProps(props) {
+    if (props.value !== this.props.value) {
+      this.setState({
+        value: props.value
+      });
     }
+  }
 
-    componentDidUpdate() {
-        componentHandler.upgradeDom();
-    }
+  handleChange(event) {
+    // triggers on onBlur of element,
+    const value = event.target.value;
+    this.setState({
+      value
+    });
 
-	componentWillReceiveProps(props){ 
-		if (props.value !== this.props.value) {
-			this.setState({
-				value: props.value
-			});
-		}
-	}
-	render () {
-		var {field, disabled, onChange } = this.props;
-		var {value} = this.state;
+    this.props.onChange(value, this.props.field.name);
+  }
 
-		// select field edit component.
-		let Comp = {
-			string: fields.Text,
-			option: fields.Option,
-			enum: fields.Enum,
-			boolean: fields.Boolean,
-			array: fields.Array,
-			date: fields.Date
-		}[field.type]
+  render() {
+    const { field, disabled, onChange } = this.props;
+    const { value } = this.state;
 
-		return (
-			<Comp 
-				{...field}
-				disabled={disabled}
-				value={value}
-				onChange={value => this.setState({value}) }
-				onBlur={value => onChange(value, field.name)}>
-			</Comp>
-		)
-	}
+    // select field edit component.
+    let Comp = {
+      string: fields.Text,
+      option: fields.Option,
+      enum: fields.Enum,
+      boolean: fields.Boolean,
+      array: fields.Array,
+      date: fields.Date
+    }[_.get(field, 'type', 'string')];
+    // Default to string
+
+    return (
+      <Comp
+        {...field}
+        disabled={disabled}
+        value={value}
+        onChange={(_value) => this.setState({ _value }) }
+        onBlur={(_value) => onChange(_value, field.name)}
+      />
+    );
+  }
 }

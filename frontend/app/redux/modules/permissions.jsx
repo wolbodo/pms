@@ -1,43 +1,40 @@
-import _ from 'lodash'
-import _initialState from './permissions.state.json'
-import Immutable from 'immutable'
-import {CLEAR} from './clearState'
+import _ from 'lodash';
+import Immutable from 'immutable';
+import { CLEAR } from './clearState';
 
-const initialState = Immutable.fromJS(_initialState);
+const initialState = Immutable.Map();
 
 const SET = 'pms/permissions/SET';
 const CHANGE = 'pms/permissions/CHANGE';
 
-export function change(change) {
+export function change(_change) {
   return {
     name: CHANGE,
-    data: change
-  }
+    data: _change
+  };
 }
 
 const reducers = {
-	[SET]: (permissions) => 
-		permissions,
+  [SET]: (permissions) =>
+    permissions,
 
-	[CHANGE]: (permissions, {data}) =>
-		permissions.updateIn([data.group.id, data.schema, 'read'], 
-			readperms => data.read ? 
-				Immutable.Set(readperms).add(data.field.name)
-			  : Immutable.Set(readperms).remove(data.field.name)
-			)
-			.updateIn([data.group.id, data.schema, 'write'], 
-			writeperms => data.write ? 
-				Immutable.Set(writeperms).add(data.field.name)
-			  : Immutable.Set(writeperms).remove(data.field.name)
-			),
-    
-  [CLEAR]: state => initialState
-}
+  [CHANGE]: (permissions, { data }) =>
+    permissions.updateIn([data.group.id, data.schema, 'read'],
+      (readperms) => (data.read ?
+        Immutable.Set(readperms).add(data.field.name)
+        : Immutable.Set(readperms).remove(data.field.name)
+      ))
+      .updateIn([data.group.id, data.schema, 'write'],
+      (writeperms) => (data.write ?
+        Immutable.Set(writeperms).add(data.field.name)
+        : Immutable.Set(writeperms).remove(data.field.name)
+      )),
+  [CLEAR]: () => initialState
+};
 
-
-export default (state=initialState, action) => 
+export default (state = initialState, action) =>
   _.get(
-    reducers, 
+    reducers,
     action.type,   // Get type reducer
-    state => state // Default passtrough
-  )(state, action)
+    (_state) => _state // Default passtrough
+  )(state, action);

@@ -99,10 +99,7 @@ class FieldsHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write({
-                    field['name']: field 
-                    for field in row[0]
-                })
+                self.write(row[0])
             finally:
                 cur.close()
 
@@ -121,10 +118,7 @@ class RolesHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write({
-                    role['id']: role
-                    for role in row[0]
-                })
+                self.write(row[0])
             finally:
                 cur.close()
 
@@ -162,10 +156,7 @@ class PeopleHandler(DatabaseHandler):
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
 
-                self.write({
-                    person['id']: person
-                    for person in row[0]
-                })
+                self.write(row[0])
             finally:
                 cur.close()
 

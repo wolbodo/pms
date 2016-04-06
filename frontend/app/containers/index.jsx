@@ -1,12 +1,12 @@
-import fields from './fields'
-import group from './group'
-import people from './people'
-import permissions from './permissions'
+import fields from './fields';
+import group from './group';
+import people from './people';
+import permissions from './permissions';
 
-import App from './app/app'
-import HeaderBar from './app/headerBar'
+import App from './app/app';
+import HeaderBar from './app/headerBar';
 
-import Login from './login/login'
+import Login from './login/login';
 
 export {
 	fields,
@@ -17,4 +17,4 @@ export {
 
 	App,
 	Login
-}
+};

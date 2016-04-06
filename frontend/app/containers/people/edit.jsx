@@ -1,46 +1,39 @@
 import _ from 'lodash';
-import React from 'react';
-import ReactDOM from 'react-dom';
-import * as mdl from 'react-mdl'
-
-import {ItemEdit} from 'components';
+import React, { PropTypes } from 'react';
+import { ItemEdit } from 'components';
 
 import { connect } from 'react-redux';
 
 import * as peopleActions from 'redux/modules/people';
 
-@connect(state => ({
-    people: state.get('people').toJS(),
-    fields: state.get('fields').toJS(),
-    auth: state.get('auth').toJS(),
-    permissions: state.get('permissions').toJS()
-}), {
-    update: peopleActions.update
-})
-export default class PersonEdit extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        const {
-            params, people, fields, auth, permissions,
-            update
-        } = this.props;
+function PersonEdit({ params, people, fields, auth, update }) {
+  const personId = params.id || auth.user.user;
+  const item = _.assign(
+    people.items[personId] || {},
+    _.get(people, ['updates', personId])
+  );
 
-        let person_id = params.id || auth.user.user
-        let item = _.assign(
-            people.items[person_id] || {},
-            _.get(people, ['updates', person_id])
-        );
-
-        return (
-            <ItemEdit
-                schema={fields.schemas.person}
-                item={item}
-                permissions={permissions.bestuur.person}
-                onChange={(value, key) => {
-                    update(person_id, value, key)
-                }} />
-        );
-    }
+  return (
+    <ItemEdit
+      schema={fields.items.people}
+      item={item}
+      permissions={auth.permissions.people}
+      onChange={(value, key) => update(personId, value, key) }
+    />
+  );
 }
+PersonEdit.propTypes = {
+  params: PropTypes.object,
+  people: PropTypes.object,
+  fields: PropTypes.object,
+  auth: PropTypes.object,
+  update: PropTypes.func,
+};
+
+export default connect((state) => ({
+  people: state.get('people').toJS(),
+  fields: state.get('fields').toJS(),
+  auth: state.get('auth').toJS(),
+}), {
+  update: peopleActions.update
+})(PersonEdit);

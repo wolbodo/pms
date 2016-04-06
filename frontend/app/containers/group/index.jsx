@@ -1,7 +1,7 @@
-import Edit from './edit'
-import View from './view'
+import Edit from './edit';
+import View from './view';
 
 export default {
-	Edit,
-	View
-}
+  Edit,
+  View
+};

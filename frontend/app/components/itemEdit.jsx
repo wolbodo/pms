@@ -1,87 +1,92 @@
-import React from 'react';
-import * as mdl from 'react-mdl'
-
-import Field from './field';
-import update from  'react-addons-update';
-
+import React, { PropTypes } from 'react';
+import * as mdl from 'react-mdl';
 import * as _ from 'lodash';
 
+import Field from './field';
+
 export default class ItemEdit extends React.Component {
-	constructor(props) {
-		super(props);
+  static propTypes = {
+    item: PropTypes.object,
+    schema: PropTypes.object,
+    permissions: PropTypes.object,
+    onChange: PropTypes.func,
+  };
 
-		this.handleChange = this.handleChange.bind(this);
-	}
-	handleChange(value, key) {
-		let {onChange, item} = this.props;
+  constructor(props) {
+    super(props);
 
-		console.log("Setting store")
+    this.handleChange = this.handleChange.bind(this);
+  }
+  handleChange(value, key) {
+    const { onChange, item } = this.props;
 
-		// did value change?
-		if ((item[key] !== value) && onChange) {
-			onChange(value, key)
-		} 
-	}
-	render() {
-		const {schema, item, permissions } = this.props;
+    console.log('Setting store');
 
-		// Filter all readable nonempty fields, or writable fields
-		// _.(readable && filled) || writable
-		let map_filter = (arr, mapfun, filterfun) => _.filter(_.map(arr, mapfun), filterfun)
+    // did value change?
+    if ((item[key] !== value) && onChange) {
+      onChange(value, key);
+    }
+  }
+  render() {
+    const { schema, item, permissions } = this.props;
 
-		let form = map_filter(
-			schema.form, 
-			group => ({
-				title: group.title,
-				fields: map_filter(
-					group.fields,
-					fieldset => map_filter(
-						fieldset,
-						field => (
-							// Readable and nonempty					// writable
-							(_.includes(permissions.read, field) && !_.isEmpty(item[field])) || _.includes(permissions.write, field)
-						) && {
-						 	// Then add the field, with all info zipped into an object.
-							schema: schema.fields[field],
-							value: item[field],
-							readable: _.includes(permissions.read, field),
-							writable: _.includes(permissions.write, field)
-						},
-						field => !!field
-					),
-					fieldset => !_.isEmpty(fieldset)
-				)
-			}),
-			group => !_.isEmpty(group.fields)
-		)
+    // Filter all readable nonempty fields, or writable fields
+    // _.(readable && filled) || writable
+    const mapFilter = (arr, mapfun, filterfun) => _.filter(_.map(arr, mapfun), filterfun);
 
+    let form = mapFilter(
+      schema.form,
+      (group) => ({
+        title: group.title,
+        fields: mapFilter(
+          group.properties,
+          (fieldset) => mapFilter(
+            fieldset,
+            (field) => (
+              // Readable and nonempty          // writable
+              (_.includes(permissions.read, field) && !_.isEmpty(item[field]))
+                || _.includes(permissions.write, field)
+            ) && {
+              // Then add the field, with all info zipped into an object.
+              schema: schema.properties[field],
+              value: item[field],
+              readable: _.includes(permissions.read, field),
+              writable: _.includes(permissions.write, field)
+            },
+            (field) => !!field
+          ),
+          (fieldset) => !_.isEmpty(fieldset)
+        )
+      }),
+      (group) => !_.isEmpty(group.fields)
+    );
 
-		return (
-		<form className='content' onSubmit={this.handleSubmit}>
-		{_.map(form, (group, i) => (
-			<mdl.Card key={i} className='mdl-color--white mdl-shadow--2dp'>
-				<mdl.CardTitle>
-					{group.title}
-				</mdl.CardTitle>
-				<div className="mdl-card__form">
-				{_.map(group.fields, (fieldset, key) => (
-					<div key={key} className="mdl-card__formset">
-					{_.map(fieldset, (field, key) => (
-						<Field 
-							key={key} 
-							field={field.schema}
-							tabIndex="0"
-							disabled={!field.writable}
-							onChange={this.handleChange}
-							value={field.value} />
-					))}
-					</div>
-				))}
-				</div>
-			</mdl.Card>
-		))}
-		</form>
-
-		)
-	}
-} 
+    return (
+      <form className="content" onSubmit={this.handleSubmit}>
+      {_.map(form, (group, i) => (
+        <mdl.Card key={i} className="mdl-color--white mdl-shadow--2dp">
+          <mdl.CardTitle>
+            {group.title}
+          </mdl.CardTitle>
+          <div className="mdl-card__form">
+          {_.map(group.properties, (fieldset, key) => (
+            <div key={key} className="mdl-card__formset">
+            {_.map(fieldset, (field, _key) => (
+              <Field
+                key={_key}
+                field={field.schema}
+                tabIndex="0"
+                disabled={!field.writable}
+                onChange={this.handleChange}
+                value={field.value}
+              />
+            ))}
+            </div>
+          ))}
+          </div>
+        </mdl.Card>
+      ))}
+      </form>
+    );
+  }
+}

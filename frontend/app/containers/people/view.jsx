@@ -1,84 +1,86 @@
+import React, { PropTypes } from 'react';
+import * as mdl from 'react-mdl';
 
-import React from 'react'
-import * as mdl from 'react-mdl'
+import { List, Head, Row } from 'components/list';
 
-import {List, Head, Row} from 'components/list'
+import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 
-import { Link } from 'react-router'
-import { connect } from 'react-redux'
-import { push } from 'react-router-redux'
+import _ from 'lodash';
+import fieldComponents from 'components/fields';
 
-import _ from 'lodash'
-import fieldComponents from 'components/fields'
-
-@connect(state => ({
-        people: state.get('people').toJS(),
-        auth: state.get('auth').toJS(),
-        fields: state.get('fields').toJS(),
-        groups: state.get('groups').toJS()
-    }), 
-    {
-        push
-    }
-)
+@connect((state) => ({
+  people: state.get('people').toJS(),
+  auth: state.get('auth').toJS(),
+  fields: state.get('fields').toJS(),
+  groups: state.get('groups').toJS()
+}), {
+  pushState: push
+})
 export default class PeopleView extends React.Component {
+  static renderHeaderButtons(actions) {
+    return (
+      <mdl.Button onTouchTap={() => actions.create()}>
+        Nieuw persoon
+      </mdl.Button>
+    );
+  }
 
-    static renderHeaderButtons(actions) {
-        return (
-          <mdl.Button onTouchTap={() => actions.create()}>
-            Nieuw persoon
-          </mdl.Button>
-        )
+  static propTypes = {
+    fields: PropTypes.object,
+    groups: PropTypes.object,
+    people: PropTypes.object,
+    pushState: PropTypes.func,
+  };
+  static defaultProps = {
+    people: []
+  };
+
+  loaded() {
+    const { fields, groups } = this.props;
+
+    return fields.loaded && groups.loaded;
+  }
+
+  render() {
+    if (!this.loaded()) {
+      return (<h1>Loading</h1>);
     }
 
-    static defaultProps = {
-        people: []
-    };
-
-    loaded() {
-        const {fields, groups} = this.props
-
-        return fields.loaded && groups.loaded
-    }
-    
-    constructor(props) {
-        super(props)
-    }
-
-    render() {
-        if (!this.loaded()) {
-            return (<h1>Loading</h1>)
-        }
-
-        var headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
+    const headerfields = ['nickname', 'firstname', 'lastname', 'city', 'gender',
                         'mobile', 'email'];
+    const { people, fields, groups, pushState } = this.props;
 
-        const {history, people, fields, groups, push} = this.props
+    // merge items with updated items.
+    const items = _.merge(people.items, people.updates);
 
-        // merge items with updated items.
-        let items = _.merge(people.items, people.updates)
+    // Create a select title ;)
+    const title = (
+      <fieldComponents.Enum
+        value={_.get(this.props, 'routeParams.group_name', 'leden')}
+        options={_.mapKeys(groups.items, (group) => group.name)}
+        style={{
+          fontSize: '22px',
+          fontWeight: 'bold',
+          lineHeight: '34px'
+        }}
+        onBlur={(param) => pushState(`/mensen/${param}`)}
+      />
+    );
 
-        // Create a select title ;)
-        let title = (
-            <fieldComponents.Enum
-                value={_.get(this.props, 'routeParams.group_name', 'leden')}
-                options={_.mapValues(groups.items, group => group.name)}
-                style={{fontSize:'22px', fontWeight:'bold', lineHeight:'34px'}}
-                onBlur={param => push('/mensen/' + param)}/>
-        )
-
-        return (
-            <List title={title}>
-                <Head schema={fields.items.people} fields={headerfields} editLink/>
-                {_.map(items, (row, i) => (
-                    <Row 
-                        className="click"
-                        key={i} 
-                        item={row} 
-                        fields={headerfields} 
-                        edit={() => push(`/lid-${i}`)} />
-                ))}
-            </List>
-        )
-    }
+    return (
+      <List title={title}>
+        <Head schema={fields.items.people} fields={headerfields} editLink />
+        {_.map(items, (row, i) => (
+          <Row
+            className="click"
+            key={i}
+            item={row}
+            fields={headerfields}
+            edit={() => pushState(`/lid-${i}`)}
+          />
+        ))}
+      </List>
+    );
+  }
 }

@@ -1,28 +1,38 @@
-import React from 'react';
-import * as mdl from 'react-mdl'
+import React, { PropTypes } from 'react';
 
-import {DatePicker} from 'material-ui';
+import { DatePicker } from 'material-ui';
 
 export default class Date extends React.Component {
-    // TODO: OnChange, and properly showing dates
-    render() {
-        let { name, label, value, disabled,
-              onChange, onBlur } = this.props
+  static propTypes = {
+    label: PropTypes.string,
+    value: PropTypes.array,
+    disabled: PropTypes.bool,
+    onBlur: PropTypes.func.isRequired,
+    onChange: PropTypes.func.isRequired
+  };
+  static defaultProps = {
+    label: 'Date'
+  };
 
-        return (
-        <DatePicker 
-            className="datepicker"
-            container="dialog"
-            autoOk={true}
-            disabled={disabled}
-            floatingLabelText={label} 
-            open={!disabled} 
-            style={{
-                width: '125px'
-            }} 
-            textFieldStyle={{
-                width: '125px'
-            }} />
-        );
-    }
+  // TODO: OnChange, and properly showing dates
+  render() {
+    let { label, disabled } = this.props;
+
+    return (
+      <DatePicker
+        className="datepicker"
+        container="dialog"
+        autoOk
+        disabled={disabled}
+        floatingLabelText={label}
+        open={!disabled}
+        style={{
+          width: '125px'
+        }}
+        textFieldStyle={{
+          width: '125px'
+        }}
+      />
+    );
+  }
 }

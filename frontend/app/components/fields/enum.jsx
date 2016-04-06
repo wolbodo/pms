@@ -1,36 +1,36 @@
-import React from 'react';
+import _ from 'lodash';
+import React, { PropTypes } from 'react';
 
-import {SelectField} from 'material-ui';
+import { SelectField } from 'material-ui';
 import MenuItem from 'material-ui/lib/menus/menu-item';
 
-export default class Enum extends React.Component {
+export default function Enum({ label, value, disabled, options, onBlur }) {
+  const style = {};
 
-    render() {
-        let { name, label, value, disabled, options,
-              onBlur, style } = this.props
-
-        style = style || {}
-
-        return (
-            <SelectField
-                className="selectfield"
-                floatingLabelText={label} 
-                value={value}
-                style={style}
-                onChange={(ev, i, option) => {
-                    onBlur(option)
-                }}
-                disabled={disabled}
-            >
-            {_.map(options, (field, key) => (
-                <MenuItem
-                    style={style}
-                    key={key}
-                    value={key}
-                    primaryText={field}
-                    />
-            ))}
-            </SelectField>
-        );
-    }
+  return (
+    <SelectField
+      className="selectfield"
+      floatingLabelText={ label }
+      value={value}
+      style={style}
+      onChange={(ev, i, option) => onBlur(option)}
+      disabled={disabled}
+    >
+    {_.map(options, (field, key) => (
+      <MenuItem
+        style={style}
+        key={key}
+        value={key}
+        primaryText={field}
+      />
+    ))}
+    </SelectField>
+  );
 }
+Enum.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.string,
+  options: PropTypes.object.isRequired,
+  disabled: PropTypes.bool,
+  onBlur: PropTypes.func.isRequired,
+};

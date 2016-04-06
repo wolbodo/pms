@@ -1,5 +1,5 @@
-import View from './table'
+import View from './table';
 
 export default {
-	View
-}
+  View
+};
