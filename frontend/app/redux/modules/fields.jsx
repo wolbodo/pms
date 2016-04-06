@@ -159,17 +159,17 @@ const reducers = {
 
 
   [MOVE_SCHEMAFIELD]: (fields, { data }) =>
-  fields.setIn(['schemas', data.schema],
-          moveSchemaField(fields.getIn(['schemas', data.schema]),
+  fields.setIn(['items', data.schema],
+          moveSchemaField(fields.getIn(['items', data.schema]),
                   data.fromIndex, data.toIndex)),
 
   [CREATE_FIELDSET]: (fields, { data }) =>
-  fields.setIn(['schemas', data.schema],
-          createSchemaSet(fields.getIn(['schemas', data.schema]),
+  fields.setIn(['items', data.schema],
+          createSchemaSet(fields.getIn(['items', data.schema]),
                   data.fromIndex, data.toIndex)),
 
   [UPDATE_FIELD]: (fields, { data }) =>
-  fields.updateIn(['schemas', data.schema, 'fields', data.id],
+  fields.updateIn(['items', data.schema, 'fields', data.id],
             (field) => field.merge(data.field)),
 
   [CLEAR]: () => initialState

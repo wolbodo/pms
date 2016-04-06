@@ -7,12 +7,12 @@ import * as fieldActions from 'redux/modules/fields';
 import { ItemEdit } from 'components';
 
 
-function FieldsEdit({ params, fields, permissions, updateField }) {
+function FieldsEdit({ params, fields, auth, updateField }) {
   return (
     <ItemEdit
-      schema={fields.schemas.field}
-      permissions={permissions.leden.field}
-      item={fields.schemas.person.fields[params.veld]}
+      schema={fields.items.fields}
+      permmissions={auth.permissions.fields}
+      item={fields.items.person.fields[params.veld]}
       onChange={(value, key) => updateField('person', params.veld, { [key]: value }) }
     />
   );
@@ -20,13 +20,13 @@ function FieldsEdit({ params, fields, permissions, updateField }) {
 FieldsEdit.propTypes = {
   params: PropTypes.object,
   fields: PropTypes.object,
-  permissions: PropTypes.object,
+  auth: PropTypes.object,
   updateField: PropTypes.func
 };
 
 export default connect((state) => ({
   fields: state.get('fields').toJS(),
-  permissions: state.get('permissions').toJS()
+  auth: state.get('auth').toJS()
 }), {
   ...fieldActions
 })(FieldsEdit);
