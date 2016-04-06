@@ -7,7 +7,7 @@ export default class Option extends React.Component {
 
   static propTypes = {
     name: PropTypes.string.isRequired,
-    label: PropTypes.string,
+    title: PropTypes.string,
     value: PropTypes.array,
     options: PropTypes.object.isRequired,
     disabled: PropTypes.bool,
@@ -15,7 +15,7 @@ export default class Option extends React.Component {
     onChange: PropTypes.func.isRequired
   };
   static defaultProps = {
-    label: 'Option'
+    title: 'Option'
   };
 
   render() {

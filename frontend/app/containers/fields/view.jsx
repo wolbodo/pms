@@ -220,7 +220,7 @@ class Field extends React.Component {
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
         <Link to={`/velden/${field.name}`}>
-        {field.label}
+        {field.title}
         </Link>
       </div>
     ));

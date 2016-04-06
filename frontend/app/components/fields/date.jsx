@@ -4,19 +4,19 @@ import { DatePicker } from 'material-ui';
 
 export default class Date extends React.Component {
   static propTypes = {
-    label: PropTypes.string,
+    title: PropTypes.string,
     value: PropTypes.array,
     disabled: PropTypes.bool,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
   static defaultProps = {
-    label: 'Date'
+    title: 'Date'
   };
 
   // TODO: OnChange, and properly showing dates
   render() {
-    let { label, disabled } = this.props;
+    let { title, disabled } = this.props;
 
     return (
       <DatePicker
@@ -24,7 +24,7 @@ export default class Date extends React.Component {
         container="dialog"
         autoOk
         disabled={disabled}
-        floatingLabelText={label}
+        floatingLabelText={title}
         open={!disabled}
         style={{
           width: '125px'

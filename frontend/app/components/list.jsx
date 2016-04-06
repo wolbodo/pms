@@ -47,8 +47,8 @@ export function Head({ schema, fields, fieldLink }) {
         <th key={field.id} className="mdl-data-table__cell--non-numeric">
         {
           fieldLink ? (
-            <Link to={`${fieldLink}/${field.name}`}>{field.label}</Link>
-          ) : field.label
+            <Link to={`${fieldLink}/${field.name}`}>{field.title}</Link>
+          ) : field.title
         }
         </th>
       ))}

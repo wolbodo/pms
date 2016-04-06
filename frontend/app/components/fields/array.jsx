@@ -7,13 +7,13 @@ import { Chip } from 'components';
 export default class Array extends React.Component {
   static propTypes = {
     name: PropTypes.string,
-    label: PropTypes.string,
+    title: PropTypes.string,
     value: PropTypes.array,
     disabled: PropTypes.bool,
     onBlur: PropTypes.func.isRequired
   };
   static defaultProps = {
-    label: 'Array'
+    title: 'Array'
   };
 
   onChange(index) {
@@ -46,7 +46,7 @@ export default class Array extends React.Component {
   }
 
   render() {
-    const { name, label, value } = this.props;
+    const { name, title, value } = this.props;
 
     // Shows an array of strings for now.
     return (
@@ -76,7 +76,7 @@ export default class Array extends React.Component {
             && this.deleteValue()
           }
         />
-        </div> <label className="chip-list--label" htmlFor={`chiplist-${name}`}>{label}</label>
+        </div> <label className="chip-list--label" htmlFor={`chiplist-${name}`}>{title}</label>
       </div>
     );
   }

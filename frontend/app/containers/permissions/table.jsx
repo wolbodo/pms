@@ -72,7 +72,7 @@ class PermissionsDialog extends React.Component {
               Voor de personen in
               <span className="group">"{group.name}"</span>
               op het veld
-              <span className="field">"{field.label}"</span>
+              <span className="field">"{field.title}"</span>
             </p>
             <div className="switches">
               <div>
@@ -183,7 +183,7 @@ export default class PermissionsView extends React.Component {
         <tr key={`${key}-${i}`}>
           <th>
             <Link to={`/velden/${field.name}`}>
-              {field.label}
+              {field.title}
             </Link>
           </th>
           {_.map(groups.items, (group, j) =>

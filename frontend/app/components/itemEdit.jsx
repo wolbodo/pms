@@ -39,19 +39,18 @@ export default class ItemEdit extends React.Component {
       (group) => ({
         title: group.title,
         fields: mapFilter(
-          group.properties,
+          group.fields,
           (fieldset) => mapFilter(
             fieldset,
             (field) => (
               // Readable and nonempty          // writable
-              (_.includes(permissions.read, field) && !_.isEmpty(item[field]))
-                || _.includes(permissions.write, field)
+              (_.includes(permissions.view, field) && !_.isEmpty(item[field]))
+                || _.includes(permissions.edit, field)
             ) && {
               // Then add the field, with all info zipped into an object.
               schema: schema.properties[field],
               value: item[field],
-              readable: _.includes(permissions.read, field),
-              writable: _.includes(permissions.write, field)
+              writable: _.includes(permissions.edit, field)
             },
             (field) => !!field
           ),
@@ -69,7 +68,7 @@ export default class ItemEdit extends React.Component {
             {group.title}
           </mdl.CardTitle>
           <div className="mdl-card__form">
-          {_.map(group.properties, (fieldset, key) => (
+          {_.map(group.fields, (fieldset, key) => (
             <div key={key} className="mdl-card__formset">
             {_.map(fieldset, (field, _key) => (
               <Field

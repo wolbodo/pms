@@ -4,24 +4,24 @@ import * as mdl from 'react-mdl';
 
 export default class Boolean extends React.Component {
   static propTypes = {
-    label: PropTypes.string,
+    title: PropTypes.string,
     value: PropTypes.array,
     disabled: PropTypes.bool,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
   static defaultProps = {
-    label: 'Boolean'
+    title: 'Boolean'
   };
 
   render() {
-    const { label, value, disabled,
+    const { title, value, disabled,
         onChange, onBlur } = this.props;
 
     return (
       <mdl.Checkbox
         checked={!!value || false}
-        label={label}
+        label={title}
         disabled={disabled}
         onBlur={(event) => onBlur(event.target.checked)}
         onChange={(event) => onChange(event.target.checked)}

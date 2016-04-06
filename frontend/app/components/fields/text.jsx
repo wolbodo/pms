@@ -6,26 +6,26 @@ export default class Text extends React.Component {
 
   static propTypes = {
     name: PropTypes.string,
-    label: PropTypes.string,
+    title: PropTypes.string,
     value: PropTypes.string,
     disabled: PropTypes.bool,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
   static defaultProps = {
-    label: 'Date'
+    title: 'Text'
   };
 
   render() {
-    const { name, label, value, disabled,
+    const { name, title, value, disabled,
         onChange, onBlur } = this.props;
 
     return (
       <div className="textfield">
-        <div className="auto-size">{value || label}</div>
+        <div className="auto-size">{value || title}</div>
         <mdl.Textfield
           className={[`field-${name}`, (value !== undefined) ? 'is-dirty' : ''].join(' ')}
-          label={label}
+          label={title}
           name={name}
           value={value}
           disabled={disabled}

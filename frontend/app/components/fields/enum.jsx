@@ -4,13 +4,13 @@ import React, { PropTypes } from 'react';
 import { SelectField } from 'material-ui';
 import MenuItem from 'material-ui/lib/menus/menu-item';
 
-export default function Enum({ label, value, disabled, options, onBlur }) {
+export default function Enum({ title, value, disabled, options, onBlur }) {
   const style = {};
 
   return (
     <SelectField
       className="selectfield"
-      floatingLabelText={ label }
+      floatingLabelText={ title }
       value={value}
       style={style}
       onChange={(ev, i, option) => onBlur(option)}
@@ -28,7 +28,7 @@ export default function Enum({ label, value, disabled, options, onBlur }) {
   );
 }
 Enum.propTypes = {
-  label: PropTypes.string,
+  title: PropTypes.string,
   value: PropTypes.string,
   options: PropTypes.object.isRequired,
   disabled: PropTypes.bool,
