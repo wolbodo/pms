@@ -3,12 +3,12 @@ import {
     LOCATION_CHANGE
 } from 'react-router-redux';
 
-let initialState = Immutable.fromJS({
-    locationBeforeTransitions: null
+const initialState = Immutable.fromJS({
+  locationBeforeTransitions: null
 });
 
 
-export default (state=initialState, action) => {
+export default (state = initialState, action) => {
   if (action.type === LOCATION_CHANGE) {
     return state.merge({
       locationBeforeTransitions: action.payload
@@ -16,4 +16,4 @@ export default (state=initialState, action) => {
   }
 
   return state;
-}
+};

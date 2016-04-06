@@ -1,50 +1,66 @@
+import _ from 'lodash';
+import React, { PropTypes } from 'react';
+import * as mdl from 'react-mdl';
 
-import React from 'react'
-import * as mdl from 'react-mdl'
+import { List, Head, Row } from 'components/list';
+import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 
-import {List, Head, Row} from 'components/list'
-import {Link} from 'react-router'
+import * as groupsActions from 'redux/modules/groups';
+import * as fieldsActions from 'redux/modules/fields';
 
-import { connect } from 'react-redux'
-import { push } from 'react-router-redux'
-
-import * as groupActions from 'redux/modules/groups';
-
-@connect(state => ({
-	groups: state.get('groups').toJS(),
-	fields: state.get('fields').toJS()
+@connect((state) => ({
+  groups: state.get('groups').toJS(),
+  fields: state.get('fields').toJS()
 }), {
-	create: groupActions.create,
-	push: push
+  create: groupsActions.create,
+  pushState: push,
+  fieldsFetch: fieldsActions.fetch,
+  groupsFetch: groupsActions.fetch
 })
 export default class GroupView extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+  static propTypes = {
+    groups: PropTypes.object,
+    fields: PropTypes.object,
+    create: PropTypes.func,
+    pushState: PropTypes.func,
+    fieldsFetch: PropTypes.func,
+    groupsFetch: PropTypes.func,
+  }
+  componentDidMount() {
+    this.props.fieldsFetch();
+    this.props.groupsFetch();
+  }
 
-	renderButtons() {
-		let {create} = this.props;
+  renderButtons() {
+    const { create } = this.props;
 
-		return (
-			<mdl.IconButton 
-				name="add"
-				onClick={() => create.create()} />
-		)
-	}
+    return (
+      <mdl.IconButton
+        name="add"
+        onClick={() => create.create()}
+      />
+    );
+  }
 
-	render() {
-		var header_fields = ['name', 'description'];
+  render() {
+    const headerFields = ['name'];
+    // const headerFields = ['name', 'description'];
+    const { groups, fields, pushState } = this.props;
 
-		const {groups, fields, push} = this.props;
-			
-		return (
-			<List title="Groepen" buttons={this.renderButtons()}>
-				<Head schema={fields.schemas.group} fields={header_fields} editLink/>
-				{_.map(groups.items, (row, i) => (
-					<Row className='click' key={i} item={row} fields={header_fields} 
-						edit={ () => push(`groepen/${i}`) } />
-				))}
-			</List>
-		);
-	}
+    return (
+      <List title="Groepen" buttons={this.renderButtons()}>
+        <Head schema={fields.items.roles} fields={headerFields} editLink />
+        {_.map(groups.items, (row, i) => (
+          <Row
+            className="click"
+            key={i}
+            item={row}
+            fields={headerFields}
+            edit={ () => pushState(`groepen/${i}`) }
+          />
+        ))}
+      </List>
+    );
+  }
 }

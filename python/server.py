@@ -12,7 +12,7 @@ import json
 
 DSN = 'dbname=pms user=pms'
 HOSTNAME = 'localhost'
-PORT = 8080
+PORT = 4242
 
 pool = None
 
@@ -99,7 +99,7 @@ class FieldsHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+                self.write(row[0])
             finally:
                 cur.close()
 
@@ -118,7 +118,7 @@ class RolesHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+                self.write(row[0])
             finally:
                 cur.close()
 
@@ -155,7 +155,8 @@ class PeopleHandler(DatabaseHandler):
                 })
                 row = yield from cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
-                self.write(json.dumps(row[0]))  # Normally tornado transforms objects into JSON, except for lists.
+
+                self.write(row[0])
             finally:
                 cur.close()
 
@@ -188,7 +189,7 @@ class PeopleHandler(DatabaseHandler):
                     'body': self.request.body.decode('utf-8')
                 })
                 row = yield from cur.fetchone()
-                self.write(row[0])  # Normally tornado transforms objects into JSON, except for lists.
+                self.write(row[0])
             finally:
                 cur.close()
 

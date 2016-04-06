@@ -1,30 +1,41 @@
-import _ from 'lodash'
-import fetch from 'isomorphic-fetch'
+import _ from 'lodash';
+import fetch from 'isomorphic-fetch';
 
-export default function API({uri, options={}, types, ...rest}) {
-  const headers = options.headers || new Headers();
+export function API(token, uri, options = {}) {
+  const { headers = new Headers() } = options;
+  let {
+    method,
+    body,
+    ...rest
+  } = options;
 
-  if (_.has(options, 'body')) {
-    options.body = JSON.stringify(options.body);
-    headers.set('Content-Type', 'application/json');
-    options.method = _.get(options, 'method', 'POST');
+  if (token) {
+    headers.set('Authorization', token);
   }
 
+  if (!_.isEmpty(body)) {
+    body = JSON.stringify(body);
+    headers.set('Content-Type', 'application/json');
+    method = method || 'POST';
+  }
+
+  return fetch(`/api/${uri}`, {
+    method: method || 'GET',
+    headers,
+    body,
+    ...rest
+  });
+}
+
+export function apiAction({ uri, options = {}, types, ...rest }) {
   return (dispatch, getState) => {
-    const token = getState().getIn(['auth', 'token'])
-    if (token) {
-      headers.set('Authorization', token)
-    }
+    const token = getState().getIn(['auth', 'token']);
 
     dispatch({
       types,
       uri,
       ...rest,
-      promise: fetch(`/api/${uri}`, {
-        ...options,
-        headers: headers
-      })
-    })
-
-  }
+      promise: API(token, uri, options)
+    });
+  };
 }

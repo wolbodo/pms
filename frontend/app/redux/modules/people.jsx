@@ -1,145 +1,183 @@
-import _ from 'lodash'
-import _fetch from 'isomorphic-fetch'
-import {fromJS, Map, List} from 'immutable'
+import _ from 'lodash';
+import { fromJS, Map } from 'immutable';
 
-import API from 'redux/apiWrapper'
+import { apiAction, API } from 'redux/apiWrapper';
+import { CLEAR } from './clearState';
+
+import { push } from 'react-router-redux';
 
 const initialState = fromJS({
   items: {},
   updates: {},
-  dirty: false
+  fetching: false,
+  pushing: false
 });
 
-const FETCH_START = 'pms/people/FETCH_START';
+const FETCH = 'pms/people/FETCH';
 const FETCH_SUCCESS = 'pms/people/FETCH_SUCCESS';
 const FETCH_FAIL = 'pms/people/FETCH_FAIL';
 
-const UPDATE_START = 'pms/people/UPDATE_START';
-const UPDATE_SUCCESS = 'pms/people/UPDATE_SUCCESS';
-const UPDATE_FAIL = 'pms/people/UPDATE_FAIL';
+const PUSH = 'pms/people/PUSH';
+const PUSH_SUCCESS = 'pms/people/PUSH_SUCCESS';
+const PUSH_FAIL = 'pms/people/PUSH_FAIL';
 
-const CREATE_START = 'pms/people/CREATE_START';
-const CREATE_SUCCESS = 'pms/people/CREATE_SUCCESS';
-const CREATE_FAIL = 'pms/people/CREATE_FAIL';
-
-const LOCAL_UPDATE = 'pms/people/LOCAL_UPDATE'
-const LOCAL_REVERT = 'pms/people/LOCAL_REVERT';
-const LOCAL_CREATE = 'pms/people/LOCAL_CREATE';
+const UPDATE = 'pms/people/UPDATE';
+const REVERT = 'pms/people/REVERT';
+const CREATE = 'pms/people/CREATE';
 
 const COMMIT_FINISHED = 'pms/people/COMMIT_FINISHED';
 
 export function fetch() {
-  return API({
-    types: [FETCH_START, FETCH_SUCCESS, FETCH_FAIL],
+  return apiAction({
+    types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
     uri: 'people'
   });
 }
 
 export function update(id, value, key) {
   return {
-    type: LOCAL_UPDATE,
+    type: UPDATE,
     data: {
-      id: id.toString(), 
+      id: id.toString(),
       value, key
     }
-  }
+  };
 }
 
 export function create() {
-  return dispatch => {
-    let id = Date.now()
+  return (dispatch) => {
+    const id = Date.now();
     dispatch({
-      type: LOCAL_CREATE,
+      type: CREATE,
       data: {
         id: id.toString()
       }
-    })
-    dispatch(push(`/lid-${id}`))
-  }
+    });
+    dispatch(push(`/lid-${id}`));
+  };
 }
 
 export function revert() {
   return {
-    type: LOCAL_REVERT
-  }
+    type: REVERT
+  };
 }
 
 export function commit() {
   return (dispatch, getState) => {
-    let people = getState().get('people')
+    const token = getState().getIn(['auth', 'token']);
+
+    function post(body) {
+      // creates new person.
+      // TODO: Check for double post...
+      return {
+        types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
+        uri: 'people',
+        promise:
+          // Create new person in api.
+          API(token, 'people', {
+            body
+          })
+      };
+    }
+
+    function put(id, data) {
+      // Updates a person with data.
+      // Fetches
+      return {
+        types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
+        uri: `person/${id}`, // For debugging
+        promise:
+          // fetch the person first, to see whether it has changed.
+          API(token, `person/${id}`)
+          // Check whether it has been modified
+          .then((result) => {
+            if (result.status === 304) {
+              // Good
+            }
+            // Should create trigger conflicts.
+            // throw new Error('Fail')))
+
+            return API(token, `person/${id}`, {
+              method: 'PUT',
+              body: data
+            });
+          })
+      };
+    }
+
+    const people = getState().get('people');
     // Save all updates
     people.get('updates')
-          .map((person, i) => 
-              // Add or update person, whether gid exists.
-              people.hasIn(['items', i, 'gid'])
-               ? dispatch(API({
-                  types: [UPDATE_START, UPDATE_SUCCESS, UPDATE_FAIL],
-                  uri: `person/${i}`,
-                  options: {
-                    method: 'PUT',
-                    body: person
-                  }
-                }))
-               : dispatch(API({
-                  types: [CREATE_START, CREATE_SUCCESS, CREATE_FAIL],
-                  uri: 'people',
-                  options: {
-                    body: person
-                  }
-                }))
-          );
+          .map((person, i) => (
+            // Add or update person, whether gid exists.
+            people.hasIn(['items', i])
+              // Existing person
+            ? dispatch(put(i, person))
+            // New person
+            : dispatch(post(person))
+          ));
 
     // Clear updates locally
     // FIXME: Clear when all commits were successfull.
     dispatch({
       type: COMMIT_FINISHED
     });
-
-
-  }
+  };
 }
 
 const reducers = {
-  [FETCH_START]: people => people,
-  [FETCH_SUCCESS]: (people, {data}) =>
-    people.merge({
-      items: fromJS(data)
-              .reduce((lookup, item) => 
-                lookup.set(item.get('id').toString(), item),
-                Map()
-              )
+  [FETCH]: (people) =>
+    people.merge({ fetching: true }),
+
+  [FETCH_SUCCESS]: (people, { data }) =>
+    // Create an indexed object with key = Object id
+    people.mergeDeep({
+      fetching: false,
+      loaded: true, // Only set initially, So the ui know it has data.
+      items: data
     }),
-  [FETCH_FAIL]: people => people,
 
-  [CREATE_SUCCESS]: (people, {data}) =>
-    people.updateIn(['items', data.id.toString()], 
-                    person => (person || Map()).merge(data)),
-  [CREATE_START]: people => people,
-  [CREATE_FAIL]: people => people,
+  [FETCH_FAIL]: (people, { error }) =>
+    people.merge({ fetching: false, error }),
 
-  [UPDATE_SUCCESS]: (people, {data}) =>
-    people.updateIn(['items', data.id.toString()], 
-                    person => (person || Map()).merge(data)),
-  [UPDATE_START]: people => people,
-  [UPDATE_FAIL]: people => people,
 
-  [COMMIT_FINISHED]: people =>
+  [PUSH]: (people) =>
+    people.merge({ pushing: true }),
+
+  [PUSH_SUCCESS]: (people, { data }) =>
+    people.mergeDeep({
+      pushing: false,
+      items: {
+        [data.id]: data
+      }
+    }),
+
+  [PUSH_FAIL]: (people, { error }) =>
+    people.merge({
+      pushing: false,
+      error
+    }),
+
+  [COMMIT_FINISHED]: (people) =>
     people.set('updates', Map()),
 
-  [LOCAL_REVERT]: people =>
+  [REVERT]: (people) =>
     people.set('updates', Map()),
-    
-  [LOCAL_UPDATE]: (people, {data}) => {
-    return people.updateIn(['updates', data.id, data.key], () => data.value)
-  },
 
-  [LOCAL_CREATE]: (people, {data}) =>
-    people.update('updates', updates => updates.merge({[data.id]: {}}))
-}
+  [UPDATE]: (people, { data }) =>
+    people.updateIn(['updates', data.id, data.key], () => data.value),
 
-export default (state=initialState, action) => 
+  [CREATE]: (people, { data }) =>
+    people.update('updates', (updates) =>
+      updates.merge({ [data.id]: {} })),
+
+  [CLEAR]: () => initialState
+};
+
+export default (state = initialState, action) =>
   _.get(
-    reducers, 
+    reducers,
     action.type,   // Get type reducer
-    state => state // Default passtrough
-  )(state, action)
+    (_state) => _state // Default passtrough
+  )(state, action);

@@ -139,6 +139,7 @@ CREATE EXTENSION pgcrypto;
 ```
 sudo -u pms psql -f database/create.sql
 sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | sudo -u pms psql
+sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | psql -U pms
 ```
 
 # Backup Cycle

@@ -122,27 +122,27 @@
       "fields": {
         "nickname": {
           "type": "string",
-          "label": "Bijnaam",
+          "title": "Bijnaam",
           "name": "nickname"
         },
         "firstname": {
           "type": "string",
-          "label": "Voornaam",
+          "title": "Voornaam",
           "name": "firstname"
         },
         "infix": {
           "type": "string",
-          "label": "Tussenvoegsel",
+          "title": "Tussenvoegsel",
           "name": "infix"
         },
         "lastname": {
           "type": "string",
-          "label": "Achternaam",
+          "title": "Achternaam",
           "name": "lastname"
         },
         "gender": {
           "type": "enum",
-          "label": "Geslacht",
+          "title": "Geslacht",
           "name": "gender",
           "options": {
             "male": "Man",
@@ -154,137 +154,137 @@
         "birthdate": {
           "type": "date",
           "name": "birthdate",
-          "label": "Geboortedatum"
+          "title": "Geboortedatum"
         },
         "deathdate": {
           "type": "date",
           "name": "deathdate",
-          "label": "Sterfdatum"
+          "title": "Sterfdatum"
         },
         "street": {
           "type": "string",
           "name": "street",
-          "label": "Straat"
+          "title": "Straat"
         },
         "housenumber": {
           "type": "string",
           "name": "housenumber",
-          "label": "Huisnummer"
+          "title": "Huisnummer"
         },
         "zipcode": {
           "type": "string",
           "name": "zipcode",
-          "label": "Postcode"
+          "title": "Postcode"
         },
         "city": {
           "type": "string",
           "name": "city",
-          "label": "Woonplaats"
+          "title": "Woonplaats"
         },
         "country": {
           "type": "string",
           "name": "country",
-          "label": "Land"
+          "title": "Land"
         },
         "iban": {
           "type": "string",
           "name": "iban",
-          "label": "IBAN"
+          "title": "IBAN"
         },
         "directdebit": {
           "type": "array",
           "name": "directdebit",
-          "label": "Overboeking"
+          "title": "Overboeking"
         },
         "email": {
           "type": "string",
           "name": "email",
-          "label": "Email"
+          "title": "Email"
         },
         "mobile": {
           "type": "string",
           "name": "mobile",
-          "label": "Mobiel"
+          "title": "Mobiel"
         },
         "phone": {
           "type": "string",
           "name": "phone",
-          "label": "Telefoon"
+          "title": "Telefoon"
         },
         "emergencyinfo": {
           "type": "string",
           "name": "emergencyinfo",
-          "label": "Noodgeval info"
+          "title": "Noodgeval info"
         },
         "membertype": {
           "type": "string",
           "name": "membertype",
-          "label": "Lid type"
+          "title": "Lid type"
         },
         "membersince": {
           "type": "string",
           "name": "membersince",
-          "label": "Lid sinds"
+          "title": "Lid sinds"
         },
         "membertill": {
           "type": "string",
           "name": "membertill",
-          "label": "Lid tot"
+          "title": "Lid tot"
         },
         "functions": {
           "type": "array",
           "name": "functions",
-          "label": "Functies"
+          "title": "Functies"
         },
         "notes": {
           "type": "string",
           "name": "notes",
-          "label": "Opmerkingen"
+          "title": "Opmerkingen"
         },
         "wantscontact": {
           "type": "string",
           "name": "wantscontact",
-          "label": "Wil contact"
+          "title": "Wil contact"
         },
         "keycode": {
           "type": "string",
           "name": "keycode",
-          "label": "KeyCode"
+          "title": "KeyCode"
         },
         "coasters": {
           "type": "boolean",
           "name": "coasters",
-          "label": "Viltjes"
+          "title": "Viltjes"
         },
         "cashregister": {
           "type": "boolean",
           "name": "cashregister",
-          "label": "Kassasysteem"
+          "title": "Kassasysteem"
         },
         "frontdoor": {
           "type": "boolean",
           "name": "frontdoor",
-          "label": "Voordeur"
+          "title": "Voordeur"
         },
         "isadmin": {
           "type": "boolean",
           "name": "isadmin",
-          "label": "Admin"
+          "title": "Admin"
         },
         "passwordhash": {
           "type": "string",
           "name": "passwordhash",
-          "label": "Wachtwoord"
+          "title": "Wachtwoord"
         },
         "modified": {
           "type": "string",
           "name": "modified",
-          "label": "Gewijzigd"
+          "title": "Gewijzigd"
         },
         "created": {
           "type": "string",
           "name": "created",
-          "label": "Aangemaakt"
+          "title": "Aangemaakt"
         }
       }
     },
@@ -296,7 +296,7 @@
           "title": "Veld",
           "fields": [
             ["name"],
-            ["label"],
+            ["title"],
             ["type"]
           ]
         }
@@ -304,18 +304,18 @@
       "fields": {
         "name": {
           "name": "name",
-          "label": "Naam",
+          "title": "Naam",
           "type": "string",
           "readonly": true
         },
-        "label": {
-          "name": "label",
-          "label": "Label",
+        "title": {
+          "name": "title",
+          "title": "Label",
           "type": "string"
         },
         "type": {
           "name": "type",
-          "label": "Type",
+          "title": "Type",
           "type": "option",
           "options": {
             "string": "Tekst",
@@ -344,12 +344,12 @@
         "name": {
           "name": "name",
           "type": "string",
-          "label": "Naam"
+          "title": "Naam"
         },
         "description": {
           "name": "description",
           "type": "string",
-          "label": "Omschrijving"
+          "title": "Omschrijving"
         }
       }
     }

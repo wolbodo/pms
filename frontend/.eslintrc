@@ -1,4 +1,4 @@
-{
+{ "extends": "eslint-config-airbnb",
   "ecmaFeatures": {
     "jsx": true,
     "modules": true
@@ -9,19 +9,38 @@
   },
   "parser": "babel-eslint",
   "rules": {
+    "new-cap": 0,
     "quotes": [2, "single"],
     "strict": [2, "never"],
     "babel/generator-star-spacing": 1,
-    "babel/new-cap": 1,
+    "babel/new-cap": 0,
     "babel/object-shorthand": 1,
     "babel/arrow-parens": 1,
     "babel/no-await-in-loop": 1,
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
-    "react/react-in-jsx-scope": 2
+    "react/react-in-jsx-scope": 2,
+    "react/no-multi-comp": 0,
+    "import/default": 0,
+    "import/no-duplicates": 0,
+    "import/named": 0,
+    "import/namespace": 0,
+    "import/no-unresolved": 0,
+    "import/no-named-as-default": 2,
+    "comma-dangle": 0,  // not sure why airbnb turned this on. gross!
+    "indent": [2, 2, {"SwitchCase": 1}],
+    "no-console": 0,
+    "no-alert": 0,
+    "id-length": [2, {"min": 2, "properties": "never", "exceptions": ["x", "i", "j", "_"]}]
   },
   "plugins": [
     "babel",
-    "react"
-  ]
+    "react", "import"
+  ],
+  "settings": {
+    "import/parser": "babel-eslint",
+    "import/resolve": {
+      moduleDirectory: ["node_modules", "app"]
+    }
+  }
 }
