@@ -78,9 +78,9 @@ Install rust (we will later drop the nightly channel).
 curl -sSf https://static.rust-lang.org/rustup.sh | sh -s -- --channel=nightly
 ```
 
-Install libssl-dev or openssl-dev (for what again?)
+Install libssl-dev or openssl-dev and for linking some libraries, watch out with purging these 'unused' packages.
 ```
-sudo apt-get install -y libssl-dev
+sudo apt-get install -y gcc-multilib libssl-dev
 ```
 
 Install some extra dependencies for postgres_macros (sql! macro that syntax checks the SQL at build). Readline is definitly needed, bison and flex are optional.

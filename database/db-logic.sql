@@ -296,7 +296,7 @@ BEGIN
     IF people_id = -1 THEN
         RETURN people;
     ELSE
-        RETURN people->0;
+        RETURN people->people_id::TEXT;
     END IF;
 END;
 $function$;
@@ -424,7 +424,7 @@ BEGIN
     IF _roles_id = -1 THEN
         RETURN roles;
     ELSE
-        RETURN roles->0;
+        RETURN roles->_roles_id::TEXT;
     END IF;
 END;
 $function$;
@@ -476,7 +476,7 @@ BEGIN
     IF _ref_table IS NULL THEN
         RETURN fields;
     ELSE
-        RETURN fields->0;
+        RETURN fields->_ref_table;
     END IF;
 END;
 $function$;
