@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { push } from 'react-router-redux';
 import Immutable from 'immutable';
 
-import API from 'redux/apiWrapper';
+import { apiAction } from 'redux/apiWrapper';
 import { CLEAR } from './clearState';
 
 const FETCH = 'pms/groups/FETCH';
@@ -24,7 +24,7 @@ const initialState = Immutable.fromJS({
 });
 
 export function fetch() {
-  return API({
+  return apiAction({
     types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
     uri: 'roles'
   });

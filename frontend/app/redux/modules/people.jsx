@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { fromJS, Map } from 'immutable';
 
-import API from 'redux/apiWrapper';
+import { apiAction, API } from 'redux/apiWrapper';
 import { CLEAR } from './clearState';
 
 import { push } from 'react-router-redux';
@@ -28,7 +28,7 @@ const CREATE = 'pms/people/CREATE';
 const COMMIT_FINISHED = 'pms/people/COMMIT_FINISHED';
 
 export function fetch() {
-  return API({
+  return apiAction({
     types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
     uri: 'people'
   });
@@ -65,6 +65,47 @@ export function revert() {
 
 export function commit() {
   return (dispatch, getState) => {
+    const token = getState().getIn(['auth', 'token']);
+
+    function post(body) {
+      // creates new person.
+      // TODO: Check for double post...
+      return {
+        types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
+        uri: 'people',
+        promise:
+          // Create new person in api.
+          API(token, 'people', {
+            body
+          })
+      };
+    }
+
+    function put(id, data) {
+      // Updates a person with data.
+      // Fetches
+      return {
+        types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
+        uri: `person/${id}`, // For debugging
+        promise:
+          // fetch the person first, to see whether it has changed.
+          API(token, `person/${id}`)
+          // Check whether it has been modified
+          .then((result) => {
+            if (result.status === 304) {
+              // Good
+            }
+            // Should create trigger conflicts.
+            // throw new Error('Fail')))
+
+            return API(token, `person/${id}`, {
+              method: 'PUT',
+              body: data
+            });
+          })
+      };
+    }
+
     const people = getState().get('people');
     // Save all updates
     people.get('updates')
@@ -72,22 +113,9 @@ export function commit() {
             // Add or update person, whether gid exists.
             people.hasIn(['items', i])
               // Existing person
-            ? dispatch(API({
-              types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
-              uri: `person/${i}`,
-              options: {
-                method: 'PUT',
-                body: person
-              }
-            }))
+            ? dispatch(put(i, person))
             // New person
-            : dispatch(API({
-              types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
-              uri: 'people',
-              options: {
-                body: person
-              }
-            }))
+            : dispatch(post(person))
           ));
 
     // Clear updates locally

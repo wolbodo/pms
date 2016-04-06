@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Immutable from 'immutable';
 import { CLEAR } from './clearState';
-import API from 'redux/apiWrapper';
+import { apiAction } from 'redux/apiWrapper';
 
 const initialState = Immutable.Map();
 
@@ -23,7 +23,7 @@ const FETCH_FAIL = 'pms/fields/FETCH_FAIL';
 // const CREATE = 'pms/fields/CREATE';
 
 export function fetch() {
-  return API({
+  return apiAction({
     types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
     uri: 'fields'
   });

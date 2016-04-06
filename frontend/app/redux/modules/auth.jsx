@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Immutable from 'immutable';
 
-import API from 'redux/apiWrapper';
+import { apiAction } from 'redux/apiWrapper';
 
 import { CLEAR } from './clearState';
 
@@ -16,7 +16,7 @@ const FAIL = 'pms/auth/LOGIN_FAIL';
 const LOGOUT = 'pms/auth/LOGOUT';
 
 export function login(username, password) {
-  return API({
+  return apiAction({
     types: [START, SUCCESS, FAIL],
     uri: 'login',
     options: {
