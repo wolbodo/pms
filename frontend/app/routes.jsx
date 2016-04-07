@@ -33,7 +33,6 @@ function fetchResources(store, ...resources) {
     if (state.hasIn(['auth', 'token'])) {
       // User is logged in
 
-      // TODO: Fetch correct resources
       _.each(resources, (resource) => {
         if (_.has(actions, resource)) {
           if (!state.getIn([resource, 'loaded']) || state.getIn([resource, 'fetching'])) {

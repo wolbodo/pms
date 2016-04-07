@@ -38,10 +38,10 @@ List.propTypes = {
   buttons: PropTypes.object,
 };
 
-export function Head({ schema, fields, fieldLink }) {
+export function Head({ schema, fieldLink }) {
   return (
     <tr>
-      {fields
+      {schema.header
         .map((fieldname) => schema.properties[fieldname]) // get fields from the fieldname
         .map((field) => (
         <th key={field.id} className="mdl-data-table__cell--non-numeric">
@@ -57,7 +57,6 @@ export function Head({ schema, fields, fieldLink }) {
 }
 Head.propTypes = {
   schema: PropTypes.object,
-  fields: PropTypes.array,
   fieldLink: PropTypes.string,
 };
 

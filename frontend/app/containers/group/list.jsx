@@ -18,7 +18,7 @@ import * as fieldsActions from 'redux/modules/fields';
   fieldsFetch: fieldsActions.fetch,
   groupsFetch: groupsActions.fetch
 })
-export default class GroupView extends React.Component {
+export default class GroupList extends React.Component {
   static propTypes = {
     groups: PropTypes.object,
     fields: PropTypes.object,

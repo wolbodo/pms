@@ -71,6 +71,17 @@ Build production frontend
 npm run build
 ```
 
+# (optional) python 3.5 backend
+
+Install python 3.5
+```sudo apt-get install python-3.5 python-3.5-dev```
+
+Create virtual env
+```mkvirtualenv -p /usr/bin/python3.5 pms```
+
+```pip install aiopg requests tornado```
+
+
 # Backend
 
 Install rust (we will later drop the nightly channel).

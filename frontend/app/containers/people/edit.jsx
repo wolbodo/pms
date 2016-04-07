@@ -9,6 +9,10 @@ import * as peopleActions from 'redux/modules/people';
 function PersonEdit({ params, people, fields, auth, update }) {
   const personId = params.id || auth.user.user;
 
+  const permissions = (parseInt(personId, 10) === auth.user.user)
+    ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
+    : auth.permissions.people;
+
   // Find peson
   const item = _.assign(
     _.get(people, ['items', personId], {}),
@@ -19,7 +23,7 @@ function PersonEdit({ params, people, fields, auth, update }) {
     <ItemEdit
       schema={fields.items.people}
       item={item}
-      permissions={auth.permissions.people}
+      permissions={permissions}
       onChange={(value, key) => update(personId, value, key) }
     />
   );

@@ -11,8 +11,8 @@ function FieldsEdit({ params, fields, auth, updateField }) {
   return (
     <ItemEdit
       schema={fields.items.fields}
-      permmissions={auth.permissions.fields}
-      item={fields.items.person.fields[params.veld]}
+      permissions={auth.permissions.fields}
+      item={fields.items.fields[params.veld]}
       onChange={(value, key) => updateField('person', params.veld, { [key]: value }) }
     />
   );
