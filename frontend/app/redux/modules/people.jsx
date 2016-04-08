@@ -141,7 +141,6 @@ const reducers = {
   [FETCH_FAIL]: (people, { error }) =>
     people.merge({ fetching: false, error }),
 
-
   [PUSH]: (people) =>
     people.merge({ pushing: true }),
 

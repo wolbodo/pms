@@ -40,17 +40,6 @@ export default class App extends React.Component {
     fieldsFetch: PropTypes.func,
   }
 
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      currentPage: 0
-    };
-
-    this.handleTab = this.handleTab.bind(this);
-    this.setPage = this.setPage.bind(this);
-  }
-
   componentWillReceiveProps(nextProps) {
     const { auth,
       pushState, peopleFetch, groupsFetch, fieldsFetch } = this.props;
@@ -66,19 +55,6 @@ export default class App extends React.Component {
       // logout
       pushState('/login');
     }
-  }
-
-  setPage(page) {
-    return () =>
-      this.setState({
-        currentPage: page
-      });
-  }
-
-  handleTab(tab) {
-    this.setState({
-      activeTab: tab
-    });
   }
 
   render() {

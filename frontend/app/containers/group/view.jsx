@@ -2,16 +2,18 @@ import _ from 'lodash';
 import React, { PropTypes } from 'react';
 import * as mdl from 'react-mdl';
 
-import { List, Head, Row } from 'components/list';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
+
+import { Field } from 'components';
 
 import * as groupsActions from 'redux/modules/groups';
 import * as fieldsActions from 'redux/modules/fields';
 
 @connect((state) => ({
+  auth: state.get('auth').toJS(),
   groups: state.get('groups').toJS(),
-  fields: state.get('fields').toJS()
+  fields: state.get('fields').toJS(),
 }), {
   create: groupsActions.create,
   pushState: push,
@@ -20,6 +22,7 @@ import * as fieldsActions from 'redux/modules/fields';
 })
 export default class GroupView extends React.Component {
   static propTypes = {
+    auth: PropTypes.object,
     groups: PropTypes.object,
     fields: PropTypes.object,
     create: PropTypes.func,
@@ -44,22 +47,49 @@ export default class GroupView extends React.Component {
   }
 
   render() {
-    const { groups, fields, pushState } = this.props;
+    const {
+      groups: { items },
+      auth: { permissions },
+      fields } = this.props;
     const schema = _.get(fields, 'items.roles');
 
+    const editFields = ['description'];
+
     return (
-      <List title="Groepen" buttons={this.renderButtons()}>
-        <Head schema={schema} editLink />
-        {_.map(groups.items, (row, i) => (
-          <Row
-            className="click"
-            key={i}
-            item={row}
-            fields={schema.header}
-            edit={ () => pushState(`groepen/${i}`) }
-          />
-        ))}
-      </List>
+      <div className="content">
+      {_.map(items, (group) => (
+        <mdl.Card key={group.id} className="mdl-color--white mdl-shadow--2dp">
+          <mdl.CardTitle>
+            {group.name}
+          </mdl.CardTitle>
+          <div className="fieldset">
+            {_.map(editFields, (field) => (
+              <Field
+                key={field}
+                field={_.get(schema.properties, field)}
+                disabled={!_.includes(permissions.roles.edit, field)}
+                value={group[field]}
+              />
+            ))}
+          </div>
+        </mdl.Card>
+      ))}
+      </div>
     );
+
+    // return (
+    //   <List title="Groepen" buttons={this.renderButtons()}>
+    //     <Head schema={schema} editLink />
+    //     {_.map(groups.items, (row, i) => (
+    //       <Row
+    //         className="click"
+    //         key={i}
+    //         item={row}
+    //         fields={schema.header}
+    //         edit={ () => pushState(`groepen/${i}`) }
+    //       />
+    //     ))}
+    //   </List>
+    // );
   }
 }

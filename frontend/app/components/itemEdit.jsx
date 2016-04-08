@@ -72,7 +72,7 @@ export default class ItemEdit extends React.Component {
           </mdl.CardTitle>
           <div className="mdl-card__form">
           {_.map(group.fields, (fieldset, key) => (
-            <div key={key} className="mdl-card__formset">
+            <div key={key} className="fieldset">
             {_.map(fieldset, (field, _key) => (
               <Field
                 key={_key}
