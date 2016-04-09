@@ -15,9 +15,9 @@ import {
 import * as authActions from 'redux/modules/auth';
 import clearState from 'redux/modules/clearState';
 
-import peopleActions from 'redux/modules/people';
-import groupsActions from 'redux/modules/groups';
-import fieldsActions from 'redux/modules/fields';
+import * as peopleActions from 'redux/modules/people';
+import * as groupsActions from 'redux/modules/groups';
+import * as fieldsActions from 'redux/modules/fields';
 
 
 // Create a mapping for resourcetypes...
@@ -37,7 +37,7 @@ function fetchResources(store, ...resources) {
         if (_.has(actions, resource)) {
           if (!state.getIn([resource, 'loaded']) || state.getIn([resource, 'fetching'])) {
             // fetch resource
-            store.dispatch(actions[resource]());
+            store.dispatch(actions[resource].fetch());
           }
         }
       });

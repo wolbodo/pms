@@ -54,7 +54,8 @@ export default class Field extends React.Component {
       enum: fields.Enum,
       boolean: fields.Boolean,
       array: fields.Array,
-      date: fields.Date
+      date: fields.Date,
+      link: fields.Link,
     }[_.get(field, 'type', 'string')];
     // Default to string
 
