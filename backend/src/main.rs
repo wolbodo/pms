@@ -19,7 +19,7 @@ use iron::{AfterMiddleware};
 use iron::prelude::*;
 use iron::modifiers::Header;
 
-use hyper::header::{Authorization, ContentType};
+use hyper::header::{Authorization, ContentType, ETag, EntityTag, IfNoneMatch};
 use hyper::mime::{Mime, TopLevel, SubLevel};
 
 use router::Router;
@@ -64,13 +64,14 @@ macro_rules! notfound {
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
-    let db = req.db_conn();
     let login = match req.get::<bodyparser::Struct<Login>>() {
         Ok(Some(body)) => body,
         Ok(None) => badrequest!("Please send some body!".to_string()),
         Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
         Err(err) => badrequest!(err.to_string())
     };
+
+    let db = req.db_conn();
     let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
 
     let rows = match stmt.query(&[&login.user, &login.password]) {
@@ -89,26 +90,61 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
 }
 
-fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    // Returns a list of people, might be using filters. 
+fn caching(val: &Value, req: &Request) -> IronResult<Response> {
+    // Fixme: handle some unwrap panics.
+    let gid = match val.find("gid") {
+        Some(value) => value.as_i64().unwrap_or(-1),
+        None => {
+            let mut max = 0;
+            for (_, value) in val.as_object().unwrap().iter() {
+                let gidval = value.find("gid").unwrap().as_i64().unwrap_or(-1);
+                if gidval > max {
+                    max = gidval;
+                }
+            }
+            max
+        }
+    };
+    if gid == -1 {
+        return Ok(Response::with((status::Ok, serde_json::to_string(&val).unwrap())));
+    }
+    let gidstr = gid.to_string();
+    let tag_header = Header(ETag(EntityTag::new(false, gidstr.to_owned())));
+    let content_changed = match req.headers.get::<IfNoneMatch>() {
+        None => true,
+        Some(&IfNoneMatch::Any) => false,
+        Some(&IfNoneMatch::Items(ref items)) => {
+            let mut changed = true;
+            for etag in items {
+                if etag.tag() == gidstr {
+                    changed = false;
+                    break;
+                }
+            }
+            changed
+        }
+    };
+    if !content_changed {
+        return Ok(Response::with((status::NotModified, tag_header)));
+    }
+    Ok(Response::with((status::Ok, serde_json::to_string(&val).unwrap(), tag_header)))
+}
 
+// Returns a list of people, might be using filters.
+fn handle_people_get(req: &mut Request) -> IronResult<Response> {
     let ref people_id_arg = req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1");
     let people_id = match people_id_arg.parse::<i32>() {
         Ok(value) => value,
         Err(err) => badrequest!(err.to_string())
     };
 
-    let db = req.db_conn();
-
     let token = match req.headers.get::<Authorization<String>>() {
         Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => "".to_string()
+        None => badrequest!("No Authorization header found".to_string())
     };
 
-    println!("Authorization token: {}", token);
-
+    let db = req.db_conn();
     let stmt = db.prepare(sql!("SELECT people_get(token := $1, people_id := $2);")).unwrap();
-
     let rows = match stmt.query(&[&token, &people_id]) {
         Ok(rows) => rows,
         Err(PgError::Db(err)) => badrequest!(err.message),
@@ -119,12 +155,8 @@ fn handle_people_get(req: &mut Request) -> IronResult<Response> {
         Some(value) => value,
         None => notfound!("Id not found (or no read access)".to_string())
     };
-
-    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
-    // // Err(Response::with((status::Ok)));
+    caching(&people, &req)
 }
-
-
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
     // Update an existing person.
@@ -138,10 +170,8 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
             Err(err) => badrequest!(err.to_string())
         };
     }
-
-    let db = req.db_conn();
-
     let token = match req.headers.get::<Authorization<String>>() {
+
         Some(&Authorization(ref token)) => token.clone().to_string(),
         None => "".to_string() 
     };
@@ -153,6 +183,7 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string())
     };
 
+    let db = req.db_conn();
     let stmt = db.prepare(sql!("SELECT people_set(token := $1, people_id := $2, data := $3);")).unwrap();
 
     let rows = match stmt.query(&[&token, &people_id, &data]) {
@@ -168,14 +199,11 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
     };
 
     Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
-    // // Err(Response::with((status::Ok)));
-
+    // Err(Response::with((status::Ok)));
 }
 
 fn handle_people_add(req: &mut Request) -> IronResult<Response> {
     // Create a new person. 
-
-    let db = req.db_conn();
 
     let token = match req.headers.get::<Authorization<String>>() {
         Some(&Authorization(ref token)) => token.clone().to_string(),
@@ -189,6 +217,7 @@ fn handle_people_add(req: &mut Request) -> IronResult<Response> {
         Err(err) => badrequest!(err.to_string())
     };
 
+    let db = req.db_conn();
     let stmt = db.prepare(sql!("SELECT people_add(token := $1, data := $2);")).unwrap();
 
     let rows = match stmt.query(&[&token, &data]) {
@@ -226,8 +255,9 @@ impl AfterMiddleware for JsonResponse {
     }
 }
 
-// `curl -i "localhost:3000/" -H "application/json" -d '{"name":"jason","age":"2"}'`
-// and check out the printed json in your terminal.
+// TOKEN=$(curl http://localhost:4242/login -H "application/json" -d '{"user":"sammy@example.com","password":"1234"}' | jq '.token' -r)
+// curl http://localhost:4242/people -H "Authorization: $TOKEN"  | jq '.'
+
 fn main() {
 
     let router = router!(
