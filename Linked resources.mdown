@@ -1,0 +1,40 @@
+# Exposing linked resources.
+
+
+Let's say we have a table of `roles`, and a table of `people` linked by a table `roles_people`
+
+The resources in people are available trough `/people` and roles as `/roles`
+The linking table is not exposed trough the api, but the data in the links between resources are exposed in `people` as:
+```
+{
+  ...properties,
+  roles: [{
+    $ref: '#/roles/2',
+    comment: "Was erg veel heisa over tijdens instemmings alv -> notulen..."
+  }]
+}
+```
+
+In the `roles` api the link is exposed as:
+```
+{
+  ...properties,
+  people: [{
+    $ref: '#/people/2',
+    created: 'yesterday',
+    comment: "Was erg veel heisa over tijdens instemmings alv -> notulen..."
+  },{
+    $ref: '#/people/3',
+    created: 'yesterday',
+  },{
+    created: 'yesterday',
+    $ref: '#/people/4',
+  },{
+    $ref: '#/people/5',
+    created: 'yesterday',
+  },{
+    $ref: '#/people/6',
+    created: 'yesterday',
+  }]
+}
+```
