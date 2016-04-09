@@ -10,6 +10,7 @@ export default class Array extends React.Component {
     title: PropTypes.string,
     value: PropTypes.array,
     disabled: PropTypes.bool,
+    getOptions: PropTypes.func,
     onBlur: PropTypes.func.isRequired
   };
   static defaultProps = {
@@ -45,6 +46,28 @@ export default class Array extends React.Component {
     onBlur(_.slice(value, 0, -1));
   }
 
+  handleKeyPress(event) {
+    const { getOptions } = this.props;
+
+
+    if (event.key === 'Backspace' && _.isEmpty(event.target.textContent)) {
+      this.deleteValue();
+      this.setState({
+        options: null
+      });
+    }
+
+    if (event.key === 'Enter') {
+      this.addValue(event);
+    }
+
+    if (getOptions) {
+      this.setState({
+        options: getOptions(event.target.textContent + event.key)
+      });
+    }
+  }
+
   render() {
     const { name, title, value } = this.props;
 
@@ -52,6 +75,7 @@ export default class Array extends React.Component {
     return (
       <div className="chip-list" onClick={() => {
       // focus the p element when clicking on the chip-list
+      // Rewite to use refs...
         ReactDOM
           .findDOMNode(this)
           .querySelector(`#chiplist-${name}`)
@@ -70,13 +94,10 @@ export default class Array extends React.Component {
         <p id={`chiplist-${name}`}
           contentEditable="true"
           onBlur={(event) => this.addValue(event)}
-          onKeyPress={(event) => (event.key === 'Enter') && this.addValue(event)}
-          onKeyDown={(event) =>
-            (event.key === 'Backspace' && _.isEmpty(event.target.textContent))
-            && this.deleteValue()
-          }
+          onKeyPress={(event) => this.handleKeyPress(event)}
+          onKeyDown={(event) => this.handleKeyPress(event)}
         />
-        </div> <label className="chip-list--label" htmlFor={`chiplist-${name}`}>{title}</label>
+        </div><label className="chip-list--label" htmlFor={`chiplist-${name}`}>{title}</label>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import Boolean from './boolean';
 import Date from './date';
 import Enum from './enum';
 import Text from './text';
+import Link from './link';
 
 
 export default {
@@ -12,5 +13,6 @@ export default {
   Boolean,
   Date,
   Enum,
-  Text
+  Text,
+  Link,
 };

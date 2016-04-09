@@ -50,12 +50,17 @@ export default class PeopleView extends React.Component {
 
     // Get the current group/role
     const currentGroup = _.find(groups.items, (group) =>
-                                              group.name === (routeParams.group_name || 'member'));
+                                              group.name === routeParams.group_name);
+
+    // filter people
+    const peopleSet = currentGroup
+                    ? _.filter(items, (person) => _.includes(currentGroup.people_ids, person.id))
+                    : items;
 
     // Create a select title ;)
     const title = (
       <fieldComponents.Enum
-        value={currentGroup.name}
+        value={_.get(currentGroup, 'name', 'all')}
         options={_.fromPairs(_.map(groups.items, ({ name }) => [name, name]))}
         style={{
           fontSize: '22px',
@@ -69,16 +74,14 @@ export default class PeopleView extends React.Component {
     return (
       <List title={title}>
         <Head schema={schema} editLink />
-        {_.map(
-          _.filter(items, (person) => _.includes(currentGroup.people_ids, person.id)),
-          (person) => (
-            <Row
-              className="click"
-              key={person.id}
-              item={person}
-              fields={schema.header}
-              edit={() => pushState(`/lid-${person.id}`)}
-            />
+        {_.map(peopleSet, (person) => (
+          <Row
+            className="click"
+            key={person.id}
+            item={person}
+            fields={schema.header}
+            edit={() => pushState(`/lid-${person.id}`)}
+          />
         ))}
       </List>
     );

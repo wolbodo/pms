@@ -13,6 +13,7 @@ import * as fieldsActions from 'redux/modules/fields';
 @connect((state) => ({
   auth: state.get('auth').toJS(),
   groups: state.get('groups').toJS(),
+  people: state.get('people').toJS(),
   fields: state.get('fields').toJS(),
 }), {
   create: groupsActions.create,
@@ -24,6 +25,7 @@ export default class GroupView extends React.Component {
   static propTypes = {
     auth: PropTypes.object,
     groups: PropTypes.object,
+    people: PropTypes.object,
     fields: PropTypes.object,
     create: PropTypes.func,
     pushState: PropTypes.func,
@@ -50,6 +52,7 @@ export default class GroupView extends React.Component {
     const {
       groups: { items },
       auth: { permissions },
+      people,
       fields } = this.props;
     const schema = _.get(fields, 'items.roles');
 
@@ -71,6 +74,24 @@ export default class GroupView extends React.Component {
                 value={group[field]}
               />
             ))}
+          </div>
+          <div className="people">
+            <Field
+              value={_.map(group.people_ids, (id) => _.get(people.items, id))}
+              field={{
+                type: 'link',
+                title: 'Mensen',
+                name: 'people',
+                target: 'people',
+                displayValue: 'nickname',
+                getOptions: (value) =>
+                  _.filter(people.items,
+                    ({ nickname = '' }) =>
+                      _.lowerCase(nickname).match(_.lowerCase(value))),
+                onBlur: (value, key) => console.log('blur', value, key),
+                onChange: (value, key) => console.log('change', value, key)
+              }}
+            />
           </div>
         </mdl.Card>
       ))}
