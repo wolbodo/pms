@@ -227,7 +227,7 @@ export default class PermissionsView extends React.Component {
     const { fields } = this.props;
     return (
       <tbody>
-        { _.map(fields.schemas, (schema, i) => this.renderSchema(schema, i)) }
+        { _.map(fields.items, (schema, i) => this.renderSchema(schema, i)) }
       </tbody>
     );
   }

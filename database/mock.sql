@@ -88,7 +88,7 @@ SELECT people.id, roles.id, -1 FROM
 
 INSERT INTO fields (ref_table, name, data, modified_by)
 VALUES
-    ('people', NULL, '{"required":["email","nickname"],"form":[{"title":"Persoon","fields":[["nickname"],["firstname","infix","lastname"],["gender"],["birthdate","deathdate"]]},{"title":"Adres","fields":[["street","housenumber"],["zipcode","city"],["country"]]},{"title":"Bank","fields":[["iban"],["directdebit"],["email"],["mobile"],["phone"],["emergencyinfo"]]},{"title":"Status","fields":[["membertype"],["membersince","membertill"],["functions"],["notes"],["wantscontact"]]},{"title":"Sleutel","fields":[["keycode"],["coasters"],["cashregister"],["frontdoor"],["isadmin"]]},{"title":"System","fields":[["passwordhash"],["modified"],["created"]]}]}', -1),
+    ('people', NULL, '{"required":["email","nickname"],"header":["nickname","firstname","lastname","city","gender","mobile","email"],"form":[{"title":"Persoon","fields":[["nickname"],["firstname","infix","lastname"],["gender"],["birthdate","deathdate"]]},{"title":"Adres","fields":[["street","housenumber"],["zipcode","city"],["country"]]},{"title":"Bank","fields":[["iban"],["directdebit"],["email"],["mobile"],["phone"],["emergencyinfo"]]},{"title":"Status","fields":[["membertype"],["membersince","membertill"],["functions"],["notes"],["wantscontact"]]},{"title":"Sleutel","fields":[["keycode"],["coasters"],["cashregister"],["frontdoor"],["isadmin"]]},{"title":"System","fields":[["passwordhash"],["modified"],["created"]]}]}', -1),
     ('people','gid', '{}', -1),
     ('people','id', '{}', -1),
 
@@ -132,14 +132,20 @@ VALUES
     ('people','wantscontact','{"type":"boolean","title":"Wil contact"}', -1),
     ('people','zipcode','{"type":"string","title":"Postcode"}', -1),
 
-    ('roles', NULL, '{"name":"Groepen","title":"Wijzig groep","form":[{"title":"Gegevens","fields":[["name"],["description"]]}]}', -1),
+    ('roles', NULL, '{"title":"Wijzig groep","header":["name","description"],"form":[{"title":"Gegevens","fields":[["name"],["description"]]}]}', -1),
     ('roles','name', '{"type":"string","title":"Naam"}', -1),
     ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
     ('roles','gid', '{}', -1),
     ('roles','id', '{}', -1),
     ('roles','people_ids', '{}', -1),
     ('roles','valid_from', '{}', -1),
-    ('roles','valid_till', '{}', -1);
+    ('roles','valid_till', '{}', -1),
+
+    ('fields', NULL, '{"title":"Wijzig veld","form":[{"title":"Veld","fields":[["name"],["title"],["type"]]}]}', -1),
+    ('fields', 'name', '{"name":"name","title":"Naam","type":"string","readonly":true}', -1),
+    ('fields', 'title', '{"name":"title","title":"Label","type":"string"}', -1),
+    ('fields', 'type', '{"name":"type","title":"Type","type":"option","options":{"string":"Tekst","option":"Optie","enum":"Dropdown","date":"Datum","array":"Lijst","boolean":"Booleaan"}}', -1);
+
 
 INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
 SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table IN ('people', 'roles') UNION

@@ -181,6 +181,7 @@ class Field extends React.Component {
     connectDragSource: PropTypes.func.isRequired,
     connectDropTarget: PropTypes.func.isRequired,
     isDragging: PropTypes.bool.isRequired,
+    getFieldURI: PropTypes.func,
 
     field: PropTypes.object,
     isOver: PropTypes.bool,
@@ -208,7 +209,7 @@ class Field extends React.Component {
   render() {
     const {
       isDragging, connectDragSource, connectDropTarget,
-      field, isOver,
+      field, isOver, getFieldURI,
       direction
     } = this.props;
 
@@ -219,7 +220,7 @@ class Field extends React.Component {
         className={classnames('field', isOver && direction)}
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
-        <Link to={`/velden/${field.name}`}>
+        <Link to={getFieldURI(field.name)}>
         {field.title}
         </Link>
       </div>
@@ -233,10 +234,11 @@ class FieldSet extends React.Component {
   // Injected by React DnD:
     connectDropTarget: PropTypes.func.isRequired,
 
-    fields: PropTypes.object,
+    fields: PropTypes.array,
     schema: PropTypes.object,
-    index: PropTypes.object,
+    index: PropTypes.array,
     isOver: PropTypes.bool,
+    getFieldURI: PropTypes.func,
     direction: PropTypes.bool,
 
     addSet: PropTypes.func,
@@ -249,7 +251,8 @@ class FieldSet extends React.Component {
   }
 
   render() {
-    const { isOver, connectDropTarget, index, fields, moveField, addSet, schema } = this.props;
+    const { isOver, connectDropTarget, index, fields,
+      moveField, addSet, schema, getFieldURI } = this.props;
     const { direction } = this.state;
 
     return connectDropTarget(
@@ -257,8 +260,12 @@ class FieldSet extends React.Component {
         { _.map(fields, (field, i) =>
           <Field
             key={i}
+            getFieldURI={getFieldURI}
             index={index.concat(i)}
-            field={schema.properties[field]}
+            field={{
+              name: field,
+              ...schema.properties[field]
+            }}
             moveField={moveField}
             addSet={addSet}
           />
@@ -272,15 +279,16 @@ class FieldSet extends React.Component {
 @dropTarget(ItemTypes.FIELD, groupTarget, targetCollect)
 class Group extends React.Component {
   static propTypes = {
-    connectDragSource: PropTypes.func.isRequired,
+    // connectDragSource: PropTypes.func.isRequired,
+    // isDragging: PropTypes.bool.isRequired,
     connectDropTarget: PropTypes.func.isRequired,
-    isDragging: PropTypes.bool.isRequired,
     isOver: PropTypes.bool,
 
-    fieldsets: PropTypes.object,
+    fieldsets: PropTypes.array,
     schema: PropTypes.object,
     title: PropTypes.string,
-    index: PropTypes.object,
+    index: PropTypes.number,
+    getFieldURI: PropTypes.func,
 
     moveField: PropTypes.func,
     addSet: PropTypes.func,
@@ -303,7 +311,7 @@ class Group extends React.Component {
 
   render() {
     const { isOver, connectDropTarget, title, index,
-      moveField, addSet, schema } = this.props;
+      moveField, addSet, schema, getFieldURI } = this.props;
     const { fieldsets } = this.state;
 
     return connectDropTarget(
@@ -319,6 +327,7 @@ class Group extends React.Component {
             <FieldSet
               fields={fieldset}
               moveField={moveField}
+              getFieldURI={getFieldURI}
               schema={schema}
               addSet={addSet}
               key={i}
@@ -353,27 +362,31 @@ export default class FieldsView extends React.Component {
   moveField(fromIndex, toIndex) {
     const { moveField } = this.props;
 
-    moveField('person', fromIndex, toIndex);
+    moveField('people', fromIndex, toIndex);
   }
 
   addSet(fromIndex, toIndex) {
     const { createSet } = this.props;
 
-    createSet('person', fromIndex, toIndex);
+    createSet('people', fromIndex, toIndex);
   }
 
   render() {
     const { fields } = this.props;
 
+    // TODO: Fix editing multiple tables, for now, just edit people.
+    const table = 'people';
+
     // <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
       <div className="content fieldsview">
-      { _.map(fields.items.people.form, (group, i) =>
+      { _.map(fields.items[table].form, (group, i) =>
         <Group
           key={i}
           index={i}
+          getFieldURI={(name) => `/velden/${name}`}
           moveField={this.moveField}
-          schema={fields.schemas.person}
+          schema={fields.items[table]}
           addSet={this.addSet}
           title={group.title}
           fieldsets={group.fields}

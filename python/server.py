@@ -18,8 +18,6 @@ pool = None
 
 
 def coroutine(func):
-    func = asyncio.coroutine(func)
-
     def decorator(*args, **kwargs):
         future = tornado.concurrent.Future()
 
@@ -33,174 +31,125 @@ def coroutine(func):
     return decorator
 
 
-@asyncio.coroutine
-def aio_requests():
-    def do_req():
-        return requests.get("http://google.com")
-    loop = asyncio.get_event_loop()
-    req = loop.run_in_executor(None, do_req)
-    resp = yield from req
-    print(resp.status_code)
-
-# post "/login" => handle_login,
-
-# get "/people" => handle_people_get,
-# post "/people" => handle_person_add,
-# get "/person/:id" => handle_people_get,
-# put "/person/:id" => handle_person_set,
-
-# get "/fields" => handle_fields,
-# put "/fields" => handle_fields_edit
-
-
 class DatabaseHandler(tornado.web.RequestHandler):
     @coroutine
-    def initialize(self, pool):
+    async def initialize(self, pool):
         self.pool = pool
 
 
+    def write_error(self, status_code, **kwargs):
+        self.set_status(status_code);
+        self.write({
+            'error': str(kwargs['exc_info'][1])
+        })
+        
+
 class LoginHandler(DatabaseHandler):
     @coroutine
-    def post(self):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
+    async def post(self):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
                 # Login
-                yield from cur.execute("SELECT login(emailaddress := %(user)s, password := %(password)s);",
-                                       json.loads(self.request.body.decode('utf-8'))
-                                       )
-                token = yield from cur.fetchone()
+                await cur.execute("SELECT login(emailaddress := %(user)s, password := %(password)s);",
+                                  json.loads(self.request.body.decode('utf-8'))
+                                  )
+                token = await cur.fetchone()
 
                 # Get permissions
-                yield from cur.execute("SELECT (permissions_get(token := %(token)s)).permissions;", {
+                await cur.execute("SELECT (permissions_get(token := %(token)s)).permissions;", {
                     'token': token[0]
                 })
-                permissions = yield from cur.fetchone()
+                permissions = await cur.fetchone()
 
                 self.write({
-                    'token': token[0], 
+                    'token': token[0],
                     'permissions': permissions[0]
                 })
-            finally:
-                cur.close()
-
-        print('done with request')
 
 
 class FieldsHandler(DatabaseHandler):
     @coroutine
-    def get(self, table=None):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT fields_get(token := %(token)s, ref_table := %(table)s);", {
+    async def get(self, table=None):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT fields_get(token := %(token)s, ref_table := %(table)s);", {
                     'token': self.request.headers['Authorization'],
                     'table': table
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
 
 class RolesHandler(DatabaseHandler):
     @coroutine
-    def get(self, roles_id):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT roles_get(token := %(token)s, roles_id := %(roles_id)s);", {
+    async def get(self, roles_id):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT roles_get(token := %(token)s, roles_id := %(roles_id)s);", {
                     'token': self.request.headers['Authorization'],
                     'roles_id': roles_id or -1
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
 
 class PermissionsHandler(DatabaseHandler):
     @coroutine
-    def get(self):
+    async def get(self):
         """Returns the self-permissions for now. Should return all permissions"""
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT (permissions_get(token := %(token)s)).permissions;", {
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT (permissions_get(token := %(token)s)).permissions;", {
                     'token': self.request.headers['Authorization']
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
 
 class PeopleHandler(DatabaseHandler):
     @coroutine
-    def get(self, people_id=-1):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT people_get(token := %(token)s, people_id := %(people_id)s);", {
+    async def get(self, people_id=-1):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT people_get(token := %(token)s, people_id := %(people_id)s);", {
                     'token': self.request.headers['Authorization'],
                     'people_id': people_id
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.set_header('Content-Type', 'application/json')
 
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
     @coroutine
-    def put(self, people_id):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT people_set(token := %(token)s, people_id := %(people_id)s, data := %(body)s);", {
+    async def put(self, people_id):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT people_set(token := %(token)s, people_id := %(people_id)s, data := %(body)s);", {
                     'token': self.request.headers['Authorization'],
                     'people_id': people_id,
                     'body': self.request.body.decode('utf-8')
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
     @coroutine
-    def post(self):
-        with (yield from self.pool) as conn:
-            cur = yield from conn.cursor()
-            try:
-                yield from cur.execute("SELECT people_add(token := %(token)s, data := %(body)s);", {
+    async def post(self):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT people_add(token := %(token)s, data := %(body)s);", {
                     'token': self.request.headers['Authorization'],
                     'body': self.request.body.decode('utf-8')
                 })
-                row = yield from cur.fetchone()
+                row = await cur.fetchone()
                 self.write(row[0])
-            finally:
-                cur.close()
-
-        print('done with request')
 
 
-@asyncio.coroutine
-def init_database(dsn):
+async def init_database(dsn):
     global pool
 
-    pool = yield from aiopg.create_pool(dsn)
+    pool = await aiopg.create_pool(dsn)
 
 
 def start_server(r):
