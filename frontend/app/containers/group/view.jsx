@@ -84,10 +84,7 @@ export default class GroupView extends React.Component {
                 name: 'people',
                 target: 'people',
                 displayValue: 'nickname',
-                getOptions: (value) =>
-                  _.filter(people.items,
-                    ({ nickname = '' }) =>
-                      _.lowerCase(nickname).match(_.lowerCase(value))),
+                options: people.items,
                 onBlur: (value, key) => console.log('blur', value, key),
                 onChange: (value, key) => console.log('change', value, key)
               }}

@@ -28,6 +28,7 @@ function PersonEdit({ params, people, groups, fields, auth, update }) {
         title: 'Groepen',
         target: 'roles',
         displayValue: 'name',
+        options: groups.items,
       }
     }
   });

@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
-import ReactDOM from 'react-dom';
 import _ from 'lodash';
+// import AutoComplete from 'material-ui/lib/auto-complete';
+// import MenuItem from 'material-ui/lib/menus/menu-item';
 
 import { Chip } from 'components';
 
@@ -10,12 +11,18 @@ export default class Array extends React.Component {
     title: PropTypes.string,
     value: PropTypes.array,
     disabled: PropTypes.bool,
-    getOptions: PropTypes.func,
+    options: PropTypes.array,
     onBlur: PropTypes.func.isRequired
   };
   static defaultProps = {
     title: 'Array'
   };
+
+  constructor(props) {
+    super(props);
+
+    this.state = {};
+  }
 
   onChange(index) {
     const { onBlur, value } = this.props;
@@ -47,41 +54,21 @@ export default class Array extends React.Component {
   }
 
   handleKeyPress(event) {
-    const { getOptions } = this.props;
-
-
     if (event.key === 'Backspace' && _.isEmpty(event.target.textContent)) {
       this.deleteValue();
-      this.setState({
-        options: null
-      });
     }
 
     if (event.key === 'Enter') {
       this.addValue(event);
     }
-
-    if (getOptions) {
-      this.setState({
-        options: getOptions(event.target.textContent + event.key)
-      });
-    }
   }
 
   render() {
-    const { name, title, value } = this.props;
-
+    const { title, value } = this.props;
     // Shows an array of strings for now.
+    // Get the react internal id to create the id.
     return (
-      <div className="chip-list" onClick={() => {
-      // focus the p element when clicking on the chip-list
-      // Rewite to use refs...
-        ReactDOM
-          .findDOMNode(this)
-          .querySelector(`#chiplist-${name}`)
-          .focus();
-      }}
-      >
+      <div className="chip-list" onClick={() => this._input && this._input.focus()}>
         <div>
         { _.map(value || [], (item, i) => (
           <Chip key={i}>
@@ -91,13 +78,13 @@ export default class Array extends React.Component {
             >cancel</i>
           </Chip>
         ))}
-        <p id={`chiplist-${name}`}
-          contentEditable="true"
-          onBlur={(event) => this.addValue(event)}
-          onKeyPress={(event) => this.handleKeyPress(event)}
-          onKeyDown={(event) => this.handleKeyPress(event)}
-        />
-        </div><label className="chip-list--label" htmlFor={`chiplist-${name}`}>{title}</label>
+          <p ref={(el) => {this._input = el;}}
+            contentEditable="true"
+            onBlur={(event) => this.addValue(event)}
+            onKeyPress={(event) => this.handleKeyPress(event)}
+            onKeyDown={(event) => this.handleKeyPress(event)}
+          />
+        </div><label className="chip-list--label">{title}</label>
       </div>
     );
   }
