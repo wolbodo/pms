@@ -61,6 +61,43 @@ macro_rules! notfound {
     ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
+macro_rules! get_id {
+    ($req:expr) => (
+        match $req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1").parse::<i32>() {
+            Ok(value) => value,
+            Err(err) => badrequest!(err.to_string())
+        }
+    );
+}
+
+macro_rules! get_token {
+    ($req:expr) => (
+        match $req.headers.get::<Authorization<String>>() {
+            Some(&Authorization(ref token)) => token.clone().to_string(),
+            None => badrequest!("No Authorization header found".to_string())
+        }
+    );
+}
+
+macro_rules! get_json {
+    ($req:expr, $func:expr, $id:expr, $token:expr) => (
+        {
+            let db = $req.db_conn();
+            let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_get(token := $1, ", $func, "_id := $2);"))).unwrap();
+            let rows = match stmt.query(&[&$token, &$id]) {
+                Ok(rows) => rows,
+                Err(PgError::Db(err)) => badrequest!(err.message),
+                Err(err) => badrequest!(err.to_string()),
+            };
+            let object: Value = match rows.get(0).get(0) {
+                Some(value) => value,
+                None => notfound!("Id not found (or no read access)".to_string())
+            };
+            object
+        }
+    );
+}
+
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
@@ -90,7 +127,8 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
 }
 
-fn caching(val: &Value, req: &Request) -> IronResult<Response> {
+fn caching(req: &Request, val: &Value) -> IronResult<Response> {
+    // Fixme: maybe it's smarter to make this AfterMiddleware that uses a sha2 over the body string value.
     // Fixme: handle some unwrap panics.
     let gid = match val.find("gid") {
         Some(value) => value.as_i64().unwrap_or(-1),
@@ -132,30 +170,11 @@ fn caching(val: &Value, req: &Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    let ref people_id_arg = req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1");
-    let people_id = match people_id_arg.parse::<i32>() {
-        Ok(value) => value,
-        Err(err) => badrequest!(err.to_string())
-    };
+    caching(&req, &get_json!(req, "people", get_id!(req), get_token!(req)))
+}
 
-    let token = match req.headers.get::<Authorization<String>>() {
-        Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => badrequest!("No Authorization header found".to_string())
-    };
-
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT people_get(token := $1, people_id := $2);")).unwrap();
-    let rows = match stmt.query(&[&token, &people_id]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let people: Value = match rows.get(0).get(0) {
-        Some(value) => value,
-        None => notfound!("Id not found (or no read access)".to_string())
-    };
-    caching(&people, &req)
+fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &get_json!(req, "roles", get_id!(req), get_token!(req)))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
@@ -268,10 +287,10 @@ fn main() {
         get  "/people/:id" => handle_people_get,
         put  "/people/:id" => handle_people_set,
 
-        // post "/groups"     => handle_groups_add,
-        // get  "/groups"     => handle_groups_get,
-        // get  "/groups/:id" => handle_groups_get,
-        // put  "/groups/:id" => handle_groups_set,
+        // post "/roles"     => handle_roles_add,
+        get  "/roles"     => handle_roles_get,
+        get  "/roles/:id" => handle_roles_get,
+        // put  "/roles/:id" => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
         // get  "/permissions"     => handle_permissions_get,
