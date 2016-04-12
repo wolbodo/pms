@@ -16,6 +16,7 @@ export default class Link extends React.Component {
     disabled: PropTypes.bool,
     options: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
+    onChange: PropTypes.func.isRequired,
     displayValue: PropTypes.string,
   };
   static defaultProps = {
@@ -68,10 +69,7 @@ export default class Link extends React.Component {
   }
 
   render() {
-    const { title, value, options, displayValue } = this.props;
-
-      // value={_.map(value, listToDisplay)}
-      // options={_.map(options, listToDisplay)}
+    const { title, value, options, displayValue, onChange } = this.props;
 
     const listToDisplay = (item) => _.get(item, _.toPath(displayValue));
     // Shows an array of strings for now.
@@ -93,6 +91,7 @@ export default class Link extends React.Component {
             ref={(el) => {this._input = el;}}
             floatingLabelText="Nieuw..."
             filter={AutoComplete.fuzzyFilter}
+            onNewRequest={(val) => onChange(_.find(options, (opt) => opt.name === val))}
             dataSource={_.map(options, listToDisplay)}
           />
         </div><label className="link-list--label">{title}</label>
