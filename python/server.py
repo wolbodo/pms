@@ -94,6 +94,18 @@ class RolesHandler(DatabaseHandler):
                 self.set_header('Content-Type', 'application/json')
                 self.write(row[0])
 
+    @coroutine
+    async def put(self, roles_id):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT roles_set(token := %(token)s, roles_id := %(roles_id)s, data := %(body)s);", {
+                    'token': self.request.headers['Authorization'],
+                    'roles_id': roles_id,
+                    'body': self.request.body.decode('utf-8')
+                })
+                row = await cur.fetchone()
+                self.write(row[0])
+
 
 class PermissionsHandler(DatabaseHandler):
     @coroutine
@@ -161,7 +173,7 @@ def start_server(r):
 
         (r'/fields/?([^.]+)?', FieldsHandler, {'pool': pool}),       # GET
 
-        (r'/roles/?(\d+)?', RolesHandler, {'pool': pool}),       # GET
+        (r'/roles/?(\d+)?', RolesHandler, {'pool': pool}),       # GET, PUT/
 
         (r'/permissions', PermissionsHandler, {'pool': pool}),       # GET
 

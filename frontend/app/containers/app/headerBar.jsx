@@ -15,6 +15,8 @@ import { Dialog, FlatButton } from 'material-ui';
   peopleRevert: peopleActions.revert,
   peopleCreate: peopleActions.create,
   groupCreate: groupsActions.create,
+  groupsCommit: groupsActions.commit,
+  groupsRevert: groupsActions.revert,
   fieldCreate: fieldsActions.create,
 })
 export default class HeaderBar extends React.Component {
@@ -28,6 +30,8 @@ export default class HeaderBar extends React.Component {
     peopleRevert: PropTypes.func,
     peopleCommit: PropTypes.func,
     groupCreate: PropTypes.func,
+    groupsCommit: PropTypes.func,
+    groupsRevert: PropTypes.func,
     fieldCreate: PropTypes.func,
   };
 
@@ -119,7 +123,7 @@ export default class HeaderBar extends React.Component {
     const {
       people, groups, fields,
       peopleCommit, peopleRevert, peopleCreate,
-      groupCreate, fieldCreate, route
+      groupCreate, groupsRevert, groupsCommit, fieldCreate, route
     } = this.props;
     const changed = (
       !_.isEmpty(people.updates) ||
@@ -133,7 +137,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           ripple
           id="header-save-button"
-          onClick={() => peopleCommit()}
+          onClick={() => {peopleCommit(); groupsCommit();}}
         >
           Opslaan
         </mdl.Button>
@@ -142,7 +146,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           ripple
           colored
-          onClick={() => peopleRevert()}
+          onClick={() => {peopleRevert(); groupsRevert();}}
         >
           Annuleren
         </mdl.Button>

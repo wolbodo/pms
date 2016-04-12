@@ -19,7 +19,8 @@ import * as fieldsActions from 'redux/modules/fields';
   create: groupsActions.create,
   pushState: push,
   fieldsFetch: fieldsActions.fetch,
-  groupsFetch: groupsActions.fetch
+  groupsFetch: groupsActions.fetch,
+  groupsUpdate: groupsActions.update,
 })
 export default class GroupView extends React.Component {
   static propTypes = {
@@ -31,6 +32,7 @@ export default class GroupView extends React.Component {
     pushState: PropTypes.func,
     fieldsFetch: PropTypes.func,
     groupsFetch: PropTypes.func,
+    groupsUpdate: PropTypes.func,
   }
   componentDidMount() {
     this.props.fieldsFetch();
@@ -50,17 +52,19 @@ export default class GroupView extends React.Component {
 
   render() {
     const {
-      groups: { items },
+      groups: { items, updates }, groupsUpdate,
       auth: { permissions },
       people,
       fields } = this.props;
+
     const schema = _.get(fields, 'items.roles');
 
+    const groups = _.merge(items, updates);
     const editFields = ['description'];
 
     return (
       <div className="content">
-      {_.map(items, (group) => (
+      {_.map(groups, (group) => (
         <mdl.Card key={group.id} className="mdl-color--white mdl-shadow--2dp">
           <mdl.CardTitle>
             {group.name}
@@ -71,6 +75,7 @@ export default class GroupView extends React.Component {
                 key={field}
                 field={_.get(schema.properties, field)}
                 disabled={!_.includes(permissions.roles.edit, field)}
+                onChange={(value) => groupsUpdate(group.id, { [field]: value })}
                 value={group[field]}
               />
             ))}
@@ -78,6 +83,8 @@ export default class GroupView extends React.Component {
           <div className="people">
             <Field
               value={_.map(group.people_ids, (id) => _.get(people.items, id))}
+              onBlur={(value, key) => console.log('blur', value, key)}
+              onChange={(value, key) => console.log('change', value, key)}
               field={{
                 type: 'link',
                 title: 'Mensen',
@@ -85,8 +92,6 @@ export default class GroupView extends React.Component {
                 target: 'people',
                 displayValue: 'nickname',
                 options: people.items,
-                onBlur: (value, key) => console.log('blur', value, key),
-                onChange: (value, key) => console.log('change', value, key)
               }}
             />
           </div>
