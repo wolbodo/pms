@@ -1,37 +1,36 @@
 #![feature(custom_derive, plugin)]
 #![plugin(postgres_macros, serde_macros)]
-extern crate iron;
 extern crate bodyparser;
+extern crate crypto;
+extern crate iron;
+extern crate iron_postgres_middleware as pg_middleware;
 extern crate persistent;
-extern crate serde;
-extern crate serde_json;
-extern crate hyper;
+extern crate postgres;
 #[macro_use(router)]
 extern crate router;
-extern crate postgres;
-extern crate iron_postgres_middleware as pg_middleware;
-extern crate crypto;
-
-use std::collections::BTreeMap;
-
-use persistent::Read;
-use iron::status;
-use iron::{AfterMiddleware};
-use iron::prelude::*;
-use iron::method::Method;
-use iron::modifiers::Header;
+extern crate serde;
+extern crate serde_json;
 
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 
-use hyper::header::{Authorization, ContentType, ETag, EntityTag, IfNoneMatch};
-use hyper::mime::{Mime, TopLevel, SubLevel};
+use iron::AfterMiddleware;
+use iron::headers::{Authorization, ContentType, ETag, EntityTag, IfNoneMatch};
+use iron::method::Method;
+use iron::mime::{Mime, TopLevel, SubLevel};
+use iron::modifiers::Header;
+use iron::prelude::*;
+use iron::status;
+
+use persistent::Read;
+
+use pg_middleware::{PostgresMiddleware, PostgresReqExt};
+use postgres::error::Error as PgError;
 
 use router::Router;
 
 use serde_json::*;
-use pg_middleware::{PostgresMiddleware, PostgresReqExt};
-use postgres::error::Error as PgError;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Login {

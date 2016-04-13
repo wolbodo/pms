@@ -4,21 +4,16 @@ version = "0.1.0"
 authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.com>"]
 
 [dependencies]
+bodyparser = "*"
 iron = "*"
-hyper = "*"
-router = "*"
 persistent = "*"
 postgres = { version = "*", features = ["serde_json", "unix_socket"]}
 postgres_macros = "*"
+router = "*"
+rust-crypto = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"
-bodyparser = "*"
-rand = "*"
-time = "*"
-rustc-serialize = "*"
-rust-crypto = "*"
 
 [dependencies.iron-postgres-middleware]
 git = "https://github.com/neoel/iron-postgres-middleware.git"
-
