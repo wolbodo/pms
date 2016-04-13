@@ -17,6 +17,7 @@ bodyparser = "*"
 rand = "*"
 time = "*"
 rustc-serialize = "*"
+rust-crypto = "*"
 
 [dependencies.iron-postgres-middleware]
 git = "https://github.com/neoel/iron-postgres-middleware.git"

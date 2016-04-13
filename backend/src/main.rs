@@ -10,6 +10,7 @@ extern crate hyper;
 extern crate router;
 extern crate postgres;
 extern crate iron_postgres_middleware as pg_middleware;
+extern crate crypto;
 
 use std::collections::BTreeMap;
 
@@ -17,7 +18,11 @@ use persistent::Read;
 use iron::status;
 use iron::{AfterMiddleware};
 use iron::prelude::*;
+use iron::method::Method;
 use iron::modifiers::Header;
+
+use crypto::digest::Digest;
+use crypto::sha2::Sha256;
 
 use hyper::header::{Authorization, ContentType, ETag, EntityTag, IfNoneMatch};
 use hyper::mime::{Mime, TopLevel, SubLevel};
@@ -49,6 +54,10 @@ struct SimpleError {
 //Client sends: Authorization: Bearer {{JWT}}
 //Server sends: HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Bearer realm="example", error="invalid_token", error_description="The access token expired"
 
+macro_rules! ok_json {
+    ($msg:expr) => (Ok(Response::with((status::Ok, serde_json::to_string($msg).unwrap()))));
+}
+
 macro_rules! badrequest {
     ($msg:expr) => (return Ok(Response::with((status::BadRequest, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
@@ -61,9 +70,9 @@ macro_rules! notfound {
     ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
-macro_rules! get_id {
-    ($req:expr) => (
-        match $req.extensions.get::<Router>().unwrap().find("id").unwrap_or("-1").parse::<i32>() {
+macro_rules! get_int {
+    ($req:expr, $name:expr) => (
+        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<i32>() {
             Ok(value) => value,
             Err(err) => badrequest!(err.to_string())
         }
@@ -98,6 +107,37 @@ macro_rules! get_json {
     );
 }
 
+// Sadly we cann't move this to AfterMiddleware since that only exposes WriteBody.
+fn caching(req: &Request, val: &Value) -> IronResult<Response> {
+    // Sanity check, we cache only GET requests
+    if req.method != Method::Get {
+        return ok_json!(val);
+    }
+    let content = serde_json::to_string(&val).unwrap();
+    let mut sha256 = Sha256::new();
+    sha256.input_str(&content);
+    let hash = sha256.result_str();
+    let etag_header = Header(ETag(EntityTag::new(false, hash.to_owned())));
+    let content_changed = match req.headers.get::<IfNoneMatch>() {
+        None => true,
+        Some(&IfNoneMatch::Any) => false,
+        Some(&IfNoneMatch::Items(ref items)) => {
+            let mut changed = true;
+            for etag in items {
+                if etag.tag() == hash {
+                    changed = false;
+                    break;
+                }
+            }
+            changed
+        }
+    };
+    if !content_changed {
+        return Ok(Response::with((status::NotModified, etag_header)));
+    }
+    Ok(Response::with((status::Ok, content, etag_header)))
+}
+
 fn handle_login(req: &mut Request) -> IronResult<Response> {
     //TODO: correct header (json), fix OK path to json.
 
@@ -127,54 +167,13 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
 }
 
-fn caching(req: &Request, val: &Value) -> IronResult<Response> {
-    // Fixme: maybe it's smarter to make this AfterMiddleware that uses a sha2 over the body string value.
-    // Fixme: handle some unwrap panics.
-    let gid = match val.find("gid") {
-        Some(value) => value.as_i64().unwrap_or(-1),
-        None => {
-            let mut max = 0;
-            for (_, value) in val.as_object().unwrap().iter() {
-                let gidval = value.find("gid").unwrap().as_i64().unwrap_or(-1);
-                if gidval > max {
-                    max = gidval;
-                }
-            }
-            max
-        }
-    };
-    if gid == -1 {
-        return Ok(Response::with((status::Ok, serde_json::to_string(&val).unwrap())));
-    }
-    let gidstr = gid.to_string();
-    let tag_header = Header(ETag(EntityTag::new(false, gidstr.to_owned())));
-    let content_changed = match req.headers.get::<IfNoneMatch>() {
-        None => true,
-        Some(&IfNoneMatch::Any) => false,
-        Some(&IfNoneMatch::Items(ref items)) => {
-            let mut changed = true;
-            for etag in items {
-                if etag.tag() == gidstr {
-                    changed = false;
-                    break;
-                }
-            }
-            changed
-        }
-    };
-    if !content_changed {
-        return Ok(Response::with((status::NotModified, tag_header)));
-    }
-    Ok(Response::with((status::Ok, serde_json::to_string(&val).unwrap(), tag_header)))
-}
-
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_json!(req, "people", get_id!(req), get_token!(req)))
+    caching(&req, &get_json!(req, "people", get_int!(req, "id"), get_token!(req)))
 }
 
 fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_json!(req, "roles", get_id!(req), get_token!(req)))
+    caching(&req, &get_json!(req, "roles", get_int!(req, "int"), get_token!(req)))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
