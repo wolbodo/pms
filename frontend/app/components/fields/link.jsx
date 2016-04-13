@@ -26,17 +26,9 @@ export default class Link extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
-  }
-
-  onChange(index) {
-    const { onBlur, value } = this.props;
-
-    if (onBlur) {
-      onBlur(
-        _.filter(value, (x, i) => i !== index)
-      );
-    }
+    this.state = {
+      newValue: ''
+    };
   }
 
   addValue({ target }) {
@@ -70,6 +62,7 @@ export default class Link extends React.Component {
 
   render() {
     const { title, value, options, displayValue, onChange } = this.props;
+    const { newValue } = this.state;
 
     const listToDisplay = (item) => _.get(item, _.toPath(displayValue));
     // Shows an array of strings for now.
@@ -83,15 +76,32 @@ export default class Link extends React.Component {
           <Chip key={i}>
             {item}
             <i className="material-icons"
-              onClick={() => this.onChange(i)}
+              onClick={() => onChange(_.filter(value, (val, key) => key !== i))}
             >cancel</i>
           </Chip>
         ))}
           <AutoComplete className="auto-complete"
             ref={(el) => {this._input = el;}}
             floatingLabelText="Nieuw..."
+            searchText={newValue}
             filter={AutoComplete.fuzzyFilter}
-            onNewRequest={(val) => onChange(_.find(options, (opt) => opt.name === val))}
+            onUpdateInput={(val) => {
+              // Keep updating, so we can clear it...
+              this.setState({
+                newValue: val
+              });
+            }}
+            onNewRequest={(val) => {
+              this.setState({
+                newValue: ''
+              });
+              onChange(
+                _(value)
+                .concat(_.find(options, (opt) => _.get(opt, _.toPath(displayValue)) === val))
+                .uniq()
+                .value()
+              );
+            }}
             dataSource={_.map(options, listToDisplay)}
           />
         </div><label className="link-list--label">{title}</label>

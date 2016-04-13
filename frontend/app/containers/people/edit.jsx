@@ -17,8 +17,11 @@ function PersonEdit({ params, people, groups, fields, auth, update }) {
   const person = _.get(people, ['items', personId], {});
   const updates = _.get(people, ['updates', personId]);
   // Find peson
-  const item = _.assign({}, person, updates,
-    { roles: _.filter(groups.items, (group) => _.includes(group.people_ids, person.id)) }
+
+  const item = _.mergeWith(
+    person, updates,
+    { roles: _.filter(groups.items, (group) => _.includes(group.people_ids, person.id)) },
+    (obj, src) => (_.isArray(obj) ? src : undefined)
   );
 
   const schema = _.merge({}, fields.items.people, {

@@ -64,7 +64,9 @@ export default class Field extends React.Component {
         {...field}
         disabled={disabled}
         value={value}
-        onChange={(_value) => this.setState({ value: _value }) }
+        onChange={(_value) => {
+          this.setState({ value: _value });
+        }}
         onBlur={(_value) => onChange(_value, field.name)}
       />
     );
