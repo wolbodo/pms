@@ -181,6 +181,16 @@ BEGIN
             RAISE EXCEPTION 'creating "%" not allowed', ref_table;
             RETURN NULL;
         END IF;
+    ELSE
+        IF base->>'gid' = update->>'gid' THEN
+            --OK construct
+        ELSEIF base->>'gid' != update->>'gid' THEN
+            RAISE EXCEPTION 'outdated gid %, expected current gid %', update->>'gid', base->>'gid';
+            RETURN NULL;
+        ELSE
+            RAISE EXCEPTION 'must supply gid on update';
+            RETURN NULL;
+        END IF;
     END IF;
     IF remove THEN
         IF rights.permissions->ref_table ? 'create' THEN
@@ -293,11 +303,11 @@ BEGIN
             )
             FROM people p WHERE valid_till IS NULL AND (id = people_id OR -1 = people_id)
         ) alias (object) WHERE object IS NOT NULL;
-    IF people_id = -1 THEN
-        RETURN people;
-    ELSE
-        RETURN people->people_id::TEXT;
-    END IF;
+    -- IF people_id = -1 THEN
+         RETURN people;
+    -- ELSE
+    --     RETURN people->people_id::TEXT;
+    -- END IF;
 END;
 $function$;
 
@@ -324,7 +334,7 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'people',
-        base := people_get(rights, people_id),
+        base := people_get(rights, people_id)->people_id::TEXT,
         update := _data
     ));
 
@@ -373,7 +383,7 @@ BEGIN
     PERFORM data_merge(
         rights := rights,
         ref_table := 'people',
-        base := people_get(rights, people_id),
+        base := people_get(rights, people_id)->people_id::TEXT,
         remove := TRUE
     );
 
@@ -421,11 +431,11 @@ BEGIN
             WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
             GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
         ) alias (object) WHERE object IS NOT NULL;
-    IF _roles_id = -1 THEN
-        RETURN roles;
-    ELSE
-        RETURN roles->_roles_id::TEXT;
-    END IF;
+    -- IF _roles_id = -1 THEN
+         RETURN roles;
+    -- ELSE
+    --     RETURN roles->_roles_id::TEXT;
+    -- END IF;
 END;
 $function$;
 
@@ -473,11 +483,11 @@ BEGIN
             GROUP BY f.ref_table, fm.data
             --GROUP BY f.gid, f.id, f.valid_from, f.valid_till, f.name, f.modified_by, f.modified, f.created, f.data
         ) alias (object);
-    IF _ref_table IS NULL THEN
-        RETURN fields;
-    ELSE
-        RETURN fields->_ref_table;
-    END IF;
+    -- IF _ref_table IS NULL THEN
+         RETURN fields;
+    -- ELSE
+    --     RETURN fields->_ref_table;
+    -- END IF;
 END;
 $function$;
 
