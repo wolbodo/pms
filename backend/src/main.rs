@@ -89,8 +89,19 @@ macro_rules! get_token {
     );
 }
 
+macro_rules! get_json_body {
+    ($req:expr) => (
+        match $req.get::<bodyparser::Struct<Value>>() {
+            Ok(Some(body)) => body,
+            Ok(None) => badrequest!("Please send some body!".to_string()),
+            Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
+            Err(err) => badrequest!(err.to_string())
+        }
+    );
+}
+
 macro_rules! get_db_json {
-    ($req:expr, $func:expr, $id:expr, $token:expr) => (
+    ($req:expr, $func:expr, $token:expr, $id:expr) => (
         {
             let db = $req.db_conn();
             let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_get(token := $1, ", $func, "_id := $2);"))).unwrap();
@@ -102,6 +113,25 @@ macro_rules! get_db_json {
             let object: Value = match rows.get(0).get(0) {
                 Some(value) => value,
                 None => notfound!("Id not found (or no read access)".to_string())
+            };
+            object
+        }
+    );
+}
+
+macro_rules! set_db_json {
+    ($req:expr, $func:expr, $token:expr, $id:expr, $data:expr) => (
+        {
+            let db = $req.db_conn();
+            let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_set(token := $1, ", $func, "_id := $2, data := $3);"))).unwrap();
+            let rows = match stmt.query(&[&$token, &$id, &$data]) {
+                Ok(rows) => rows,
+                Err(PgError::Db(err)) => badrequest!(err.message),
+                Err(err) => badrequest!(err.to_string()),
+            };
+            let object: Value = match rows.get(0).get(0) {
+                Some(value) => value,
+                None => notfound!("Unexpected response from database".to_string())
             };
             object
         }
@@ -172,55 +202,15 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "people", get_int!(req, "id"), get_token!(req)))
+    caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
 }
 
 fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "roles", get_int!(req, "int"), get_token!(req)))
+    caching(&req, &get_db_json!(req, "roles", get_token!(req), get_int!(req, "id")))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
-    // Update an existing person.
-
-    let people_id;
-    {
-        let router = req.extensions.get::<Router>().unwrap();
-        let ref people_id_arg = router.find("id").unwrap();
-        people_id = match people_id_arg.parse::<i32>() {
-            Ok(value) => value,
-            Err(err) => badrequest!(err.to_string())
-        };
-    }
-    let token = match req.headers.get::<Authorization<String>>() {
-
-        Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => "".to_string() 
-    };
-
-    let data = match req.get::<bodyparser::Struct<Value>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
-
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT people_set(token := $1, people_id := $2, data := $3);")).unwrap();
-
-    let rows = match stmt.query(&[&token, &people_id, &data]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let people = match rows.get(0).get(0) {
-        value@ Value::Array(_) => value,
-        value@Value::Object(_) => value,
-        Value::Null | _ => internalerror!("unexpected response from database".to_string())
-    };
-
-    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
-    // Err(Response::with((status::Ok)));
+    ok_json!(&set_db_json!(req, "people", get_token!(req), get_int!(req, "id"), get_json_body!(req)))
 }
 
 fn handle_people_add(req: &mut Request) -> IronResult<Response> {
