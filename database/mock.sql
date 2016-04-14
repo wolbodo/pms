@@ -143,8 +143,11 @@ VALUES
 
     ('fields', NULL, '{"title":"Wijzig veld","form":[{"title":"Veld","fields":[["name"],["title"],["type"]]}]}', -1),
     ('fields', 'name', '{"name":"name","title":"Naam","type":"string","readonly":true}', -1),
+    ('fields', 'type', '{"name":"type","title":"Type","type":"option","options":{"string":"Tekst","option":"Optie","enum":"Dropdown","date":"Datum","array":"Lijst","boolean":"Booleaan","link":"Link"}}', -1),
     ('fields', 'title', '{"name":"title","title":"Label","type":"string"}', -1),
-    ('fields', 'type', '{"name":"type","title":"Type","type":"option","options":{"string":"Tekst","option":"Optie","enum":"Dropdown","date":"Datum","array":"Lijst","boolean":"Booleaan"}}', -1);
+    ('fields', 'target', '{"name":"target","title":"Doel","type":"string"}', -1),
+    ('fields', 'displayValue', '{"name":"displayValue","title":"Weergegeven veld","type":"string"}', -1),
+    ('fields', 'options', '{"name":"options","title":"Opties","type":"array"}', -1);
 
 
 INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
@@ -170,6 +173,7 @@ SELECT DISTINCT roles.id, permissions.id, -1 FROM
         (array['edit'],         array['self','admin'], array['password_hash']),
         -- role permissions
         (array['edit'],         array['board'],        array['name', 'description']),
+        (array['view'],         array['member'],       array['name', 'description']),
         (array['view', 'edit'], array['self','board'], array['email','phone','mobile','street','housenumber','zipcode','city','state','country','iban','directdebit','gender','emergencyinfo','notes']),
         (array['view', 'edit'], array['board'],        array['nickname','firstname','infix','lastname','birthdate','deathdate','boardnotes','functions','membertype','peoplesince','frontdoor','cashregister']),
         (array['view', 'edit'], array['keymanager'],   array['keycode','frontdoor','cashregister']),

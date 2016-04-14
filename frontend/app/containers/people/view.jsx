@@ -46,7 +46,8 @@ export default class PeopleView extends React.Component {
     const schema = _.get(fields, 'items.people');
 
     // merge items with updated items.
-    const items = _.merge(people.items, people.updates);
+    const items = _.mergeWith(people.items, people.updates, (obj, src) =>
+                                (_.isArray(obj) ? src : undefined));
 
     // Get the current group/role
     const currentGroup = _.find(groups.items, (group) =>
