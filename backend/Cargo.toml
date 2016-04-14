@@ -11,6 +11,7 @@ postgres = { version = "*", features = ["serde_json", "unix_socket"]}
 postgres_macros = "*"
 router = "*"
 rust-crypto = "*"
+rustc-serialize = "*"
 serde = "*"
 serde_json = "*"
 serde_macros = "*"

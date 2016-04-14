@@ -8,6 +8,7 @@ extern crate persistent;
 extern crate postgres;
 #[macro_use(router)]
 extern crate router;
+extern crate rustc_serialize as serialize;
 extern crate serde;
 extern crate serde_json;
 
@@ -31,6 +32,7 @@ use router::Router;
 
 use serde_json::*;
 use std::collections::BTreeMap;
+use serialize::base64::{self, ToBase64};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Login {
@@ -87,7 +89,7 @@ macro_rules! get_token {
     );
 }
 
-macro_rules! get_json {
+macro_rules! get_db_json {
     ($req:expr, $func:expr, $id:expr, $token:expr) => (
         {
             let db = $req.db_conn();
@@ -115,7 +117,9 @@ fn caching(req: &Request, val: &Value) -> IronResult<Response> {
     let content = serde_json::to_string(&val).unwrap();
     let mut sha256 = Sha256::new();
     sha256.input_str(&content);
-    let hash = sha256.result_str();
+    let mut hashbytes = [0u8; 32]; //(sha256.output_bits() as u8 + 7) / 8]; // 32
+    sha256.result(&mut hashbytes);
+    let hash = hashbytes.to_base64(base64::URL_SAFE);
     let etag_header = Header(ETag(EntityTag::new(false, hash.to_owned())));
     let content_changed = match req.headers.get::<IfNoneMatch>() {
         None => true,
@@ -168,11 +172,11 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_json!(req, "people", get_int!(req, "id"), get_token!(req)))
+    caching(&req, &get_db_json!(req, "people", get_int!(req, "id"), get_token!(req)))
 }
 
 fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_json!(req, "roles", get_int!(req, "int"), get_token!(req)))
+    caching(&req, &get_db_json!(req, "roles", get_int!(req, "int"), get_token!(req)))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
