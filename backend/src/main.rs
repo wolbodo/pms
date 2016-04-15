@@ -89,6 +89,54 @@ macro_rules! get_token {
     );
 }
 
+macro_rules! expand_sql_arguments {
+    // Start
+    ( $name1:ident ) => ( concat!(
+        stringify!($name1), " := $1"
+    ));
+    ( $name1:ident, $name2:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2"
+    ));
+    ( $name1:ident, $name2:ident, $name3:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2,",
+        stringify!($name3), " := $3"
+    ));
+    ( $name1:ident, $name2:ident, $name3:ident, $name4:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2,",
+        stringify!($name3), " := $3,",
+        stringify!($name4), " := $4"
+    ));
+}
+
+macro_rules! call_db {
+    (
+        req => $req:expr, 
+        func => $func:expr,
+        args => (
+            $($name:ident $value:expr),*
+        )
+    ) => ({
+        let db = $req.db_conn();
+        let stmt = db.prepare(
+            sql!(concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"))
+        ).unwrap();
+        let rows = match stmt.query(&[$(&$value),*]) {
+            Ok(rows) => rows,
+            Err(PgError::Db(err)) => badrequest!(err.message),
+            Err(err) => badrequest!(err.to_string()),
+        };
+        let object: Value = match rows.get(0).get(0) {
+            Some(value) => value,
+            None => notfound!("Id not found (or no read access)".to_string())
+        };
+        object
+    })
+}
+
+
 macro_rules! get_json_body {
     ($req:expr) => (
         match $req.get::<bodyparser::Struct<Value>>() {
@@ -194,6 +242,8 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
     let token: String = rows.get(0).get(0);
     resp.insert("token", token);
+    // insert permissions
+    // resp.insert("permissions", )
 
     //let mut userContext = BTreeMap::new();
     //userContext
@@ -202,7 +252,15 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
+    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
+    caching(&req, &call_db!(
+        req => req, 
+        func => "get_people", 
+        args => (
+            token get_token!(req),
+            people_id get_int!(req, "id")
+        )
+    ))
 }
 
 fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
