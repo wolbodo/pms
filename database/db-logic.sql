@@ -51,7 +51,7 @@ $function$;
 
 
 CREATE OR REPLACE FUNCTION public.login(emailaddress TEXT, password TEXT)
- RETURNS TEXT
+ RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
@@ -59,6 +59,8 @@ DECLARE
   payload JSONB;
   content TEXT;
   signature TEXT;
+  token TEXT;
+  permissions JSONB;
 BEGIN
     header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
     SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO STRICT payload
@@ -68,7 +70,12 @@ BEGIN
         WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
     content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
     signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
-    RETURN content || '.' || signature;
+    token = content || '.' || signature;
+
+    SELECT (permissions_get(token := token)).permissions INTO permissions;
+    RETURN jsonb_build_object('token', token, 'permissions', permissions);
+
+
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RAISE EXCEPTION 'Username or password wrong.';

@@ -31,7 +31,6 @@ use postgres::error::Error as PgError;
 use router::Router;
 
 use serde_json::*;
-use std::collections::BTreeMap;
 use serialize::base64::{self, ToBase64};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -224,31 +223,16 @@ fn caching(req: &Request, val: &Value) -> IronResult<Response> {
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
 
-    let mut resp = BTreeMap::new();
-
     let login = get_json_body!(req, Login);
-    let token = call_db!(
+
+    ok_json!(&call_db!(
         req  => req,
         func => "login",
         args => (
             emailaddress login.user,
             password     login.password
-        ),
-        response_type => String
-    );
-    let permissions = call_db!(
-        req  => req,
-        query => "SELECT (permissions_get(token := $1)).permissions",
-        values => &[&token],
-        response_type => Value
-    );
-
-    println!("{:?}", permissions);
-
-    resp.insert("token", token);
-    // resp.insert("permissions", &permissions);
-
-    ok_json!(&resp)
+        )
+    ))
 }
 
 // Returns a list of people, might be using filters.
