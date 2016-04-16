@@ -121,56 +121,24 @@ macro_rules! print_values {
 macro_rules! call_db {
     (
         req => $req:expr, 
-        query => $query:expr,
-        values => $values:expr,
-        response_type => $response_type:ty
+        func => $func:expr,
+        args => ( $($name:ident $value:expr),* )
     ) => ({
         let db = $req.db_conn();
-        println!(concat!("Query: ", $query));
+        println!(concat!("Query: ", concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");")));
 
-        let stmt = db.prepare(sql!($query)).unwrap();
-        let rows = match stmt.query($values) {
+        let stmt = db.prepare(sql!(concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"))).unwrap();
+        let rows = match stmt.query(&[$(&$value),*]) {
             Ok(rows) => rows,
             Err(PgError::Db(err)) => badrequest!(err.message),
             Err(err) => badrequest!(err.to_string()),
         };
-        let object: $response_type = match rows.get(0).get(0) {
+        let object: Value = match rows.get(0).get(0) {
             Some(value) => value,
             None => notfound!("Id not found (or no read access)".to_string())
         };
         object
-    });
-    (
-        req => $req:expr, 
-        func => $func:expr,
-        args => (
-            $($name:ident $value:expr),*
-        ),
-        response_type => $response_type:ty
-    ) => (
-        call_db!(
-            req => $req,
-            query => concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"),
-            values => &[$(&$value),*],
-            response_type => $response_type
-        )
-    );
-    (
-        req => $req:expr, 
-        func => $func:expr,
-        args => (
-            $($name:ident $value:expr),*
-        )
-    ) => (
-        call_db!(
-            req => $req,
-            func => $func,
-            args => (
-                $($name $value),*
-            ),
-            response_type => Value
-        )
-    );
+    })
 }
 
 
@@ -226,7 +194,7 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
     let login = get_json_body!(req, Login);
 
     ok_json!(&call_db!(
-        req  => req,
+        req => req,
         func => "login",
         args => (
             emailaddress login.user,
@@ -239,19 +207,8 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
     // caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
     caching(&req, &call_db!(
-        req => req, 
-        func => "people_get", 
-        args => (
-            token     get_token!(req),
-            people_id get_int!(req, "id")
-        )
-    ))
-}
-
-fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &call_db!(
-        req  => req,
-        func => "roles_get",
+        req => req,
+        func => "people_get",
         args => (
             token     get_token!(req),
             people_id get_int!(req, "id")
@@ -261,7 +218,7 @@ fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
     ok_json!(&call_db!(
-        req  => req,
+        req => req,
         func => "people_set",
         args => (
             token     get_token!(req),
@@ -273,35 +230,49 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
 
 fn handle_people_add(req: &mut Request) -> IronResult<Response> {
     // Create a new person. 
+    ok_json!(&call_db!(
+        req => req,
+        func => "people_add",
+        args => (
+            token     get_token!(req),
+            data      get_json_body!(req)
+        )
+    ))
+}
 
-    let token = match req.headers.get::<Authorization<String>>() {
-        Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => "".to_string() 
-    };
+fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "roles_get",
+        args => (
+            token     get_token!(req),
+            roles_id  get_int!(req, "id")
+        )
+    ))
+}
 
-    let data = match req.get::<bodyparser::Struct<Value>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
+fn handle_roles_set(req: &mut Request) -> IronResult<Response> {
+    ok_json!(&call_db!(
+        req => req,
+        func => "roles_set",
+        args => (
+            token     get_token!(req),
+            roles_id  get_int!(req, "id"),
+            data      get_json_body!(req)
+        )
+    ))
+}
 
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT people_add(token := $1, data := $2);")).unwrap();
-
-    let rows = match stmt.query(&[&token, &data]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let people = match rows.get(0).get(0) {
-        value@ Value::Array(_) => value,
-        value@Value::Object(_) => value,
-        Value::Null | _ => internalerror!("unexpected response from database".to_string())
-    };
-
-    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
+fn handle_roles_add(req: &mut Request) -> IronResult<Response> {
+    // Create a new person. 
+    ok_json!(&call_db!(
+        req => req,
+        func => "roles_add",
+        args => (
+            token     get_token!(req),
+            data      get_json_body!(req)
+        )
+    ))
 }
 
 fn handle_fields(_: &mut Request) -> IronResult<Response> {
@@ -338,9 +309,10 @@ fn main() {
         put  "/people/:id" => handle_people_set,
 
         // post "/roles"     => handle_roles_add,
+        post  "/roles"    => handle_roles_add,
         get  "/roles"     => handle_roles_get,
         get  "/roles/:id" => handle_roles_get,
-        // put  "/roles/:id" => handle_roles_set,
+        put  "/roles/:id" => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
         // get  "/permissions"     => handle_permissions_get,
