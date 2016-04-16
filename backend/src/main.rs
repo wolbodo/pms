@@ -111,77 +111,80 @@ macro_rules! expand_sql_arguments {
     ));
 }
 
+macro_rules! print_values {
+    ($($value:expr),*) => ({
+        $(
+            println!(concat!(stringify!($value), ": {:?}"), $value);
+        );*
+    })
+}
+
 macro_rules! call_db {
+    (
+        req => $req:expr, 
+        query => $query:expr,
+        values => $values:expr,
+        response_type => $response_type:ty
+    ) => ({
+        let db = $req.db_conn();
+        println!(concat!("Query: ", $query));
+
+        let stmt = db.prepare(sql!($query)).unwrap();
+        let rows = match stmt.query($values) {
+            Ok(rows) => rows,
+            Err(PgError::Db(err)) => badrequest!(err.message),
+            Err(err) => badrequest!(err.to_string()),
+        };
+        let object: $response_type = match rows.get(0).get(0) {
+            Some(value) => value,
+            None => notfound!("Id not found (or no read access)".to_string())
+        };
+        object
+    });
+    (
+        req => $req:expr, 
+        func => $func:expr,
+        args => (
+            $($name:ident $value:expr),*
+        ),
+        response_type => $response_type:ty
+    ) => (
+        call_db!(
+            req => $req,
+            query => concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"),
+            values => &[$(&$value),*],
+            response_type => $response_type
+        )
+    );
     (
         req => $req:expr, 
         func => $func:expr,
         args => (
             $($name:ident $value:expr),*
         )
-    ) => ({
-        let db = $req.db_conn();
-        let stmt = db.prepare(
-            sql!(concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"))
-        ).unwrap();
-        let rows = match stmt.query(&[$(&$value),*]) {
-            Ok(rows) => rows,
-            Err(PgError::Db(err)) => badrequest!(err.message),
-            Err(err) => badrequest!(err.to_string()),
-        };
-        let object: Value = match rows.get(0).get(0) {
-            Some(value) => value,
-            None => notfound!("Id not found (or no read access)".to_string())
-        };
-        object
-    })
+    ) => (
+        call_db!(
+            req => $req,
+            func => $func,
+            args => (
+                $($name $value),*
+            ),
+            response_type => Value
+        )
+    );
 }
 
 
 macro_rules! get_json_body {
     ($req:expr) => (
-        match $req.get::<bodyparser::Struct<Value>>() {
+        get_json_body!($req, Value)
+    );
+    ($req:expr, $response_type:ty) => (
+        match $req.get::<bodyparser::Struct<$response_type>>() {
             Ok(Some(body)) => body,
             Ok(None) => badrequest!("Please send some body!".to_string()),
             Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
             Err(err) => badrequest!(err.to_string())
-        }
-    );
-}
-
-macro_rules! get_db_json {
-    ($req:expr, $func:expr, $token:expr, $id:expr) => (
-        {
-            let db = $req.db_conn();
-            let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_get(token := $1, ", $func, "_id := $2);"))).unwrap();
-            let rows = match stmt.query(&[&$token, &$id]) {
-                Ok(rows) => rows,
-                Err(PgError::Db(err)) => badrequest!(err.message),
-                Err(err) => badrequest!(err.to_string()),
-            };
-            let object: Value = match rows.get(0).get(0) {
-                Some(value) => value,
-                None => notfound!("Id not found (or no read access)".to_string())
-            };
-            object
-        }
-    );
-}
-
-macro_rules! set_db_json {
-    ($req:expr, $func:expr, $token:expr, $id:expr, $data:expr) => (
-        {
-            let db = $req.db_conn();
-            let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_set(token := $1, ", $func, "_id := $2, data := $3);"))).unwrap();
-            let rows = match stmt.query(&[&$token, &$id, &$data]) {
-                Ok(rows) => rows,
-                Err(PgError::Db(err)) => badrequest!(err.message),
-                Err(err) => badrequest!(err.to_string()),
-            };
-            let object: Value = match rows.get(0).get(0) {
-                Some(value) => value,
-                None => notfound!("Unexpected response from database".to_string())
-            };
-            object
         }
     );
 }
@@ -220,34 +223,32 @@ fn caching(req: &Request, val: &Value) -> IronResult<Response> {
 }
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
-    //TODO: correct header (json), fix OK path to json.
-
-    let login = match req.get::<bodyparser::Struct<Login>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
-
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
-
-    let rows = match stmt.query(&[&login.user, &login.password]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
 
     let mut resp = BTreeMap::new();
 
-    let token: String = rows.get(0).get(0);
-    resp.insert("token", token);
-    // insert permissions
-    // resp.insert("permissions", )
+    let login = get_json_body!(req, Login);
+    let token = call_db!(
+        req  => req,
+        func => "login",
+        args => (
+            emailaddress login.user,
+            password     login.password
+        ),
+        response_type => String
+    );
+    let permissions = call_db!(
+        req  => req,
+        query => "SELECT (permissions_get(token := $1)).permissions",
+        values => &[&token],
+        response_type => Value
+    );
 
-    //let mut userContext = BTreeMap::new();
-    //userContext
-    Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
+    println!("{:?}", permissions);
+
+    resp.insert("token", token);
+    // resp.insert("permissions", &permissions);
+
+    ok_json!(&resp)
 }
 
 // Returns a list of people, might be using filters.
@@ -255,20 +256,35 @@ fn handle_people_get(req: &mut Request) -> IronResult<Response> {
     // caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
     caching(&req, &call_db!(
         req => req, 
-        func => "get_people", 
+        func => "people_get", 
         args => (
-            token get_token!(req),
+            token     get_token!(req),
             people_id get_int!(req, "id")
         )
     ))
 }
 
 fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "roles", get_token!(req), get_int!(req, "id")))
+    caching(&req, &call_db!(
+        req  => req,
+        func => "roles_get",
+        args => (
+            token     get_token!(req),
+            people_id get_int!(req, "id")
+        )
+    ))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
-    ok_json!(&set_db_json!(req, "people", get_token!(req), get_int!(req, "id"), get_json_body!(req)))
+    ok_json!(&call_db!(
+        req  => req,
+        func => "people_set",
+        args => (
+            token     get_token!(req),
+            people_id get_int!(req, "id"),
+            data      get_json_body!(req)
+        )
+    ))
 }
 
 fn handle_people_add(req: &mut Request) -> IronResult<Response> {
