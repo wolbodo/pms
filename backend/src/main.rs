@@ -70,9 +70,9 @@ macro_rules! notfound {
     ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
-macro_rules! get_int {
-    ($req:expr, $name:expr) => (
-        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<i32>() {
+macro_rules! get_param {
+    ($req:expr, $name:expr, $res_type:ty) => (
+        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<$res_type>() {
             Ok(value) => value,
             Err(err) => badrequest!(err.to_string())
         }
@@ -126,7 +126,6 @@ macro_rules! call_db {
     ) => ({
         let db = $req.db_conn();
         println!(concat!("Query: ", concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");")));
-
         let stmt = db.prepare(sql!(concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"))).unwrap();
         let rows = match stmt.query(&[$(&$value),*]) {
             Ok(rows) => rows,
@@ -205,13 +204,13 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_int!(req, "id")))
+    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_param!(req, "id", i32)))
     caching(&req, &call_db!(
         req => req,
         func => "people_get",
         args => (
             token     get_token!(req),
-            people_id get_int!(req, "id")
+            people_id get_param!(req, "id", i32)
         )
     ))
 }
@@ -222,7 +221,7 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
         func => "people_set",
         args => (
             token     get_token!(req),
-            people_id get_int!(req, "id"),
+            people_id get_param!(req, "id", i32),
             data      get_json_body!(req)
         )
     ))
@@ -246,7 +245,7 @@ fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
         func => "roles_get",
         args => (
             token     get_token!(req),
-            roles_id  get_int!(req, "id")
+            roles_id  get_param!(req, "id", i32)
         )
     ))
 }
@@ -257,7 +256,7 @@ fn handle_roles_set(req: &mut Request) -> IronResult<Response> {
         func => "roles_set",
         args => (
             token     get_token!(req),
-            roles_id  get_int!(req, "id"),
+            roles_id  get_param!(req, "id", i32),
             data      get_json_body!(req)
         )
     ))
@@ -275,10 +274,28 @@ fn handle_roles_add(req: &mut Request) -> IronResult<Response> {
     ))
 }
 
-fn handle_fields(_: &mut Request) -> IronResult<Response> {
-    // Return fields. 
+fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
 
-    Ok(Response::with((status::Ok)))
+    let mut table = get_param!(req, "table", String);
+
+    if table == "-1" {
+        return caching(&req, &call_db!(
+            req => req,
+            func => "fields_get",
+            args => (
+                token get_token!(req)
+            )
+        ));
+    } else {
+        return caching(&req, &call_db!(
+            req => req,
+            func => "fields_get",
+            args => (
+                token get_token!(req),
+                ref_table table
+            )
+        ));
+    }
 }
 
 fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
@@ -308,7 +325,6 @@ fn main() {
         get  "/people/:id" => handle_people_get,
         put  "/people/:id" => handle_people_set,
 
-        // post "/roles"     => handle_roles_add,
         post  "/roles"    => handle_roles_add,
         get  "/roles"     => handle_roles_get,
         get  "/roles/:id" => handle_roles_get,
@@ -324,8 +340,9 @@ fn main() {
         // get  "/link/:id" => handle_link_get,
         // put  "/link/:id" => handle_link_set,
 
-        get  "/fields"     => handle_fields,
-        put  "/fields"     => handle_fields_edit
+        get  "/fields"        => handle_fields_get,
+        get  "/fields/:table" => handle_fields_get,
+        put  "/fields"        => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
