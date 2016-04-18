@@ -287,7 +287,7 @@ fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
 
 fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
 
-    let mut table = get_param!(req, "table", String);
+    let table = get_param!(req, "table", String);
 
     if table == "-1" {
         return caching(&req, &call_db!(
@@ -342,8 +342,8 @@ fn main() {
         put  "/roles/:id" => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
-        // get  "/permissions"     => handle_permissions_get,
-        // get  "/permissions/:id" => handle_permissions_get,
+        get  "/permissions"     => handle_permissions_get,
+        get  "/permissions/:id" => handle_permissions_get,
         // put  "/permissions/:id" => handle_permissions_set,
 
         // post "/link"     => handle_link_add,
