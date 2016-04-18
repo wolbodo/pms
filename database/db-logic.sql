@@ -68,13 +68,13 @@ DECLARE
   content TEXT;
   signature TEXT;
   token TEXT;
-  permissions JSONB;
 BEGIN
     header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
     SELECT
-        JSONB_BUILD_OBJECT('user', p.id)
-        || JSONB_BUILD_OBJECT('exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')))
-        INTO STRICT payload
+        JSONB_BUILD_OBJECT(
+            'user', p.id,
+            'exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days'))
+        ) INTO STRICT payload
         FROM people p
             JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
             JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
@@ -82,11 +82,10 @@ BEGIN
     content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
     signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
     token = content || '.' || signature;
-
-    SELECT (permissions_get(token := token)).permissions INTO permissions;
-    RETURN jsonb_build_object('token', token, 'permissions', permissions);
-
-
+    RETURN JSONB_BUILD_OBJECT(
+        'token', token,
+        'permissions', (permissions_get(token := token)).permissions
+    );
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RAISE EXCEPTION '%', jsonb_error('Username or password wrong');
