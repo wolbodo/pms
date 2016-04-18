@@ -8,9 +8,9 @@ BEGIN
     RETURN CONVERT_FROM(DECODE(TRANSLATE(json || REPEAT('=', LENGTH(json) * 6 % 8 / 2), '-_',''), 'base64'), 'UTF-8')::JSONB;
 EXCEPTION
     WHEN invalid_parameter_value THEN
-        GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
-        RAISE EXCEPTION  'E: % %', info, debug1;
-        RETURN NULL;
+        --GET STACKED DIAGNOSTICS debug1 = MESSAGE_TEXT;
+        --RAISE EXCEPTION  'E: % %', info, debug1;
+        RAISE EXCEPTION '%', jsonb_error('Invalid base64 token');
 END
 $function$;
 
@@ -21,6 +21,16 @@ CREATE OR REPLACE FUNCTION public.jsonb_base64url(jsonbytes JSONB)
 AS $function$
 BEGIN
     RETURN TRANSLATE(ENCODE(jsonbytes::TEXT::BYTEA, 'base64'), '+/=', '-_');
+END
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.jsonb_error(format TEXT, VARIADIC args ANYARRAY)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN JSONB_BUILD_OBJECT('error', FORMAT(format, VARIADIC args));
 END
 $function$;
 
@@ -38,12 +48,10 @@ BEGIN
     header = base64url_jsonb(match[2]);
     payload = base64url_jsonb(match[3]);
     IF match IS NULL OR match[4] != TRANSLATE(ENCODE(HMAC(match[1], :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_') THEN
-        RAISE EXCEPTION 'Invalid signature';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('Invalid signature');
     END IF;
     IF NOT payload ? 'exp' OR (payload->>'exp')::INT < FLOOR(EXTRACT(EPOCH FROM NOW())) THEN
-        RAISE EXCEPTION 'Expired';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('Expired signature');
     END IF;
     RETURN payload;
 END
@@ -61,7 +69,10 @@ DECLARE
   signature TEXT;
 BEGIN
     header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
-    SELECT ('{ "user":' || TO_JSON(p.id) || ',"exp":' || FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')) || '}')::JSONB INTO STRICT payload
+    SELECT
+        JSONB_BUILD_OBJECT('user', p.id)
+        || JSONB_BUILD_OBJECT('exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '31 days')))
+        INTO STRICT payload
         FROM people p
             JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
             JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
@@ -71,11 +82,9 @@ BEGIN
     RETURN content || '.' || signature;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        RAISE EXCEPTION 'Username or password wrong.';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('Username or password wrong');
     WHEN TOO_MANY_ROWS THEN
-        RAISE EXCEPTION 'More than one entry found, please contact an admin or board member to fix this.';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('More than one entry found, please contact an admin or board member to fix this');
 END
 $function$;
 
@@ -178,18 +187,16 @@ BEGIN
         IF rights.permissions->ref_table ? 'create' THEN
             --OK construct
         ELSE
-            RAISE EXCEPTION 'creating "%" not allowed', ref_table;
+            RAISE EXCEPTION '%', jsonb_error('Creating "%s" not allowed', ref_table);
             RETURN NULL;
         END IF;
     ELSE
         IF base->>'gid' = update->>'gid' THEN
             --OK construct
         ELSEIF base->>'gid' != update->>'gid' THEN
-            RAISE EXCEPTION 'outdated gid %, expected current gid %', update->>'gid', base->>'gid';
-            RETURN NULL;
+            RAISE EXCEPTION '%', jsonb_error('Outdated gid %s, expected current gid %s', update->>'gid', base->>'gid');
         ELSE
-            RAISE EXCEPTION 'must supply gid on update';
-            RETURN NULL;
+            RAISE EXCEPTION '%', jsonb_error('Must supply gid on update');
         END IF;
     END IF;
     IF remove THEN
@@ -200,13 +207,11 @@ BEGIN
                 IF createfields->kv.key = '*' OR base ? kv.key AND base->kv.key @> kv.value THEN
                     --OK construct
                 ELSE
-                    RAISE EXCEPTION 'removing "%" value % not allowed', kv.key, kv.value;
-                    RETURN NULL;
+                    RAISE EXCEPTION '%', jsonb_error('Removing "%s" value %s not allowed', kv.key, kv.value);
                 END IF;
             END LOOP;
         ELSE
-            RAISE EXCEPTION 'removing "%" not allowed', ref_table;
-            RETURN NULL;
+            RAISE EXCEPTION '%', jsonb_error('Removing "%s" not allowed', ref_table);
         END IF;
     END IF;
     FOR kv IN (SELECT * FROM JSONB_EACH(update))
@@ -229,24 +234,19 @@ BEGIN
                 IF createfields->kv.key = '*' OR createfields->kv.key <@ kv.value THEN
                     --OK construct
                 ELSE
-                    RAISE EXCEPTION 'creating "%" with value % is not allowed', kv.key, kv.value;
-                    RETURN NULL;
+                    RAISE EXCEPTION '%', jsonb_error('Creating "%s" with value %s is not allowed', kv.key, kv.value);
                 END IF;
             ELSE
-                RAISE EXCEPTION 'creating "%" is not allowed', kv.key;
-                RETURN NULL;
+                RAISE EXCEPTION '%', jsonb_error('Creating "%s" is not allowed', kv.key);
             END IF;
         ELSE
-            RAISE EXCEPTION 'editing "%" is not allowed', kv.key;
-            RETURN NULL;
+            RAISE EXCEPTION '%', jsonb_error('Editing "%s" is not allowed', kv.key);
         END IF;
     END LOOP;
     IF NOT remove AND base != '{}'::JSONB AND NOT changed THEN
-        RAISE EXCEPTION 'editing nothing is not allowed';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('Editing nothing is not allowed');
     ELSEIF NOT remove AND update = '{}'::JSONB THEN
-        RAISE EXCEPTION 'creating nothing is not allowed';
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('Creating nothing is not allowed');
     END IF;
     RETURN base || update;
 END;
@@ -276,7 +276,7 @@ AS $function$
 DECLARE
     people JSONB;
 BEGIN
-    SELECT JSONB_OBJECT_AGG(object->>'id', object) INTO people
+    SELECT JSONB_BUILD_OBJECT('people', JSONB_OBJECT_AGG(object->>'id', object)) INTO people
         FROM (
             SELECT (
                 SELECT JSONB_OBJECT_AGG(key, value)
@@ -303,11 +303,7 @@ BEGIN
             )
             FROM people p WHERE valid_till IS NULL AND (id = people_id OR -1 = people_id)
         ) alias (object) WHERE object IS NOT NULL;
-    -- IF people_id = -1 THEN
-         RETURN people;
-    -- ELSE
-    --     RETURN people->people_id::TEXT;
-    -- END IF;
+    RETURN people;
 END;
 $function$;
 
@@ -334,7 +330,7 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'people',
-        base := people_get(rights, people_id)->people_id::TEXT,
+        base := people_get(rights, people_id)->'people'->people_id::TEXT,
         update := _data
     ));
 
@@ -383,14 +379,13 @@ BEGIN
     PERFORM data_merge(
         rights := rights,
         ref_table := 'people',
-        base := people_get(rights, people_id)->people_id::TEXT,
+        base := people_get(rights, people_id)->'people'->people_id::TEXT,
         remove := TRUE
     );
 
     UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'no active person with id=% found', people_id;
-        RETURN NULL;
+        RAISE EXCEPTION '%', jsonb_error('No active person with id=%s found', people_id);
     END IF;
     RETURN 'true'::JSONB;--people_get(rights, people_id);
 END;
@@ -406,7 +401,7 @@ DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
 BEGIN
-    SELECT JSONB_OBJECT_AGG(object->>'id', object) INTO roles
+    SELECT JSONB_BUILD_OBJECT('roles', JSONB_OBJECT_AGG(object->>'id', object)) INTO roles
         FROM (
             SELECT (
                 SELECT JSONB_OBJECT_AGG(key, value)
@@ -431,11 +426,7 @@ BEGIN
             WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
             GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
         ) alias (object) WHERE object IS NOT NULL;
-    -- IF _roles_id = -1 THEN
-         RETURN roles;
-    -- ELSE
-    --     RETURN roles->_roles_id::TEXT;
-    -- END IF;
+    RETURN roles;
 END;
 $function$;
 
@@ -463,7 +454,7 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'roles',
-        base := roles_get(rights, roles_id),
+        base := roles_get(rights, roles_id)->'roles'->roles_id::TEXT,
         update := _data
     ));
 
@@ -502,7 +493,6 @@ END;
 $function$;
 
 
-
 --NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
 CREATE OR REPLACE FUNCTION public.fields_get(rights payload_permissions, ref_table VARCHAR(255) DEFAULT NULL)
  RETURNS JSONB
@@ -512,7 +502,7 @@ DECLARE
     fields JSONB;
     _ref_table ALIAS FOR ref_table;
 BEGIN
-    SELECT JSONB_OBJECT_AGG(object->>'name', object) INTO fields
+    SELECT JSONB_BUILD_OBJECT('fields', JSONB_OBJECT_AGG(object->>'name', object)) INTO fields
         FROM (
             SELECT JSONB_BUILD_OBJECT('name', f.ref_table) || JSONB_BUILD_OBJECT('type', 'object') || JSONB_BUILD_OBJECT('properties', JSONB_OBJECT_AGG(f.name, (
                 SELECT COALESCE(JSONB_OBJECT_AGG(key, value), '{}'::JSONB)
@@ -535,11 +525,7 @@ BEGIN
             GROUP BY f.ref_table, fm.data
             --GROUP BY f.gid, f.id, f.valid_from, f.valid_till, f.name, f.modified_by, f.modified, f.created, f.data
         ) alias (object);
-    -- IF _ref_table IS NULL THEN
-         RETURN fields;
-    -- ELSE
-    --     RETURN fields->_ref_table;
-    -- END IF;
+    RETURN fields;
 END;
 $function$;
 
