@@ -72,9 +72,12 @@ macro_rules! notfound {
 
 macro_rules! get_param {
     ($req:expr, $name:expr, $res_type:ty) => (
-        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<$res_type>() {
-            Ok(value) => value,
-            Err(err) => badrequest!(err.to_string())
+        match $req.extensions.get::<Router>().unwrap().find($name) {
+            None => None::<$res_type>,
+            Some(thing) => match thing.parse::<$res_type>() {
+                Ok(value) => Some(value),
+                Err(err) => badrequest!(err.to_string())
+            }
         }
     );
 }
@@ -286,27 +289,14 @@ fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
 }
 
 fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
-
-    let table = get_param!(req, "table", String);
-
-    caching(&req, &match &table as &str {
-        "-1" => call_db!(
-            req => req,
-            func => "fields_get",
-            args => (
-                token get_token!(req),
-                ref_table None::<String>
-            )
-        ),
-        refname => call_db!(
-            req => req,
-            func => "fields_get",
-            args => (
-                token get_token!(req),
-                ref_table refname
-            )
+    caching(&req, &call_db!(
+        req => req,
+        func => "fields_get",
+        args => (
+            token get_token!(req),
+            ref_table get_param!(req, "table", String)
         )
-    })
+    ))
 }
 
 fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
