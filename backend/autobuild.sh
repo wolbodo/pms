@@ -5,6 +5,7 @@ trap stop_runner INT
 
 
 function build_run() {
+	echo "############### File changed: rebuilding."
 	cargo build
 	kill_runner
 	cargo run &

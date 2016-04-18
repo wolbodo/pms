@@ -31,7 +31,6 @@ use postgres::error::Error as PgError;
 use router::Router;
 
 use serde_json::*;
-use std::collections::BTreeMap;
 use serialize::base64::{self, ToBase64};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -71,9 +70,9 @@ macro_rules! notfound {
     ($msg:expr) => (return Ok(Response::with((status::NotFound, serde_json::to_string(&SimpleError{error: $msg}).unwrap()))));
 }
 
-macro_rules! get_int {
-    ($req:expr, $name:expr) => (
-        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<i32>() {
+macro_rules! get_param {
+    ($req:expr, $name:expr, $res_type:ty) => (
+        match $req.extensions.get::<Router>().unwrap().find($name).unwrap_or("-1").parse::<$res_type>() {
             Ok(value) => value,
             Err(err) => badrequest!(err.to_string())
         }
@@ -89,21 +88,69 @@ macro_rules! get_token {
     );
 }
 
-macro_rules! get_db_json {
-    ($req:expr, $func:expr, $id:expr, $token:expr) => (
-        {
-            let db = $req.db_conn();
-            let stmt = db.prepare(sql!(concat!("SELECT ", $func, "_get(token := $1, ", $func, "_id := $2);"))).unwrap();
-            let rows = match stmt.query(&[&$token, &$id]) {
-                Ok(rows) => rows,
-                Err(PgError::Db(err)) => badrequest!(err.message),
-                Err(err) => badrequest!(err.to_string()),
-            };
-            let object: Value = match rows.get(0).get(0) {
-                Some(value) => value,
-                None => notfound!("Id not found (or no read access)".to_string())
-            };
-            object
+macro_rules! expand_sql_arguments {
+    // Start
+    ( $name1:ident ) => ( concat!(
+        stringify!($name1), " := $1"
+    ));
+    ( $name1:ident, $name2:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2"
+    ));
+    ( $name1:ident, $name2:ident, $name3:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2,",
+        stringify!($name3), " := $3"
+    ));
+    ( $name1:ident, $name2:ident, $name3:ident, $name4:ident ) => ( concat!(
+        stringify!($name1), " := $1,",
+        stringify!($name2), " := $2,",
+        stringify!($name3), " := $3,",
+        stringify!($name4), " := $4"
+    ));
+}
+
+macro_rules! print_values {
+    ($($value:expr),*) => ({
+        $(
+            println!(concat!(stringify!($value), ": {:?}"), $value);
+        );*
+    })
+}
+
+macro_rules! call_db {
+    (
+        req => $req:expr, 
+        func => $func:expr,
+        args => ( $($name:ident $value:expr),* )
+    ) => ({
+        let db = $req.db_conn();
+        println!(concat!("Query: ", concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");")));
+        let stmt = db.prepare(sql!(concat!("SELECT ", $func, "(", expand_sql_arguments!($($name),*), ");"))).unwrap();
+        let rows = match stmt.query(&[$(&$value),*]) {
+            Ok(rows) => rows,
+            Err(PgError::Db(err)) => badrequest!(err.message),
+            Err(err) => badrequest!(err.to_string()),
+        };
+        let object: Value = match rows.get(0).get(0) {
+            Some(value) => value,
+            None => notfound!("Id not found (or no read access)".to_string())
+        };
+        object
+    })
+}
+
+
+macro_rules! get_json_body {
+    ($req:expr) => (
+        get_json_body!($req, Value)
+    );
+    ($req:expr, $response_type:ty) => (
+        match $req.get::<bodyparser::Struct<$response_type>>() {
+            Ok(Some(body)) => body,
+            Ok(None) => badrequest!("Please send some body!".to_string()),
+            Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
+            Err(err) => badrequest!(err.to_string())
         }
     );
 }
@@ -142,124 +189,124 @@ fn caching(req: &Request, val: &Value) -> IronResult<Response> {
 }
 
 fn handle_login(req: &mut Request) -> IronResult<Response> {
-    //TODO: correct header (json), fix OK path to json.
 
-    let login = match req.get::<bodyparser::Struct<Login>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
+    let login = get_json_body!(req, Login);
 
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT login(emailaddress := $1, password := $2);")).unwrap();
-
-    let rows = match stmt.query(&[&login.user, &login.password]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let mut resp = BTreeMap::new();
-
-    let token: String = rows.get(0).get(0);
-    resp.insert("token", token);
-
-    //let mut userContext = BTreeMap::new();
-    //userContext
-    Ok(Response::with((status::Ok, serde_json::to_string(&resp).unwrap())))
+    ok_json!(&call_db!(
+        req => req,
+        func => "login",
+        args => (
+            emailaddress login.user,
+            password     login.password
+        )
+    ))
 }
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "people", get_int!(req, "id"), get_token!(req)))
-}
-
-fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
-    caching(&req, &get_db_json!(req, "roles", get_int!(req, "int"), get_token!(req)))
+    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_param!(req, "id", i32)))
+    caching(&req, &call_db!(
+        req => req,
+        func => "people_get",
+        args => (
+            token     get_token!(req),
+            people_id get_param!(req, "id", i32)
+        )
+    ))
 }
 
 fn handle_people_set(req: &mut Request) -> IronResult<Response> {
-    // Update an existing person.
-
-    let people_id;
-    {
-        let router = req.extensions.get::<Router>().unwrap();
-        let ref people_id_arg = router.find("id").unwrap();
-        people_id = match people_id_arg.parse::<i32>() {
-            Ok(value) => value,
-            Err(err) => badrequest!(err.to_string())
-        };
-    }
-    let token = match req.headers.get::<Authorization<String>>() {
-
-        Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => "".to_string() 
-    };
-
-    let data = match req.get::<bodyparser::Struct<Value>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
-
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT people_set(token := $1, people_id := $2, data := $3);")).unwrap();
-
-    let rows = match stmt.query(&[&token, &people_id, &data]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let people = match rows.get(0).get(0) {
-        value@ Value::Array(_) => value,
-        value@Value::Object(_) => value,
-        Value::Null | _ => internalerror!("unexpected response from database".to_string())
-    };
-
-    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
-    // Err(Response::with((status::Ok)));
+    ok_json!(&call_db!(
+        req => req,
+        func => "people_set",
+        args => (
+            token     get_token!(req),
+            people_id get_param!(req, "id", i32),
+            data      get_json_body!(req)
+        )
+    ))
 }
 
 fn handle_people_add(req: &mut Request) -> IronResult<Response> {
     // Create a new person. 
-
-    let token = match req.headers.get::<Authorization<String>>() {
-        Some(&Authorization(ref token)) => token.clone().to_string(),
-        None => "".to_string() 
-    };
-
-    let data = match req.get::<bodyparser::Struct<Value>>() {
-        Ok(Some(body)) => body,
-        Ok(None) => badrequest!("Please send some body!".to_string()),
-        Err(bodyparser::BodyError { cause: bodyparser::BodyErrorCause::JsonError(err), ..}) => badrequest!(err.to_string()),
-        Err(err) => badrequest!(err.to_string())
-    };
-
-    let db = req.db_conn();
-    let stmt = db.prepare(sql!("SELECT people_add(token := $1, data := $2);")).unwrap();
-
-    let rows = match stmt.query(&[&token, &data]) {
-        Ok(rows) => rows,
-        Err(PgError::Db(err)) => badrequest!(err.message),
-        Err(err) => badrequest!(err.to_string()),
-    };
-
-    let people = match rows.get(0).get(0) {
-        value@ Value::Array(_) => value,
-        value@Value::Object(_) => value,
-        Value::Null | _ => internalerror!("unexpected response from database".to_string())
-    };
-
-    Ok(Response::with((status::Ok, serde_json::to_string(&people).unwrap())))
+    ok_json!(&call_db!(
+        req => req,
+        func => "people_add",
+        args => (
+            token     get_token!(req),
+            data      get_json_body!(req)
+        )
+    ))
 }
 
-fn handle_fields(_: &mut Request) -> IronResult<Response> {
-    // Return fields. 
+fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "roles_get",
+        args => (
+            token     get_token!(req),
+            roles_id  get_param!(req, "id", i32)
+        )
+    ))
+}
 
-    Ok(Response::with((status::Ok)))
+fn handle_roles_set(req: &mut Request) -> IronResult<Response> {
+    ok_json!(&call_db!(
+        req => req,
+        func => "roles_set",
+        args => (
+            token     get_token!(req),
+            roles_id  get_param!(req, "id", i32),
+            data      get_json_body!(req)
+        )
+    ))
+}
+
+fn handle_roles_add(req: &mut Request) -> IronResult<Response> {
+    // Create a new person. 
+    ok_json!(&call_db!(
+        req => req,
+        func => "roles_add",
+        args => (
+            token     get_token!(req),
+            data      get_json_body!(req)
+        )
+    ))
+}   
+
+fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "permissions_get",
+        args => (
+            token     get_token!(req),
+            roles_id  get_param!(req, "id", i32)
+        )
+    ))
+}
+
+fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
+
+    let table = get_param!(req, "table", String);
+
+    if table == "-1" {
+        return caching(&req, &call_db!(
+            req => req,
+            func => "fields_get",
+            args => (
+                token get_token!(req)
+            )
+        ));
+    } else {
+        return caching(&req, &call_db!(
+            req => req,
+            func => "fields_get",
+            args => (
+                token get_token!(req),
+                ref_table table
+            )
+        ));
+    }
 }
 
 fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
@@ -289,14 +336,14 @@ fn main() {
         get  "/people/:id" => handle_people_get,
         put  "/people/:id" => handle_people_set,
 
-        // post "/roles"     => handle_roles_add,
+        post  "/roles"    => handle_roles_add,
         get  "/roles"     => handle_roles_get,
         get  "/roles/:id" => handle_roles_get,
-        // put  "/roles/:id" => handle_roles_set,
+        put  "/roles/:id" => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
-        // get  "/permissions"     => handle_permissions_get,
-        // get  "/permissions/:id" => handle_permissions_get,
+        get  "/permissions"     => handle_permissions_get,
+        get  "/permissions/:id" => handle_permissions_get,
         // put  "/permissions/:id" => handle_permissions_set,
 
         // post "/link"     => handle_link_add,
@@ -304,8 +351,9 @@ fn main() {
         // get  "/link/:id" => handle_link_get,
         // put  "/link/:id" => handle_link_set,
 
-        get  "/fields"     => handle_fields,
-        put  "/fields"     => handle_fields_edit
+        get  "/fields"        => handle_fields_get,
+        get  "/fields/:table" => handle_fields_get,
+        put  "/fields"        => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
