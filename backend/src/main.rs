@@ -272,6 +272,17 @@ fn handle_roles_add(req: &mut Request) -> IronResult<Response> {
             data      get_json_body!(req)
         )
     ))
+}   
+
+fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "permissions_get",
+        args => (
+            token     get_token!(req),
+            roles_id  get_param!(req, "id", i32)
+        )
+    ))
 }
 
 fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
