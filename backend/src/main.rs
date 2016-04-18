@@ -289,24 +289,23 @@ fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
 
     let table = get_param!(req, "table", String);
 
-    if table == "-1" {
-        return caching(&req, &call_db!(
+    caching(&req, &match &table as &str {
+        "-1" => call_db!(
             req => req,
             func => "fields_get",
             args => (
                 token get_token!(req)
             )
-        ));
-    } else {
-        return caching(&req, &call_db!(
+        ),
+        refname => call_db!(
             req => req,
             func => "fields_get",
             args => (
                 token get_token!(req),
-                ref_table table
+                ref_table refname
             )
-        ));
-    }
+        )
+    })
 }
 
 fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
@@ -329,31 +328,26 @@ impl AfterMiddleware for JsonResponse {
 fn main() {
 
     let router = router!(
-        post "/login"      => handle_login,
+        post "/login"           => handle_login,
 
-        post "/people"     => handle_people_add,
-        get  "/people"     => handle_people_get,
-        get  "/people/:id" => handle_people_get,
-        put  "/people/:id" => handle_people_set,
+        post "/people"          => handle_people_add,
+        get  "/people"          => handle_people_get,
+        get  "/people/:id"      => handle_people_get,
+        put  "/people/:id"      => handle_people_set,
 
-        post  "/roles"    => handle_roles_add,
-        get  "/roles"     => handle_roles_get,
-        get  "/roles/:id" => handle_roles_get,
-        put  "/roles/:id" => handle_roles_set,
+        post "/roles"           => handle_roles_add,
+        get  "/roles"           => handle_roles_get,
+        get  "/roles/:id"       => handle_roles_get,
+        put  "/roles/:id"       => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
         get  "/permissions"     => handle_permissions_get,
         get  "/permissions/:id" => handle_permissions_get,
         // put  "/permissions/:id" => handle_permissions_set,
 
-        // post "/link"     => handle_link_add,
-        // get  "/link"     => handle_link_get,
-        // get  "/link/:id" => handle_link_get,
-        // put  "/link/:id" => handle_link_set,
-
-        get  "/fields"        => handle_fields_get,
-        get  "/fields/:table" => handle_fields_get,
-        put  "/fields"        => handle_fields_edit
+        get  "/fields"          => handle_fields_get,
+        get  "/fields/:table"   => handle_fields_get,
+        put  "/fields"          => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
