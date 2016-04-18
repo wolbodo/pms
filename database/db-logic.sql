@@ -25,7 +25,7 @@ END
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.jsonb_error(format TEXT, VARIADIC args ANYARRAY)
+CREATE OR REPLACE FUNCTION public.jsonb_error(format TEXT, VARIADIC args ANYARRAY DEFAULT ARRAY[]::INTEGER[])
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$

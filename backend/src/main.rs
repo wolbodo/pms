@@ -294,7 +294,8 @@ fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
             req => req,
             func => "fields_get",
             args => (
-                token get_token!(req)
+                token get_token!(req),
+                ref_table None::<String>
             )
         ),
         refname => call_db!(
