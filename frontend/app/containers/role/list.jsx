@@ -6,30 +6,30 @@ import { List, Head, Row } from 'components/list';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
 
-import * as groupsActions from 'redux/modules/groups';
+import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
 
 @connect((state) => ({
-  groups: state.get('groups').toJS(),
+  roles: state.get('roles').toJS(),
   fields: state.get('fields').toJS()
 }), {
-  create: groupsActions.create,
+  create: rolesActions.create,
   pushState: push,
   fieldsFetch: fieldsActions.fetch,
-  groupsFetch: groupsActions.fetch
+  rolesFetch: rolesActions.fetch
 })
-export default class GroupList extends React.Component {
+export default class RoleList extends React.Component {
   static propTypes = {
-    groups: PropTypes.object,
+    roles: PropTypes.object,
     fields: PropTypes.object,
     create: PropTypes.func,
     pushState: PropTypes.func,
     fieldsFetch: PropTypes.func,
-    groupsFetch: PropTypes.func,
+    rolesFetch: PropTypes.func,
   }
   componentDidMount() {
     this.props.fieldsFetch();
-    this.props.groupsFetch();
+    this.props.rolesFetch();
   }
 
   renderButtons() {
@@ -44,13 +44,13 @@ export default class GroupList extends React.Component {
   }
 
   render() {
-    const { groups, fields, pushState } = this.props;
+    const { roles, fields, pushState } = this.props;
     const schema = _.get(fields, 'items.roles');
 
     return (
       <List title="Groepen" buttons={this.renderButtons()}>
         <Head schema={schema} editLink />
-        {_.map(groups.items, (row, i) => (
+        {_.map(roles.items, (row, i) => (
           <Row
             className="click"
             key={i}

@@ -12,7 +12,7 @@ import fieldComponents from 'components/fields';
   people: state.get('people').toJS(),
   auth: state.get('auth').toJS(),
   fields: state.get('fields').toJS(),
-  groups: state.get('groups').toJS()
+  roles: state.get('roles').toJS()
 }), {
   pushState: push
 })
@@ -20,7 +20,7 @@ export default class PeopleView extends React.Component {
 
   static propTypes = {
     fields: PropTypes.object,
-    groups: PropTypes.object,
+    roles: PropTypes.object,
     people: PropTypes.object,
     pushState: PropTypes.func,
 
@@ -31,9 +31,9 @@ export default class PeopleView extends React.Component {
   };
 
   loaded() {
-    const { fields, groups } = this.props;
+    const { fields, roles } = this.props;
 
-    return fields.loaded && groups.loaded;
+    return fields.loaded && roles.loaded;
   }
 
   render() {
@@ -41,7 +41,7 @@ export default class PeopleView extends React.Component {
       return (<h1>Loading</h1>);
     }
     const {
-      people, fields, groups,
+      people, fields, roles,
       pushState, routeParams } = this.props;
     const schema = _.get(fields, 'items.people');
 
@@ -49,20 +49,20 @@ export default class PeopleView extends React.Component {
     const items = _.mergeWith(people.items, people.updates, (obj, src) =>
                                 (_.isArray(obj) ? src : undefined));
 
-    // Get the current group/role
-    const currentGroup = _.find(groups.items, (group) =>
-                                              group.name === routeParams.group_name);
+    // Get the current role/role
+    const currentRole = _.find(roles.items, (role) =>
+                                              role.name === routeParams.role_name);
 
     // filter people
-    const peopleSet = currentGroup
-                    ? _.filter(items, (person) => _.includes(currentGroup.people_ids, person.id))
+    const peopleSet = currentRole
+                    ? _.filter(items, (person) => _.includes(currentRole.people_ids, person.id))
                     : items;
 
     // Create a select title ;)
     const title = (
       <fieldComponents.Enum
-        value={_.get(currentGroup, 'name', 'all')}
-        options={_.fromPairs(_.map(groups.items, ({ name }) => [name, name]))}
+        value={_.get(currentRole, 'name', 'all')}
+        options={_.fromPairs(_.map(roles.items, ({ name }) => [name, name]))}
         style={{
           fontSize: '22px',
           fontWeight: 'bold',

@@ -64,11 +64,11 @@ export function updateField(schema, id, field) {
 // Index depths
 const FIELD = 2;
 const SET = 1;
-const GROUP = 0;
+const ROLE = 0;
 
 function moveSchemaField(schema, fromIndex, toIndex) {
   const field = schema.getIn(
-    ['form', fromIndex[GROUP], 'fields', fromIndex[SET], fromIndex[FIELD]]);
+    ['form', fromIndex[ROLE], 'fields', fromIndex[SET], fromIndex[FIELD]]);
   // move (delete and add) the field from fromIndex to toIndex.
 
   let _schema = schema;
@@ -76,22 +76,22 @@ function moveSchemaField(schema, fromIndex, toIndex) {
   // mind the order,
   if (fromIndex[FIELD] > toIndex[FIELD]) {
     // remove the field first, then add
-    _schema = _schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]],
+    _schema = _schema.updateIn(['form', fromIndex[ROLE], 'fields', fromIndex[SET]],
                 (fieldset) => fieldset.splice(fromIndex[FIELD], 1))
-           .updateIn(['form', toIndex[GROUP], 'fields', toIndex[SET]],
+           .updateIn(['form', toIndex[ROLE], 'fields', toIndex[SET]],
                 (fieldset) => fieldset.splice(toIndex[FIELD], 0, field));
   } else {
     // other way around
-    _schema = _schema.updateIn(['form', toIndex[GROUP], 'fields', toIndex[SET]],
+    _schema = _schema.updateIn(['form', toIndex[ROLE], 'fields', toIndex[SET]],
                 (fieldset) => fieldset.splice(toIndex[FIELD], 0, field))
-           .updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]],
+           .updateIn(['form', fromIndex[ROLE], 'fields', fromIndex[SET]],
                 (fieldset) => fieldset.splice(fromIndex[FIELD], 1));
   }
   // remove old fieldset if it was empty
-  const oldFieldset = _schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]);
+  const oldFieldset = _schema.getIn(['form', fromIndex[ROLE], 'fields', fromIndex[SET]]);
   if (oldFieldset.isEmpty()) {
     _schema = _schema.updateIn(
-      ['form', fromIndex[GROUP], 'fields'],
+      ['form', fromIndex[ROLE], 'fields'],
       (fields) => fields.splice(fromIndex[SET], 1)
     );
   }
@@ -102,21 +102,21 @@ function moveSchemaField(schema, fromIndex, toIndex) {
 function createSchemaSet(schema, fromIndex, toIndex) {
   // get field to move.
   const field = schema.getIn(
-    ['form', fromIndex[GROUP], 'fields', fromIndex[SET], fromIndex[FIELD]]);
+    ['form', fromIndex[ROLE], 'fields', fromIndex[SET], fromIndex[FIELD]]);
   console.log('Moving field:', field, fromIndex, toIndex);
 
   let _schema = schema;
 
   // remove from old place.
-  _schema = _schema.updateIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]],
+  _schema = _schema.updateIn(['form', fromIndex[ROLE], 'fields', fromIndex[SET]],
               (fieldset) => fieldset.splice(fromIndex[FIELD], 1));
 
-  console.log('From:', schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndex[SET]]).toJS());
-  console.log('To:', _schema.getIn(['form', toIndex[GROUP]]).toJS());
+  console.log('From:', schema.getIn(['form', fromIndex[ROLE], 'fields', fromIndex[SET]]).toJS());
+  console.log('To:', _schema.getIn(['form', toIndex[ROLE]]).toJS());
 
   // add in the new place.
   _schema = _schema.updateIn(
-    ['form', toIndex[GROUP], 'fields'],
+    ['form', toIndex[ROLE], 'fields'],
     (fieldsets) => fieldsets.splice(toIndex[SET], 0, Immutable.List([field]))
   );
 
@@ -124,15 +124,15 @@ function createSchemaSet(schema, fromIndex, toIndex) {
 
   // if the new fieldset was created in the same group, and before the empty old fieldset,
   // the fromIndex[SET] index has increased by 1.
-  if ((fromIndex[GROUP] === toIndex[GROUP]) && (fromIndex[SET] > toIndex[SET])) {
+  if ((fromIndex[ROLE] === toIndex[ROLE]) && (fromIndex[SET] > toIndex[SET])) {
     fromIndexSet += 1;
   }
 
   // remove old fieldset if it was empty
-  const oldFieldset = _schema.getIn(['form', fromIndex[GROUP], 'fields', fromIndexSet]);
+  const oldFieldset = _schema.getIn(['form', fromIndex[ROLE], 'fields', fromIndexSet]);
   if (oldFieldset.isEmpty()) {
     _schema = _schema.updateIn(
-      ['form', fromIndex[GROUP], 'fields'],
+      ['form', fromIndex[ROLE], 'fields'],
       (fields) => fields.splice(fromIndexSet, 1)
     );
   }

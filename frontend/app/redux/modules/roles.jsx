@@ -5,19 +5,19 @@ import Immutable from 'immutable';
 import { apiAction, API } from 'redux/apiWrapper';
 import { CLEAR } from './clearState';
 
-const FETCH = 'pms/groups/FETCH';
-const FETCH_SUCCESS = 'pms/groups/FETCH_SUCCESS';
-const FETCH_FAIL = 'pms/groups/FETCH_FAIL';
+const FETCH = 'pms/roles/FETCH';
+const FETCH_SUCCESS = 'pms/roles/FETCH_SUCCESS';
+const FETCH_FAIL = 'pms/roles/FETCH_FAIL';
 
-const PUSH = 'pms/groups/PUSH';
-const PUSH_SUCCESS = 'pms/groups/PUSH_SUCCESS';
-const PUSH_FAIL = 'pms/groups/PUSH_FAIL';
+const PUSH = 'pms/roles/PUSH';
+const PUSH_SUCCESS = 'pms/roles/PUSH_SUCCESS';
+const PUSH_FAIL = 'pms/roles/PUSH_FAIL';
 
-const UPDATE = 'pms/groups/UPDATE';
-const REVERT = 'pms/groups/REVERT';
-const CREATE = 'pms/groups/CREATE';
+const UPDATE = 'pms/roles/UPDATE';
+const REVERT = 'pms/roles/REVERT';
+const CREATE = 'pms/roles/CREATE';
 
-const COMMIT_FINISHED = 'pms/groups/COMMIT_FINISHED';
+const COMMIT_FINISHED = 'pms/roles/COMMIT_FINISHED';
 
 const initialState = Immutable.fromJS({
   loading: false
@@ -30,12 +30,12 @@ export function fetch() {
   });
 }
 
-export function update(id, group) {
+export function update(id, role) {
   return {
     type: UPDATE,
     data: {
       id: id.toString(), // TODO: is a string for now parseInt(id, 10),
-      group
+      role
     }
   };
 }
@@ -104,9 +104,9 @@ export function commit() {
       };
     }
 
-    const roles = getState().get('groups');
+    const roles = getState().get('roles');
     // Save all updates
-    roles.get('updates')
+    roles.get('updates', new Immutable.Map())
           .map((role, i) => (
             // Add or update role, whether gid exists.
             roles.hasIn(['items', i])
@@ -127,18 +127,18 @@ export function commit() {
 const reducers = {
 
   // Api handling states.
-  [FETCH]: (groups) =>
-    groups.merge({ loading: true }),
+  [FETCH]: (roles) =>
+    roles.merge({ loading: true }),
 
-  [FETCH_SUCCESS]: (groups, { data }) =>
-    groups.merge({
+  [FETCH_SUCCESS]: (roles, { data }) =>
+    roles.merge({
       fetching: false,
       loaded: true, // Only set initially, So the ui know it has data.
-      items: data
+      items: data.roles
     }),
 
-  [FETCH_FAIL]: (groups, { error }) =>
-    groups.merge({ loading: false, error }),
+  [FETCH_FAIL]: (roles, { error }) =>
+    roles.merge({ loading: false, error }),
 
 
   [PUSH]: (roles) =>
@@ -147,9 +147,7 @@ const reducers = {
   [PUSH_SUCCESS]: (roles, { data }) =>
     roles.mergeDeep({
       pushing: false,
-      items: {
-        [data.id]: data
-      }
+      items: data.roles
     }),
 
   [PUSH_FAIL]: (roles, { error }) =>
@@ -159,20 +157,20 @@ const reducers = {
     }),
 
   [REVERT]: (roles) =>
-    roles.set('updates', new Map()),
+    roles.set('updates', new Immutable.Map()),
 
   // Local changes and push
-  [CREATE]: (groups, { data }) =>
-    groups.mergeDeep({
+  [CREATE]: (roles, { data }) =>
+    roles.mergeDeep({
       updates: {
         [data.id]: {}
       }
     }),
 
-  [UPDATE]: (groups, { data }) =>
-    groups.mergeDeep({
+  [UPDATE]: (roles, { data }) =>
+    roles.mergeDeep({
       updates: {
-        [data.id]: data.group
+        [data.id]: data.role
       }
     }),
 

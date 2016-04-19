@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 
 import * as peopleActions from 'redux/modules/people';
 
-function PersonEdit({ params, people, groups, fields, auth, update }) {
+function PersonEdit({ params, people, roles, fields, auth, update }) {
   const personId = params.id || auth.user.user;
 
   const permissions = (parseInt(personId, 10) === auth.user.user)
@@ -20,7 +20,7 @@ function PersonEdit({ params, people, groups, fields, auth, update }) {
 
   const item = _.mergeWith(
     person, updates,
-    { roles: _.filter(groups.items, (group) => _.includes(group.people_ids, person.id)) },
+    { roles: _.filter(roles.items, (role) => _.includes(role.people_ids, person.id)) },
     (obj, src) => (_.isArray(obj) ? src : undefined)
   );
 
@@ -31,7 +31,7 @@ function PersonEdit({ params, people, groups, fields, auth, update }) {
         title: 'Groepen',
         target: 'roles',
         displayValue: 'name',
-        options: groups.items,
+        options: roles.items,
       }
     }
   });
@@ -50,7 +50,7 @@ function PersonEdit({ params, people, groups, fields, auth, update }) {
 PersonEdit.propTypes = {
   params: PropTypes.object,
   people: PropTypes.object,
-  groups: PropTypes.object,
+  roles: PropTypes.object,
   fields: PropTypes.object,
   auth: PropTypes.object,
   update: PropTypes.func,
@@ -58,7 +58,7 @@ PersonEdit.propTypes = {
 
 export default connect((state) => ({
   people: state.get('people').toJS(),
-  groups: state.get('groups').toJS(),
+  roles: state.get('roles').toJS(),
   fields: state.get('fields').toJS(),
   auth: state.get('auth').toJS(),
 }), {

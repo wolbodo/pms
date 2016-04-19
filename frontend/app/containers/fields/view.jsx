@@ -18,7 +18,7 @@ import * as fieldActions from 'redux/modules/fields';
 
 const ItemTypes = {
   FIELD: Symbol('field'),
-  GROUP: Symbol('group')
+  ROLE: Symbol('role')
 };
 
 function getDragDirection(component, monitor) {
@@ -49,7 +49,7 @@ function getDragDirection(component, monitor) {
 // Index depths
 const FIELD = 2;
 const SET = 1;
-const GROUP = 0;
+const ROLE = 0;
 
 /**
  * Implements the drag source contract.
@@ -72,7 +72,7 @@ const fieldTarget = {
     const direction = getDragDirection(component, monitor);
 
     if ( // were working on the same fieldset
-      (item.index[GROUP] === props.index[GROUP])
+      (item.index[ROLE] === props.index[ROLE])
        &&
       (item.index[SET] === props.index[SET])
        &&
@@ -97,7 +97,7 @@ const fieldTarget = {
     const toIndex = props.index;
 
     if ( // were working on the same fieldset
-      (item.index[GROUP] === props.index[GROUP])
+      (item.index[ROLE] === props.index[ROLE])
        &&
       (item.index[SET] === props.index[SET])
        &&
@@ -151,13 +151,13 @@ const fieldSetTarget = {
   }
 };
 
-// const groupSource = {
+// const rolesource = {
 //   beginDrag(props) {
 //     index: props.index
 //   }
 // }
 
-const groupTarget = {
+const roleTarget = {
 };
 
 
@@ -275,9 +275,9 @@ class FieldSet extends React.Component {
   }
 }
 
-// @dragSource(ItemTypes.GROUP, groupSource, sourceCollect)
-@dropTarget(ItemTypes.FIELD, groupTarget, targetCollect)
-class Group extends React.Component {
+// @dragSource(ItemTypes.ROLE, rolesource, sourceCollect)
+@dropTarget(ItemTypes.FIELD, roleTarget, targetCollect)
+class Role extends React.Component {
   static propTypes = {
     // connectDragSource: PropTypes.func.isRequired,
     // isDragging: PropTypes.bool.isRequired,
@@ -317,7 +317,7 @@ class Group extends React.Component {
     return connectDropTarget(
       <div>
         <mdl.Card
-          className={classnames('group', 'mdl-color--white', 'mdl-shadow--2dp', { hover: isOver })}
+          className={classnames('role', 'mdl-color--white', 'mdl-shadow--2dp', { hover: isOver })}
         >
           <mdl.CardTitle>
           { title }
@@ -380,16 +380,16 @@ export default class FieldsView extends React.Component {
     // <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
       <div className="content fieldsview">
-      { _.map(fields.items[table].form, (group, i) =>
-        <Group
+      { _.map(fields.items[table].form, (role, i) =>
+        <Role
           key={i}
           index={i}
           getFieldURI={(name) => `/velden/${name}`}
           moveField={this.moveField}
           schema={fields.items[table]}
           addSet={this.addSet}
-          title={group.title}
-          fieldsets={group.fields}
+          title={role.title}
+          fieldsets={role.fields}
         />
       )}
       </div>

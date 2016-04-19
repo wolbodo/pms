@@ -7,36 +7,36 @@ import { push } from 'react-router-redux';
 
 import { Field } from 'components';
 
-import * as groupsActions from 'redux/modules/groups';
+import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
 
 @connect((state) => ({
   auth: state.get('auth').toJS(),
-  groups: state.get('groups').toJS(),
+  roles: state.get('roles').toJS(),
   people: state.get('people').toJS(),
   fields: state.get('fields').toJS(),
 }), {
-  create: groupsActions.create,
+  create: rolesActions.create,
   pushState: push,
   fieldsFetch: fieldsActions.fetch,
-  groupsFetch: groupsActions.fetch,
-  groupsUpdate: groupsActions.update,
+  rolesFetch: rolesActions.fetch,
+  rolesUpdate: rolesActions.update,
 })
-export default class GroupView extends React.Component {
+export default class RoleView extends React.Component {
   static propTypes = {
     auth: PropTypes.object,
-    groups: PropTypes.object,
+    roles: PropTypes.object,
     people: PropTypes.object,
     fields: PropTypes.object,
     create: PropTypes.func,
     pushState: PropTypes.func,
     fieldsFetch: PropTypes.func,
-    groupsFetch: PropTypes.func,
-    groupsUpdate: PropTypes.func,
+    rolesFetch: PropTypes.func,
+    rolesUpdate: PropTypes.func,
   }
   componentDidMount() {
     this.props.fieldsFetch();
-    this.props.groupsFetch();
+    this.props.rolesFetch();
   }
 
   renderButtons() {
@@ -52,22 +52,22 @@ export default class GroupView extends React.Component {
 
   render() {
     const {
-      groups: { items, updates }, groupsUpdate,
+      roles: { items, updates }, rolesUpdate,
       auth: { permissions },
       people,
       fields } = this.props;
 
     const schema = _.get(fields, 'items.roles');
 
-    const groups = _.merge(items, updates);
+    const roles = _.merge(items, updates);
     const editFields = ['description'];
 
     return (
       <div className="content">
-      {_.map(groups, (group) => (
-        <mdl.Card key={group.id} className="mdl-color--white mdl-shadow--2dp">
+      {_.map(roles, (role) => (
+        <mdl.Card key={role.id} className="mdl-color--white mdl-shadow--2dp">
           <mdl.CardTitle>
-            {group.name}
+            {role.name}
           </mdl.CardTitle>
           <div className="fieldset">
             {_.map(editFields, (field) => (
@@ -75,14 +75,14 @@ export default class GroupView extends React.Component {
                 key={field}
                 field={_.get(schema.properties, field)}
                 disabled={!_.includes(permissions.roles.edit, field)}
-                onChange={(value) => groupsUpdate(group.id, { [field]: value })}
-                value={group[field]}
+                onChange={(value) => rolesUpdate(role.id, { [field]: value })}
+                value={role[field]}
               />
             ))}
           </div>
           <div className="people">
             <Field
-              value={_.map(group.people_ids, (id) => _.get(people.items, id))}
+              value={_.map(role.people_ids, (id) => _.get(people.items, id))}
               onBlur={(value, key) => console.log('blur', value, key)}
               onChange={(value, key) => console.log('change', value, key)}
               field={{
@@ -103,7 +103,7 @@ export default class GroupView extends React.Component {
     // return (
     //   <List title="Groepen" buttons={this.renderButtons()}>
     //     <Head schema={schema} editLink />
-    //     {_.map(groups.items, (row, i) => (
+    //     {_.map(roles.items, (row, i) => (
     //       <Row
     //         className="click"
     //         key={i}

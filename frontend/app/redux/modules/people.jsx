@@ -35,13 +35,16 @@ export function fetch() {
 }
 
 export function update(id, value, key) {
-  return {
-    type: UPDATE,
-    data: {
-      id: id.toString(),
-      value, key
-    }
-  };
+  return (dispatch, getState) => (
+    dispatch({
+      type: UPDATE,
+      data: {
+        id: id.toString(),
+        gid: getState().getIn(['people', 'items', id, 'gid']),
+        value, key
+      }
+    })
+  );
 }
 
 export function create() {
@@ -86,10 +89,10 @@ export function commit() {
       // Fetches
       return {
         types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
-        uri: `person/${id}`, // For debugging
+        uri: `people/${id}`, // For debugging
         promise:
           // fetch the person first, to see whether it has changed.
-          API(token, `person/${id}`)
+          API(token, `people/${id}`)
           // Check whether it has been modified
           .then((result) => {
             if (result.status === 304) {
@@ -98,7 +101,7 @@ export function commit() {
             // Should create trigger conflicts.
             // throw new Error('Fail')))
 
-            return API(token, `person/${id}`, {
+            return API(token, `people/${id}`, {
               method: 'PUT',
               body: data
             });
@@ -108,7 +111,7 @@ export function commit() {
 
     const people = getState().get('people');
     // Save all updates
-    people.get('updates')
+    people.get('updates', new Map())
           .map((person, i) => (
             // Add or update person, whether gid exists.
             people.hasIn(['items', i])
@@ -165,7 +168,13 @@ const reducers = {
     people.set('updates', Map()),
 
   [UPDATE]: (people, { data }) =>
-    people.updateIn(['updates', data.id, data.key], () => data.value),
+    people.updateIn(
+      ['updates', data.id],
+      (person = new Map()) => person.merge({
+        [data.key]: data.value,
+        gid: data.gid
+      })
+    ),
 
   [CREATE]: (people, { data }) =>
     people.update('updates', (updates) =>
