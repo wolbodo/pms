@@ -138,7 +138,7 @@ const reducers = {
     people.mergeDeep({
       fetching: false,
       loaded: true, // Only set initially, So the ui know it has data.
-      items: data
+      items: data.people
     }),
 
   [FETCH_FAIL]: (people, { error }) =>
@@ -150,9 +150,7 @@ const reducers = {
   [PUSH_SUCCESS]: (people, { data }) =>
     people.mergeDeep({
       pushing: false,
-      items: {
-        [data.id]: data
-      }
+      items: data.people
     }),
 
   [PUSH_FAIL]: (people, { error }) =>

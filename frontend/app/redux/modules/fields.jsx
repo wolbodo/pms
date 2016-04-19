@@ -151,7 +151,7 @@ const reducers = {
     fields.mergeDeep({
       fetching: false,
       loaded: true, // Only set initially, So the ui know it has data.
-      items: data
+      items: data.fields
     }),
 
   [FETCH_FAIL]: (fields, { error }) =>
