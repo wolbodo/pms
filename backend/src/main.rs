@@ -71,15 +71,6 @@ macro_rules! notfound {
 }
 
 macro_rules! get_param {
-    ($req:expr, $name:expr, $res_type:ty, $default:expr) => (
-        match $req.extensions.get::<Router>().unwrap().find($name) {
-            None => Some($default.parse::<$res_type>().unwrap()),
-            Some(thing) => match thing.parse::<$res_type>() {
-                Ok(value) => Some(value),
-                Err(err) => badrequest!(err.to_string())
-            }
-        }
-    );
     ($req:expr, $name:expr, $res_type:ty) => (
         match $req.extensions.get::<Router>().unwrap().find($name) {
             None => None::<$res_type>,
@@ -89,7 +80,6 @@ macro_rules! get_param {
             }
         }
     );
-
 }
 
 macro_rules! get_token {
@@ -217,13 +207,13 @@ fn handle_login(req: &mut Request) -> IronResult<Response> {
 
 // Returns a list of people, might be using filters.
 fn handle_people_get(req: &mut Request) -> IronResult<Response> {
-    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_param!(req, "id", i32, "-1")))
+    // caching(&req, &get_db_json!(req, "people", get_token!(req), get_param!(req, "id", i32)))
     caching(&req, &call_db!(
         req => req,
         func => "people_get",
         args => (
             token     get_token!(req),
-            people_id get_param!(req, "id", i32, "-1")
+            people_id get_param!(req, "id", i32)
         )
     ))
 }
@@ -234,7 +224,7 @@ fn handle_people_set(req: &mut Request) -> IronResult<Response> {
         func => "people_set",
         args => (
             token     get_token!(req),
-            people_id get_param!(req, "id", i32, "-1"),
+            people_id get_param!(req, "id", i32),
             data      get_json_body!(req)
         )
     ))
@@ -258,7 +248,7 @@ fn handle_roles_get(req: &mut Request) -> IronResult<Response> {
         func => "roles_get",
         args => (
             token     get_token!(req),
-            roles_id  get_param!(req, "id", i32, "-1")
+            roles_id  get_param!(req, "id", i32)
         )
     ))
 }
@@ -269,7 +259,7 @@ fn handle_roles_set(req: &mut Request) -> IronResult<Response> {
         func => "roles_set",
         args => (
             token     get_token!(req),
-            roles_id  get_param!(req, "id", i32, "-1"),
+            roles_id  get_param!(req, "id", i32),
             data      get_json_body!(req)
         )
     ))
@@ -293,7 +283,7 @@ fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
         func => "permissions_get",
         args => (
             token     get_token!(req),
-            roles_id  get_param!(req, "id", i32, "-1")
+            roles_id  get_param!(req, "id", i32)
         )
     ))
 }
