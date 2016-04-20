@@ -3,7 +3,7 @@ import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 
 import {
-  group,
+  role,
   people,
   fields,
   permissions,
@@ -16,14 +16,14 @@ import * as authActions from 'redux/modules/auth';
 import clearState from 'redux/modules/clearState';
 
 import * as peopleActions from 'redux/modules/people';
-import * as groupsActions from 'redux/modules/groups';
+import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
 
 
 // Create a mapping for resourcetypes...
 const actions = {
   people: peopleActions,
-  groups: groupsActions,
+  roles: rolesActions,
   fields: fieldsActions,
 };
 function fetchResources(store, ...resources) {
@@ -67,7 +67,7 @@ function logout(store) {
 export default (store) => (
   <Route path="/"
     component={App}
-    onEnter={fetchResources(store, 'people', 'groups', 'fields')}
+    onEnter={fetchResources(store, 'people', 'roles', 'fields')}
   >
     <IndexRoute
       name="Lijst"
@@ -76,7 +76,7 @@ export default (store) => (
     />
     <Route
       name="Mensen"
-      path="mensen(/:group_name)"
+      path="mensen(/:role_name)"
       components={{ main: people.View, header: HeaderBar }}
       onEnter={requireLogin(store)}
     />
@@ -107,20 +107,20 @@ export default (store) => (
     <Route
       name="Groepen"
       path="groepen"
-      components={{ main: group.View, header: HeaderBar }}
+      components={{ main: role.View, header: HeaderBar }}
       onEnter={requireLogin(store)}
     />
     <Route
       name="Groep"
       path="groepen/:groep"
-      components={{ main: group.Edit, header: HeaderBar }}
+      components={{ main: role.Edit, header: HeaderBar }}
       onEnter={requireLogin(store)}
     />
     <Route
       name="Permissies"
       path="permissies"
       components={{ main: permissions.View, header: HeaderBar }}
-      onEnter={fetchResources(store, 'people', 'groups', 'fields', 'permissions')}
+      onEnter={fetchResources(store, 'people', 'roles', 'fields', 'permissions')}
     />
     <Route
       name="Login"

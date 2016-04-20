@@ -36,10 +36,10 @@ export default class ItemEdit extends React.Component {
 
     let form = mapFilter(
       schema.form,
-      (group) => ({
-        title: group.title,
+      (role) => ({
+        title: role.title,
         fields: mapFilter(
-          group.fields,
+          role.fields,
           (fieldset) => mapFilter(
             fieldset,
             (field) => (
@@ -60,18 +60,18 @@ export default class ItemEdit extends React.Component {
           (fieldset) => !_.isEmpty(fieldset)
         )
       }),
-      (group) => !_.isEmpty(group.fields)
+      (role) => !_.isEmpty(role.fields)
     );
 
     return (
       <form className="content" onSubmit={this.handleSubmit}>
-      {_.map(form, (group, i) => (
+      {_.map(form, (role, i) => (
         <mdl.Card key={i} className="mdl-color--white mdl-shadow--2dp">
           <mdl.CardTitle>
-            {group.title}
+            {role.title}
           </mdl.CardTitle>
           <div className="mdl-card__form">
-          {_.map(group.fields, (fieldset, key) => (
+          {_.map(role.fields, (fieldset, key) => (
             <div key={key} className="fieldset">
             {_.map(fieldset, (field, _key) => (
               <Field

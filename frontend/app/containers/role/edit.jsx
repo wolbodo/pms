@@ -2,20 +2,20 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { ItemEdit } from 'components';
-import * as groupActions from 'redux/modules/groups';
+import * as roleActions from 'redux/modules/roles';
 
-function GroupEdit({ groups, fields, params, auth, update }) {
+function RoleEdit({ roles, fields, params, auth, update }) {
   return (
     <ItemEdit
       schema={fields.items.roles}
-      item={groups.items[params.groep]}
+      item={roles.items[params.groep]}
       permissions={auth.permissions.roles}
       onChange={(value, key) => update(params.groep, { [key]: value })}
     />
   );
 }
-GroupEdit.propTypes = {
-  groups: PropTypes.object,
+RoleEdit.propTypes = {
+  roles: PropTypes.object,
   fields: PropTypes.object,
   params: PropTypes.object,
   auth: PropTypes.object,
@@ -23,9 +23,9 @@ GroupEdit.propTypes = {
 };
 
 export default connect((state) => ({
-  groups: state.get('groups').toJS(),
+  roles: state.get('roles').toJS(),
   fields: state.get('fields').toJS(),
   auth: state.get('auth').toJS(),
 }), {
-  update: groupActions.update
-})(GroupEdit);
+  update: roleActions.update
+})(RoleEdit);

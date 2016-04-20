@@ -19,12 +19,12 @@ const reducers = {
     permissions,
 
   [CHANGE]: (permissions, { data }) =>
-    permissions.updateIn([data.group.id, data.schema, 'read'],
+    permissions.updateIn([data.role.id, data.schema, 'read'],
       (readperms) => (data.read ?
         Immutable.Set(readperms).add(data.field.name)
         : Immutable.Set(readperms).remove(data.field.name)
       ))
-      .updateIn([data.group.id, data.schema, 'write'],
+      .updateIn([data.role.id, data.schema, 'write'],
       (writeperms) => (data.write ?
         Immutable.Set(writeperms).add(data.field.name)
         : Immutable.Set(writeperms).remove(data.field.name)

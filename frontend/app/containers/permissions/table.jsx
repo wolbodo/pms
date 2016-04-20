@@ -25,7 +25,7 @@ class PermissionsDialog extends React.Component {
     if (!_.isEqual(this.props.dialogState, nextProps.dialogState)) {
       this.setState(nextProps.dialogState || {
         schema: undefined,
-        group: undefined,
+        role: undefined,
         field: undefined,
         read: false,
         write: false
@@ -41,9 +41,9 @@ class PermissionsDialog extends React.Component {
 
   render() {
     const { onClose, onSubmit } = this.props;
-    const { group, field, read, write } = this.state || {};
+    const { role, field, read, write } = this.state || {};
 
-    const dialogOpen = group && field;
+    const dialogOpen = role && field;
 
     const actions = [
       <FlatButton
@@ -70,7 +70,7 @@ class PermissionsDialog extends React.Component {
           <div>
             <p>
               Voor de personen in
-              <span className="group">"{group.name}"</span>
+              <span className="role">"{role.name}"</span>
               op het veld
               <span className="field">"{field.title}"</span>
             </p>
@@ -109,7 +109,7 @@ class PermissionsDialog extends React.Component {
 export default class PermissionsView extends React.Component {
   static propTypes = {
     permissions: PropTypes.object,
-    groups: PropTypes.object,
+    roles: PropTypes.object,
     fields: PropTypes.object,
     change: PropTypes.func,
   };
@@ -118,10 +118,10 @@ export default class PermissionsView extends React.Component {
 
     this.state = {};
   }
-  getPermissions(group, schema, field) {
+  getPermissions(role, schema, field) {
     const { permissions } = this.props;
-    const read = _.includes(_.get(permissions, [group.id, schema, 'read']), field.name);
-    const write = _.includes(_.get(permissions, [group.id, schema, 'write']), field.name);
+    const read = _.includes(_.get(permissions, [role.id, schema, 'read']), field.name);
+    const write = _.includes(_.get(permissions, [role.id, schema, 'write']), field.name);
 
     return { read, write };
   }
@@ -135,8 +135,8 @@ export default class PermissionsView extends React.Component {
     const { permissions } = this.props;
     this.setState({
       dialogState: _.assign(state, {
-        read: _.includes(permissions[state.group.id][state.schema].read, state.field.name),
-        write: _.includes(permissions[state.group.id][state.schema].write, state.field.name)
+        read: _.includes(permissions[state.role.id][state.schema].read, state.field.name),
+        write: _.includes(permissions[state.role.id][state.schema].write, state.field.name)
       })
     });
   }
@@ -147,16 +147,16 @@ export default class PermissionsView extends React.Component {
   }
 
   renderHeading() {
-    const { groups } = this.props;
+    const { roles } = this.props;
 
     return (
       <thead>
         <tr>
           <th></th>
-          {_.map(groups.items, (group, id) => (
+          {_.map(roles.items, (role, id) => (
             <th key={id} className="mdl-data-table__cell--non-numeric">
               <Link to={`/groepen/${id}`}>
-                {group.name}
+                {role.name}
               </Link>
             </th>
           ))}
@@ -167,7 +167,7 @@ export default class PermissionsView extends React.Component {
     );
   }
   renderSchema(schema, key) {
-    const { groups } = this.props;
+    const { roles } = this.props;
 
     return [
       (<tr key={`heading-${key}`}>
@@ -186,11 +186,11 @@ export default class PermissionsView extends React.Component {
               {field.title}
             </Link>
           </th>
-          {_.map(groups.items, (group, j) =>
+          {_.map(roles.items, (role, j) =>
             (<td key={j}>
               <span
                 className="permission"
-                onClick={() => this.showDialog({ schema: key, group, field })}
+                onClick={() => this.showDialog({ schema: key, role, field })}
               >
               { (({ read, write }) =>
                 [read ? <i key={'read'} className="icon">visibility</i>
@@ -198,7 +198,7 @@ export default class PermissionsView extends React.Component {
                   write ? <i key={'write'} className="icon">edit</i>
                       : <i key={'write'} className="icon dimmed">edit</i>
                 ]
-                )(this.getPermissions(group, key, field))
+                )(this.getPermissions(role, key, field))
               }
               </span>
             </td>)
@@ -207,7 +207,7 @@ export default class PermissionsView extends React.Component {
           <td>
             <span
               className="permission"
-              onClick={() => this.showDialog({ schema: key, group: 'self', field })}
+              onClick={() => this.showDialog({ schema: key, role: 'self', field })}
             >
             { (({ read, write }) =>
               [read ? <i key="read" className="icon">visibility</i>

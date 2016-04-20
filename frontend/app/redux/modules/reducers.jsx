@@ -2,7 +2,7 @@ import { combineReducers } from 'redux-immutable';
 
 import auth from './auth';
 import fields from './fields';
-import groups from './groups';
+import roles from './roles';
 import people from './people';
 import permissions from './permissions';
 import routing from './routing';
@@ -10,7 +10,7 @@ import routing from './routing';
 export default combineReducers({
   auth,
   fields,
-  groups,
+  roles,
   people,
   permissions,
   routing

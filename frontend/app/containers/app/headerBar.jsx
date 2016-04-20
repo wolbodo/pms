@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { connect } from 'react-redux';
 
 import * as peopleActions from 'redux/modules/people';
-import * as groupsActions from 'redux/modules/groups';
+import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
 
 import { Dialog, FlatButton } from 'material-ui';
@@ -14,24 +14,24 @@ import { Dialog, FlatButton } from 'material-ui';
   peopleCommit: peopleActions.commit,
   peopleRevert: peopleActions.revert,
   peopleCreate: peopleActions.create,
-  groupCreate: groupsActions.create,
-  groupsCommit: groupsActions.commit,
-  groupsRevert: groupsActions.revert,
+  roleCreate: rolesActions.create,
+  rolesCommit: rolesActions.commit,
+  rolesRevert: rolesActions.revert,
   fieldCreate: fieldsActions.create,
 })
 export default class HeaderBar extends React.Component {
   static propTypes = {
     people: PropTypes.object,
-    groups: PropTypes.object,
+    roles: PropTypes.object,
     fields: PropTypes.object,
     route: PropTypes.object,
     auth: PropTypes.object,
     peopleCreate: PropTypes.func,
     peopleRevert: PropTypes.func,
     peopleCommit: PropTypes.func,
-    groupCreate: PropTypes.func,
-    groupsCommit: PropTypes.func,
-    groupsRevert: PropTypes.func,
+    roleCreate: PropTypes.func,
+    rolesCommit: PropTypes.func,
+    rolesRevert: PropTypes.func,
     fieldCreate: PropTypes.func,
   };
 
@@ -56,7 +56,7 @@ export default class HeaderBar extends React.Component {
 
   // Deprecated: but useful for modals and such
   renderDialog() {
-    const { people, groups } = this.props;
+    const { people, roles } = this.props;
     const { dialogOpen } = this.state;
 
     const actions = [
@@ -98,15 +98,15 @@ export default class HeaderBar extends React.Component {
           </ul>
         </div>
       )}
-      { !_.isEmpty(groups.updates) && (
+      { !_.isEmpty(roles.updates) && (
         <div>
           <h6>Groepen</h6>
           <ul>
-            {_.map(groups.updates, (group, id) => (
+            {_.map(roles.updates, (role, id) => (
               <li key={id}>
-                <p>{groups.items[id].name} Gewijzigd</p>
+                <p>{roles.items[id].name} Gewijzigd</p>
                 <ul>
-                  {_.map(group, (value, key) => (
+                  {_.map(role, (value, key) => (
                     <li key={key}>{key}: {value}</li>
                   ))}
                 </ul>
@@ -121,13 +121,13 @@ export default class HeaderBar extends React.Component {
 
   render() {
     const {
-      people, groups, fields,
+      people, roles, fields,
       peopleCommit, peopleRevert, peopleCreate,
-      groupCreate, groupsRevert, groupsCommit, fieldCreate, route
+      roleCreate, rolesRevert, rolesCommit, fieldCreate, route
     } = this.props;
     const changed = (
       !_.isEmpty(people.updates) ||
-      !_.isEmpty(groups.updates) ||
+      !_.isEmpty(roles.updates) ||
       !_.isEmpty(fields.updates)
     );
 
@@ -137,7 +137,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           ripple
           id="header-save-button"
-          onClick={() => {peopleCommit(); groupsCommit();}}
+          onClick={() => {peopleCommit(); rolesCommit();}}
         >
           Opslaan
         </mdl.Button>
@@ -146,7 +146,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           ripple
           colored
-          onClick={() => {peopleRevert(); groupsRevert();}}
+          onClick={() => {peopleRevert(); rolesRevert();}}
         >
           Annuleren
         </mdl.Button>
@@ -165,7 +165,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           className="action end"
           ripple
-          onClick={() => groupCreate()}
+          onClick={() => roleCreate()}
         >
           Nieuwe groep
         </mdl.Button>
