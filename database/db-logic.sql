@@ -275,7 +275,7 @@ $function$;
 
 
 --NOTE: ONLY expose this function internally! (otherwise we have a huuuuuge security issue)
-CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_id INT DEFAULT '-1'::INT)
+CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -307,14 +307,14 @@ BEGIN
                         AND rights.permissions->'people'->'self'->'view' ? key
                     )
             )
-            FROM people p WHERE valid_till IS NULL AND (id = people_id OR -1 = people_id)
+            FROM people p WHERE valid_till IS NULL AND (id = people_id OR people_id IS NULL)
         ) alias (object) WHERE object IS NOT NULL;
     RETURN people;
 END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.people_get(token TEXT, people_id INT DEFAULT '-1'::INT)
+CREATE OR REPLACE FUNCTION public.people_get(token TEXT, people_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -399,7 +399,7 @@ $function$;
 
 --NOTE: fix self id
 --NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
-CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT '-1'::INT)
+CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -429,7 +429,7 @@ BEGIN
             )
             FROM roles r
                 LEFT JOIN people_roles pr ON pr.valid_till IS NULL AND pr.roles_id = r.id
-            WHERE r.valid_till IS NULL AND (r.id = _roles_id OR -1 = _roles_id)
+            WHERE r.valid_till IS NULL AND (r.id = _roles_id OR _roles_id IS NULL)
             GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
         ) alias (object) WHERE object IS NOT NULL;
     RETURN roles;
@@ -438,7 +438,7 @@ $function$;
 
 
 
-CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT '-1'::INT)
+CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
