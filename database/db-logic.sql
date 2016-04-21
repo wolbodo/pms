@@ -177,23 +177,17 @@ DECLARE
     permissions JSONB;
 BEGIN
     payload = parse_jwt(token);
-    SELECT JSONB_OBJECT_AGG(role_name, json) INTO permissions FROM (
-        SELECT role_name, JSONB_OBJECT_AGG(ref_table, json) AS json FROM (
+    SELECT JSONB_BUILD_OBJECT('roles_permissions', JSONB_OBJECT_AGG(r_id, json)) INTO permissions FROM (
+        SELECT r_id, JSONB_OBJECT_AGG(ref_table, json) AS json FROM (
             SELECT
-                rules.role_name,
+                rules.r_id,
                 ref_table,
-                JSONB_OBJECT_AGG(rule.key, rule.value) FILTER (WHERE rule.key IS NOT NULL) ||
-                    COALESCE(NULLIF(
-                        JSONB_BUILD_OBJECT('self', COALESCE(JSONB_OBJECT_AGG(selfrule.key, selfrule.value) FILTER (WHERE selfrule.key IS NOT NULL), '{}'::JSONB)),
-                        '{"self":{}}'
-                    ),'{}') AS json
+                JSONB_OBJECT_AGG(rule.key, rule.value) FILTER (WHERE rule.key IS NOT NULL) AS json
             FROM (
-                SELECT r.name AS role_name, pm.ref_table,
+                SELECT r.id AS r_id, pm.ref_table,
                     CASE
-                        WHEN NOT (r.name = 'self') AND type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
-                            JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name))
                         WHEN type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
-                            JSONB_BUILD_OBJECT('self', JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name)))
+                            JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name))
                         WHEN type = 'create'::permissions_type THEN
                             JSONB_BUILD_OBJECT(type, CASE WHEN ref_key IS NULL THEN '{}'::JSONB ELSE JSONB_BUILD_OBJECT(ref_key, CASE WHEN JSONB_AGG(ref_value) @> 'null'::JSONB THEN '"*"'::JSONB ELSE JSONB_AGG(ref_value) END) END)
                         WHEN type = 'custom'::permissions_type THEN
@@ -202,18 +196,14 @@ BEGIN
                 FROM permissions pm
                     JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND pm.valid_till IS NULL AND rpm.valid_till IS NULL
                     JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
-                    JOIN people_roles pr ON (pr.roles_id = r.id OR r.name = 'self') AND pr.valid_till IS NULL
-                    --JOIN people p ON pr.people_id = p.id AND p.id = _self_id AND (r.name != 'self' OR _people_id = _self_id) AND p.valid_till IS NULL
                     LEFT JOIN fields f ON pm.ref_key = 'fields' AND pm.ref_value = f.id AND f.valid_till IS NULL
-                GROUP BY r.name, r.id, pm.ref_table, pm.type, pm.ref_key, r.name = 'self'
+                GROUP BY r.id, r.name, pm.ref_table, pm.type, pm.ref_key
                 ORDER BY ref_key NULLS FIRST --so "create": {} will be overwritten by "create": {"key":[values]}
             ) rules
-                LEFT JOIN JSONB_EACH(rules.json - 'self') rule ON TRUE
-                LEFT JOIN JSONB_EACH(rules.json->'self') selfrule ON TRUE
-            GROUP BY rules.role_name, rules.ref_table
+                LEFT JOIN JSONB_EACH(rules.json) rule ON TRUE
+            GROUP BY rules.r_id, rules.ref_table
         ) alias
-        WHERE alias.role_name != 'self'
-        GROUP BY alias.role_name
+        GROUP BY alias.r_id
     ) alias;
     RETURN permissions;
 END;
