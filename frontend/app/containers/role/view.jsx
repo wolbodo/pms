@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { PropTypes } from 'react';
+import ReactDOM from 'react-dom';
 import * as mdl from 'react-mdl';
 
 import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
 
 import { Field } from 'components';
 
@@ -16,8 +16,6 @@ import * as fieldsActions from 'redux/modules/fields';
   people: state.get('people').toJS(),
   fields: state.get('fields').toJS(),
 }), {
-  create: rolesActions.create,
-  pushState: push,
   fieldsFetch: fieldsActions.fetch,
   rolesFetch: rolesActions.fetch,
   rolesUpdate: rolesActions.update,
@@ -28,8 +26,6 @@ export default class RoleView extends React.Component {
     roles: PropTypes.object,
     people: PropTypes.object,
     fields: PropTypes.object,
-    create: PropTypes.func,
-    pushState: PropTypes.func,
     fieldsFetch: PropTypes.func,
     rolesFetch: PropTypes.func,
     rolesUpdate: PropTypes.func,
@@ -39,15 +35,14 @@ export default class RoleView extends React.Component {
     this.props.rolesFetch();
   }
 
-  renderButtons() {
-    const { create } = this.props;
+  componentDidUpdate(prevProps) {
+    const { roles } = this.props;
 
-    return (
-      <mdl.IconButton
-        name="add"
-        onClick={() => create.create()}
-      />
-    );
+    if (_.keys(roles.items).length > _.keys(prevProps.roles.items).length) {
+      // Scroll to bottom
+      const node = ReactDOM.findDOMNode(this);
+      node.lastChild.scrollIntoView();
+    }
   }
 
   render() {
@@ -65,7 +60,10 @@ export default class RoleView extends React.Component {
     return (
       <div className="content">
       {_.map(roles, (role) => (
-        <mdl.Card key={role.id} className="mdl-color--white mdl-shadow--2dp">
+        <mdl.Card
+          key={role.id}
+          className="mdl-color--white mdl-shadow--2dp"
+        >
           <mdl.CardTitle>
             {role.name}
           </mdl.CardTitle>
@@ -99,20 +97,5 @@ export default class RoleView extends React.Component {
       ))}
       </div>
     );
-
-    // return (
-    //   <List title="Groepen" buttons={this.renderButtons()}>
-    //     <Head schema={schema} editLink />
-    //     {_.map(roles.items, (row, i) => (
-    //       <Row
-    //         className="click"
-    //         key={i}
-    //         item={row}
-    //         fields={schema.header}
-    //         edit={ () => pushState(`groepen/${i}`) }
-    //       />
-    //     ))}
-    //   </List>
-    // );
   }
 }

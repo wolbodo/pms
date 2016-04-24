@@ -64,7 +64,7 @@ export default class Link extends React.Component {
     const { title, value, options, displayValue, onChange } = this.props;
     const { newValue } = this.state;
 
-    const listToDisplay = (item) => _.get(item, _.toPath(displayValue));
+    const listToDisplay = (item) => _.get(item, _.toPath(displayValue), `@${item.id}`);
     // Shows an array of strings for now.
     return (
       <div
