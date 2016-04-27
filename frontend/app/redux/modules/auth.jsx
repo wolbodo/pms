@@ -7,7 +7,7 @@ import { CLEAR } from './clearState';
 
 const initialState = Immutable.fromJS({
   loggedIn: false,
-  loading: false
+  fetching: false
 });
 
 const START = 'pms/auth/LOGIN_START';
@@ -39,7 +39,7 @@ const reducers = {
   [START]: (auth) =>
     auth.merge({
       loggedIn: false,
-      loading: true
+      fetching: true
     }),
 
   [SUCCESS]: (auth, { data: { token, permissions } }) => {
@@ -55,7 +55,7 @@ const reducers = {
 
     return auth.merge({
       loggedIn: true,
-      loading: false,
+      fetching: false,
       token,
       permissions,
       user
@@ -64,7 +64,7 @@ const reducers = {
 
   [FAIL]: (auth) =>
     auth.merge({
-      loading: false
+      fetching: false
     }),
 
   [CLEAR]: () => initialState

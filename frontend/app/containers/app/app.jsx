@@ -15,9 +15,6 @@ import logo from 'img/logo.svg'; // eslint-disable-line
 @connect(
   (state) => ({
     auth: state.get('auth').toJS(),
-    people: state.get('people').toJS(),
-    fields: state.get('fields').toJS(),
-    roles: state.get('roles').toJS()
   }), {
     pushState: push,
     peopleFetch: peopleActions.fetch,
@@ -39,7 +36,11 @@ export default class App extends React.Component {
     rolesFetch: PropTypes.func,
     fieldsFetch: PropTypes.func,
   }
+  constructor(props) {
+    super(props);
 
+    this.state = { infoOpen: false };
+  }
   componentWillReceiveProps(nextProps) {
     const { auth,
       pushState, peopleFetch, rolesFetch, fieldsFetch } = this.props;

@@ -20,7 +20,7 @@ const CREATE = 'pms/roles/CREATE';
 const COMMIT_FINISHED = 'pms/roles/COMMIT_FINISHED';
 
 const initialState = Immutable.fromJS({
-  loading: false
+  fetching: false
 });
 
 export function fetch() {
@@ -128,7 +128,7 @@ const reducers = {
 
   // Api handling states.
   [FETCH]: (roles) =>
-    roles.merge({ loading: true }),
+    roles.merge({ fetching: true }),
 
   [FETCH_SUCCESS]: (roles, { data }) =>
     roles.merge({
@@ -138,7 +138,7 @@ const reducers = {
     }),
 
   [FETCH_FAIL]: (roles, { error }) =>
-    roles.merge({ loading: false, error }),
+    roles.merge({ fetching: false, error }),
 
 
   [PUSH]: (roles) =>

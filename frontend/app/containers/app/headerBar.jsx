@@ -14,10 +14,13 @@ import { Dialog, FlatButton } from 'material-ui';
   peopleCommit: peopleActions.commit,
   peopleRevert: peopleActions.revert,
   peopleCreate: peopleActions.create,
-  roleCreate: rolesActions.create,
+  peopleFetch: peopleActions.fetch,
+  rolesCreate: rolesActions.create,
+  rolesFetch: rolesActions.fetch,
   rolesCommit: rolesActions.commit,
   rolesRevert: rolesActions.revert,
-  fieldCreate: fieldsActions.create,
+  fieldsCreate: fieldsActions.create,
+  fieldsFetch: fieldsActions.fetch,
 })
 export default class HeaderBar extends React.Component {
   static propTypes = {
@@ -27,12 +30,15 @@ export default class HeaderBar extends React.Component {
     route: PropTypes.object,
     auth: PropTypes.object,
     peopleCreate: PropTypes.func,
+    peopleFetch: PropTypes.func,
     peopleRevert: PropTypes.func,
     peopleCommit: PropTypes.func,
-    roleCreate: PropTypes.func,
+    rolesCreate: PropTypes.func,
+    rolesFetch: PropTypes.func,
     rolesCommit: PropTypes.func,
     rolesRevert: PropTypes.func,
-    fieldCreate: PropTypes.func,
+    fieldsCreate: PropTypes.func,
+    fieldsFetch: PropTypes.func,
   };
 
   constructor(props) {
@@ -123,34 +129,72 @@ export default class HeaderBar extends React.Component {
     const {
       people, roles, fields,
       peopleCommit, peopleRevert, peopleCreate,
-      roleCreate, rolesRevert, rolesCommit, fieldCreate, route
+      rolesCreate, rolesRevert, rolesCommit, fieldsCreate, route
     } = this.props;
-    const changed = (
-      !_.isEmpty(people.updates) ||
-      !_.isEmpty(roles.updates) ||
-      !_.isEmpty(fields.updates)
-    );
+
+    const { peopleFetch, rolesFetch, fieldsFetch } = this.props;
+
+    // Figure out current state.
+    const sets = [people, roles, fields];
+    let apiState = undefined;
+
+    if (_.some(sets, (set) => set.fetching)) {
+      // Loading
+      apiState = (
+        <mdl.Spinner style={{ marginRight: '1em' }} />
+      );
+    } else if (_.some(sets, (set) => set.pushing)) {
+      // Sending
+      apiState = (
+        <mdl.Spinner style={{ marginRight: '1em' }} />
+      );
+    } else if (_.some(sets, (set) => !_.isEmpty(set.updates))) {
+      // Changes
+      apiState = (
+        <div>
+          <mdl.IconButton raised name="save"
+            onClick={ () => {
+              peopleCommit();
+              rolesCommit();
+            }}
+          />
+          <mdl.IconButton raised name="undo"
+            onClick={ () => {
+              peopleRevert();
+              rolesRevert();
+            }}
+          />
+        </div>);
+    } else if (_.some(sets, (set) => set.conflict)) {
+      // Error (popup)
+      apiState = (
+        <mdl.IconButton raised name="error"
+          onClick={ () => {
+            peopleFetch();
+            rolesFetch();
+            fieldsFetch();
+          }}
+        />);
+    } else if (_.every(sets, (set) => set.loaded)) {
+      // Loaded
+      apiState = (
+        <mdl.IconButton raised name="cloud download"
+          onClick={ () => {
+            peopleFetch();
+            rolesFetch();
+            fieldsFetch();
+          }}
+        />);
+    }
+
+    let error = null;
+    if (_.some(sets, (set) => !_.isEmpty(set.error))) {
+      error = 'error'
+    }
 
     return (
-      <div className="headerBar">
-      {changed && (
-        <mdl.Button
-          ripple
-          id="header-save-button"
-          onClick={() => {peopleCommit(); rolesCommit();}}
-        >
-          Opslaan
-        </mdl.Button>
-      )}
-      {changed && (
-        <mdl.Button
-          ripple
-          colored
-          onClick={() => {peopleRevert(); rolesRevert();}}
-        >
-          Annuleren
-        </mdl.Button>
-      )}
+      <div className="headerBar" style={{background:error && 'red'}}>
+      {apiState}
       <div className="spacer"></div>
       {route.name === 'Mensen' && (
         <mdl.Button
@@ -165,7 +209,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           className="action end"
           ripple
-          onClick={() => roleCreate()}
+          onClick={() => rolesCreate()}
         >
           Nieuwe groep
         </mdl.Button>
@@ -174,7 +218,7 @@ export default class HeaderBar extends React.Component {
         <mdl.Button
           className="action end"
           ripple
-          onClick={() => fieldCreate()}
+          onClick={() => fieldsCreate()}
         >
           Nieuw veld
         </mdl.Button>
