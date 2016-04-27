@@ -280,10 +280,9 @@ fn handle_roles_add(req: &mut Request) -> IronResult<Response> {
 fn handle_permissions_get(req: &mut Request) -> IronResult<Response> {
     caching(&req, &call_db!(
         req => req,
-        func => "permissions_get",
+        func => "roles_permissions_get",
         args => (
-            token     get_token!(req),
-            roles_id  get_param!(req, "id", i32)
+            token     get_token!(req)
         )
     ))
 }
@@ -333,7 +332,7 @@ fn main() {
 
         // post "/permissions"     => handle_permissions_add,
         get  "/permissions"     => handle_permissions_get,
-        get  "/permissions/:id" => handle_permissions_get,
+        // get  "/permissions/:id" => handle_permissions_get,
         // put  "/permissions/:id" => handle_permissions_set,
 
         get  "/fields"          => handle_fields_get,

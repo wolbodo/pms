@@ -1,10 +1,8 @@
 import _ from 'lodash';
 import React, { PropTypes } from 'react';
-import * as mdl from 'react-mdl';
 
 import { List, Head, Row } from 'components/list';
 import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
 
 import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
@@ -14,7 +12,6 @@ import * as fieldsActions from 'redux/modules/fields';
   fields: state.get('fields').toJS()
 }), {
   create: rolesActions.create,
-  pushState: push,
   fieldsFetch: fieldsActions.fetch,
   rolesFetch: rolesActions.fetch
 })
@@ -30,17 +27,6 @@ export default class RoleList extends React.Component {
   componentDidMount() {
     this.props.fieldsFetch();
     this.props.rolesFetch();
-  }
-
-  renderButtons() {
-    const { create } = this.props;
-
-    return (
-      <mdl.IconButton
-        name="add"
-        onClick={() => create.create()}
-      />
-    );
   }
 
   render() {

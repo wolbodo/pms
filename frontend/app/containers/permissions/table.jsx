@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import * as mdl from 'react-mdl';
 import { connect } from 'react-redux';
 
-import { change } from 'redux/modules/permissions';
+import * as permsActions from 'redux/modules/permissions';
 import { Dialog, FlatButton } from 'material-ui';
 
 import _ from 'lodash';
@@ -104,7 +104,8 @@ class PermissionsDialog extends React.Component {
 }
 
 @connect((state) => ({ ...state.toJS() }), {
-  change
+  change: permsActions.change,
+  permissionsFetch: permsActions.fetch
 })
 export default class PermissionsView extends React.Component {
   static propTypes = {
@@ -112,12 +113,24 @@ export default class PermissionsView extends React.Component {
     roles: PropTypes.object,
     fields: PropTypes.object,
     change: PropTypes.func,
+    permissionsFetch: PropTypes.func,
   };
+
   constructor(props) {
     super(props);
 
     this.state = {};
   }
+
+  componentWillReceiveProps(nextProps) {
+    const { permissionsFetch } = this.props;
+
+    if (_.isEmpty(nextProps.permissions)) {
+      permissionsFetch();
+    }
+    // pushstate('/login');
+  }
+
   getPermissions(role, schema, field) {
     const { permissions } = this.props;
     const read = _.includes(_.get(permissions, [role.id, schema, 'read']), field.name);

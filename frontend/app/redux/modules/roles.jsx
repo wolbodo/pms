@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { push } from 'react-router-redux';
+// import { push } from 'react-router-redux';
 import Immutable from 'immutable';
 
 import { apiAction, API } from 'redux/apiWrapper';
@@ -49,7 +49,7 @@ export function create() {
         id: id.toString(), // TODO: is a string for now parseInt(id, 10)
       }
     });
-    dispatch(push(`/groepen/${id}`));
+    // dispatch(push(`/groepen/${id}`));
   };
 }
 

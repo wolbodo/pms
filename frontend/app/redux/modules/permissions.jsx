@@ -1,8 +1,13 @@
 import _ from 'lodash';
 import Immutable from 'immutable';
 import { CLEAR } from './clearState';
+import { apiAction } from 'redux/apiWrapper';
 
 const initialState = Immutable.Map();
+
+const FETCH = 'pms/people/FETCH';
+const FETCH_SUCCESS = 'pms/people/FETCH_SUCCESS';
+const FETCH_FAIL = 'pms/people/FETCH_FAIL';
 
 const SET = 'pms/permissions/SET';
 const CHANGE = 'pms/permissions/CHANGE';
@@ -14,7 +19,28 @@ export function change(_change) {
   };
 }
 
+export function fetch() {
+  return apiAction({
+    types: [FETCH, FETCH_SUCCESS, FETCH_FAIL],
+    uri: 'permissions'
+  });
+}
+
 const reducers = {
+  [FETCH]: (permissions) =>
+    permissions.merge({ fetching: true }),
+
+  [FETCH_SUCCESS]: (permissions, { data }) =>
+    // Create an indexed object with key = Object id
+    permissions.mergeDeep({
+      fetching: false,
+      loaded: true, // Only set initially, So the ui know it has data.
+      items: data.roles_permissions
+    }),
+
+  [FETCH_FAIL]: (permissions, { error }) =>
+    permissions.merge({ fetching: false, error }),
+
   [SET]: (permissions) =>
     permissions,
 
