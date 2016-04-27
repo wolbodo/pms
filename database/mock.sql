@@ -154,6 +154,7 @@ VALUES
     ('people_roles','created', '{}', -1),
     ('people_roles','modified', '{}', -1),
     ('people_roles','modified_by', '{}', -1),
+    ('people_roles','people_id', '{}', -1),
     ('people_roles','valid_from', '{}', -1),
     ('people_roles','valid_till', '{}', -1),
 
@@ -182,7 +183,7 @@ SELECT 'create'::permissions_type, 'people_roles', 'roles_id', id, -1 FROM roles
 INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
-        (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created', '$ref']),
+        (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created', '$ref', 'people_id']),
         (array['view'],         array['login'],        array['name', 'members']),
         (array['view'],         array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
         (array['view','edit'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
