@@ -55,6 +55,7 @@ CREATE TABLE "people_roles"
     "valid_till"        TIMESTAMPTZ,
     "people_id"         INT NOT NULL,
     "roles_id"          INT NOT NULL,
+    "data"              JSONB NOT NULL DEFAULT '{}',
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
     "created"           TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -119,6 +120,7 @@ CREATE TABLE "roles_permissions"
     "valid_till"        TIMESTAMPTZ,
     "roles_id"          INT NOT NULL,
     "permissions_id"    INT NOT NULL,
+    "data"              JSONB NOT NULL DEFAULT '{}',
     "modified_by"       INT NOT NULL,
     "modified"          TIMESTAMPTZ, -- this should always be NULL if we don't do manual SQL
     "created"           TIMESTAMPTZ DEFAULT NOW() NOT NULL

@@ -450,31 +450,65 @@ DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
 BEGIN
-    SELECT JSONB_BUILD_OBJECT('roles', JSONB_OBJECT_AGG(object->>'id', object)) INTO roles
-        FROM (
-            SELECT (
-                SELECT JSONB_OBJECT_AGG(key, value)
-                FROM (SELECT key, value FROM JSONB_EACH(r.data)
-                    UNION
-                    VALUES
-                        ('gid'::TEXT, TO_JSON(r.gid)::JSONB),
-                        ('id', TO_JSON(r.id)::JSONB),
-                        ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.valid_from)))::JSONB),
-                        ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.valid_till))), 'null')::JSONB),
-                        ('name', COALESCE(TO_JSON(r.name), 'null')::JSONB),
-                        ('modified_by', TO_JSON(r.modified_by)::JSONB),
-                        ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.modified))), 'null')::JSONB),
-                        ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM r.created)))::JSONB),
-                        ('people_ids', TO_JSON(COALESCE(JSONB_AGG(pr.people_id) FILTER (WHERE pr.people_id IS NOT NULL), '[]'))::JSONB)
+    SELECT JSONB_BUILD_OBJECT('roles', JSONB_OBJECT_AGG(
+        r.id::TEXT,
+        (
+            SELECT JSONB_OBJECT_AGG(key, value) AS json2
+            FROM
+            (
+                SELECT key, value
+                FROM JSONB_EACH(
+                    r.data
+                    || JSONB_BUILD_OBJECT(
+                        'gid', r.gid,
+                        'id', r.id,
+                        'valid_from', TO_CHAR(r.valid_from, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                        'valid_till', TO_CHAR(r.valid_till, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                        'name', r.name,
+                        'modified_by', r.modified_by,
+                        'modified', TO_CHAR(r.modified, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                        'created', TO_CHAR(r.created, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                        'members', COALESCE(alias2.json, '[]'::JSONB)
+                    )
+                )
+            ) alias
+            WHERE
+                rights.permissions->'roles'->'view' ? key AND r.name != 'self'
+        )
+    ) --FILTER (WHERE json2 IS NOT NULL)
+    ) INTO roles
+    FROM roles r
+    LEFT JOIN
+    (
+        SELECT pr.roles_id, JSONB_AGG(
+            (
+                SELECT JSONB_OBJECT_AGG(key, value) AS json
+                FROM
+                (
+                    SELECT key, value
+                    FROM JSONB_EACH(
+                        data
+                        || JSONB_BUILD_OBJECT(
+                            'gid', gid,
+                            '$ref', '/people/' || people_id,
+                            'people_id', people_id,
+                            'valid_from', TO_CHAR(valid_from, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                            'valid_till', TO_CHAR(valid_till, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                            'modified_by', modified_by,
+                            'modified', TO_CHAR(modified, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
+                            'created', TO_CHAR(created, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"')
+                        )
+                    )
                 ) alias
                 WHERE
-                    rights.permissions->'roles'->'view' ? key AND r.name != 'self'
+                    rights.permissions->'people_roles'->'view' ? key
             )
-            FROM roles r
-                LEFT JOIN people_roles pr ON pr.valid_till IS NULL AND pr.roles_id = r.id
-            WHERE r.valid_till IS NULL AND (r.id = _roles_id OR _roles_id IS NULL)
-            GROUP BY r.gid, r.id, r.valid_from, r.valid_till, r.name, r.modified_by, r.modified, r.created, r.data
-        ) alias (object) WHERE object IS NOT NULL;
+        ) AS json
+        FROM people_roles pr
+        WHERE valid_till IS NULL
+        GROUP BY pr.roles_id
+    ) alias2 ON alias2.roles_id = r.id
+    WHERE r.valid_till IS NULL AND (r.id = _roles_id OR _roles_id IS NULL);
     RETURN roles;
 END;
 $function$;

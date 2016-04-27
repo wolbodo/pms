@@ -119,6 +119,7 @@ VALUES
     ('people','membertype','{"type":"string","title":"Lid type"}', -1),
     ('people','mobile','{"type":"string","title":"Mobiel"}', -1),
     ('people','modified','{"type":"string","title":"Gewijzigd"}', -1),
+    ('people','modified_by', '{}', -1),
     ('people','nickname','{"type":"string","title":"Bijnaam"}', -1),
     ('people','notes','{"type":"string","title":"Opmerkingen"}', -1),
     ('people','password_hash','{"type":"string","title":"Wachtwoord"}', -1),
@@ -133,13 +134,28 @@ VALUES
     ('people','zipcode','{"type":"string","title":"Postcode"}', -1),
 
     ('roles', NULL, '{"title":"Wijzig groep","header":["name","description"],"form":[{"title":"Gegevens","fields":[["name"],["description"]]}]}', -1),
-    ('roles','name', '{"type":"string","title":"Naam"}', -1),
-    ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
     ('roles','gid', '{}', -1),
     ('roles','id', '{}', -1),
-    ('roles','people_ids', '{}', -1),
+
+    ('roles','created', '{}', -1),
+    ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
+    ('roles','members', '{}', -1),
+    ('roles','modified', '{}', -1),
+    ('roles','modified_by', '{}', -1),
+    ('roles','name', '{"type":"string","title":"Naam"}', -1),
     ('roles','valid_from', '{}', -1),
     ('roles','valid_till', '{}', -1),
+
+    ('people_roles','name', '{"type":"string","title":"Naam"}', -1),
+    ('people_roles','gid', '{}', -1),
+    ('people_roles','id', '{}', -1),
+
+    ('people_roles','$ref', '{}', -1),
+    ('people_roles','created', '{}', -1),
+    ('people_roles','modified', '{}', -1),
+    ('people_roles','modified_by', '{}', -1),
+    ('people_roles','valid_from', '{}', -1),
+    ('people_roles','valid_till', '{}', -1),
 
     ('fields', NULL, '{"title":"Wijzig veld","form":[{"title":"Veld","fields":[["name"],["title"],["type"]]}]}', -1),
     ('fields', 'name', '{"name":"name","title":"Naam","type":"string","readonly":true}', -1),
@@ -151,7 +167,7 @@ VALUES
 
 
 INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)
-SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table IN ('people', 'roles') UNION
+SELECT unnest(array['view','edit'])::permissions_type AS type, ref_table, 'fields' AS ref_key, id AS ref_value, -1 AS modified_by FROM fields WHERE ref_table IN ('people', 'roles', 'people_roles') UNION
 SELECT 'create' AS type, 'people_roles' AS ref_table, 'roles_id' AS ref_key, id AS ref_value, -1 AS modified_by FROM roles UNION
 SELECT 'create' AS type, unnest(array['people','roles','people_roles','fields','permissions']) AS ref_table, NULL AS ref_key, NULL AS ref_value, -1 AS modified_by UNION
 VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1),
@@ -166,8 +182,8 @@ SELECT 'create'::permissions_type, 'people_roles', 'roles_id', id, -1 FROM roles
 INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
-        (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created']),
-        (array['view'],         array['login'],        array['name', 'people_ids']),
+        (array['view'],         array['member'],       array['gid','id','valid_from','valid_till','modified_by','modified','created', '$ref']),
+        (array['view'],         array['login'],        array['name', 'members']),
         (array['view'],         array['member'],       array['email','phone','mobile','nickname','firstname','infix','lastname','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
         (array['view','edit'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
         (array['edit'],         array['self','admin'], array['password_hash']),
