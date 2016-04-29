@@ -1,0 +1,9 @@
+pms:
+  image: wolbodo/pms
+  hostname: pms
+  environment:
+    # - CERT_NAME=dxlb.nl
+    # - VIRTUAL_HOST=pms.dxlb.nl
+    - VIRTUAL_HOST=pms.zaphod
+  ports:
+    - '80'
