@@ -131,7 +131,7 @@ const reducers = {
     roles.merge({ fetching: true }),
 
   [FETCH_SUCCESS]: (roles, { data }) =>
-    roles.merge({
+    roles.mergeDeep({
       fetching: false,
       loaded: true, // Only set initially, So the ui know it has data.
       items: data.roles

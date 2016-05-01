@@ -1,0 +1,304 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+# This is your document metadata
+info:
+  version: "0.5.0"
+  title: PMS
+schemes:
+  - http
+  - https
+
+# during dev, should point to your local machine
+# host: pms.wlbd.nl
+host: pms.zaphod
+
+# basePath prefixes all resource paths
+basePath: /api
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /login:
+    post:
+      description: Login into API
+      parameters:
+        - name: loginRequest
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              user:
+                type: string
+              password:
+                type: string
+      responses:
+        200:
+          description: Login success
+          schema:
+            $ref: '#/definitions/LoginResponse'
+  /people:
+    get:
+      description: |
+        Returns all people
+        Gets `Person` objects.
+      responses:
+        # Response code
+        200:
+          description: Returns a resultobject
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            title: PeopleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - people
+    post:
+      description: Add a new `Person` object
+      parameters:
+        - name: newPerson
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Person"
+      responses:
+        200:
+          description: Returns the new person
+          schema:
+            title: PeopleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - people
+  /people/{person_id}:
+    get:
+      description: Get a single `person`
+      parameters:
+        - in: path
+          name: person_id
+          description: the id of the `Person` being fetched
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Successfull
+          schema:
+            title: PeopleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - people
+    put:
+      description: Update a person
+      parameters:
+        - in: path
+          name: person_id
+          description: the id of the `Person` being updated
+          required: true
+          type: integer
+        - in: body
+          name: PersonUpdate
+          required: true
+          schema:
+            $ref: "#/definitions/Person"
+      responses:
+        200:
+          description: Successfull
+          schema:
+            title: PeopleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - people
+      
+  /roles:
+    get:
+      description: Returns all roles
+      responses:
+        200:
+          description: Successfull response, with roles.
+          schema:
+            title: RoleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - roles
+    post:
+      description: Creates a new `Role`
+      parameters:
+        - name: New Role
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Role"
+      responses:
+        200:
+          description: Returns the new role
+          schema:
+            title: RoleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - roles
+
+  /roles/{role_id}:
+    get:
+      description: Get a single `Role`
+      parameters:
+        - in: path
+          name: role_id
+          description: the id of the `Role` being fetched
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Successfull
+          schema:
+            title: RoleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - roles
+    put:
+      description: Update a `Role`
+      parameters:
+        - in: path
+          name: role_id
+          description: the id of the `Role` being updated
+          required: true
+          type: integer
+        - in: body
+          name: RoleUpdate
+          required: true
+          schema:
+            $ref: "#/definitions/Role"
+      responses:
+        200:
+          description: Successfull
+          schema:
+            title: RoleResult
+            allOf:
+              - $ref: "#/definitions/ApiResult"
+            required:
+              - roles
+      
+  /fields:
+    get:
+      description: Return all fields
+      responses:
+        200:
+          description: Successfull response, with fields.
+          schema:
+            title: FieldsResult
+            type: object
+            properties:
+              roles:
+                type: object
+                additionalProperties:
+                  $ref: '#/definitions/Field'
+
+definitions:
+  BaseResource:
+    type: object
+    description: |
+      The base object structure for every api base resource.
+      Contains an id and a gid, and some timestamps
+    properties:
+      id:
+        type: integer
+        description: The unique id for its type.
+      gid:
+        type: integer
+        description: Globally unique version identifier
+      valid_from:
+        type: string
+        format: date-time
+      valid_till:
+        type: string
+        format: date-time
+      modified:
+        type: string
+        format: date-time
+      modified_by:
+        type: integer
+    required:
+      - id
+      - gid
+      - valid_from
+
+  Person:
+    title: Person
+    type: object
+    required:
+      - nickname
+    properties:
+      email:
+        type: string
+      nickname:
+        type: string
+    allOf: 
+      - $ref: '#/definitions/BaseResource'
+    additionalProperties: true
+
+  Role:
+    title: Role
+    type: object
+    properties:
+      name:
+        type: string
+    allOf: 
+      - $ref: '#/definitions/BaseResource'
+    additionalProperties: true
+
+  Field:
+    type: object
+
+  LoginResponse:
+    type: object
+    properties:
+      token:
+        type: string
+      permissions:
+        $ref: '#/definitions/SelfPermissions'
+
+  SelfPermissions:
+    type: object
+
+  ResourceSchema:
+    type: object
+    properties:
+      properties:
+        type: object
+      form:
+        type: array
+        items: 
+          type: object
+      header:
+        type: array
+        items: 
+          type: object
+      required:
+        type: array
+        items: 
+          type: object
+
+  ApiResult:
+    type: object
+    properties:
+      people:
+        additionalProperties:
+          $ref: '#/definitions/Person'
+      roles:
+        additionalProperties:
+          $ref: '#/definitions/Role'
+      fields:
+        additionalProperties:
+          $ref: '#/definitions/ResourceSchema'
+              

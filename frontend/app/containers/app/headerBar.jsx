@@ -187,13 +187,13 @@ export default class HeaderBar extends React.Component {
         />);
     }
 
-    let error = null;
-    if (_.some(sets, (set) => !_.isEmpty(set.error))) {
-      error = 'error'
-    }
+    // let error = null;
+    // if (_.some(sets, (set) => !_.isEmpty(set.error))) {
+    //   error = 'error';
+    // }
 
     return (
-      <div className="headerBar" style={{background:error && 'red'}}>
+      <div className="headerBar">
       {apiState}
       <div className="spacer"></div>
       {route.name === 'Mensen' && (

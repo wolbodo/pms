@@ -40,6 +40,7 @@ export default class PeopleView extends React.Component {
     if (!this.loaded()) {
       return (<h1>Loading</h1>);
     }
+    debugger;
     const {
       people, fields, roles,
       pushState, routeParams } = this.props;

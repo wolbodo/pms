@@ -20,6 +20,7 @@ rm -rf build
 mkdir build
 cp Dockerfile build/
 cp -r frontend/dist/ build/frontend/
+cp swagger.yaml build/frontend/
 cp backend/target/release/backend build/backend
 cp backend/run_backend.sh build/
 cp -r database build/database
