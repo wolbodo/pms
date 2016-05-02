@@ -82,7 +82,7 @@ Create virtual env
 ```pip install aiopg requests tornado```
 
 
-# Backend
+# (optional) rust backend
 
 Install rust (we will later drop the nightly channel).
 ```
