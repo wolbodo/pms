@@ -73,14 +73,13 @@ npm run build
 
 # (optional) python 3.5 backend
 
-Install python 3.5
-```sudo apt-get install python-3.5 python-3.5-dev```
+Install python 3.5 and psycopg2 (pgsql driver)
 
-Create virtual env
-```mkvirtualenv -p /usr/bin/python3.5 pms```
-
-```pip install aiopg requests tornado```
-
+```
+sudo apt install python3.5 python3.5-dev python-psycopg2 
+mkvirtualenv -p /usr/bin/python3.5 pms
+pip install -r requirements.txt
+```
 
 # (optional) rust backend
 

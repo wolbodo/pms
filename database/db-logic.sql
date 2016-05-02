@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION public.to_date(stamp TIMESTAMPTZ)
  LANGUAGE plpgsql
 AS $function$
 BEGIN
-    RETURN TO_CHAR(stamp, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"');
+    RETURN TO_CHAR(stamp, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF":00"');
 END
 $function$;
 
