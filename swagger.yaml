@@ -369,18 +369,18 @@ definitions:
     properties:
       people:
         additionalProperties:
-          allOf:
-            - $ref: '#/definitions/Person'
-            - required:
-              - id
-              - gid
-              - valid_from
+          required:
+            - id
+            - gid
+            - valid_from
+          $ref: '#/definitions/Person'
       roles:
         additionalProperties:
-          oneOf:
-          - $ref: '#/definitions/Role'
-          - type: 'null'
-            description: Should not be
+          required:
+            - id
+            - gid
+            - valid_from
+          $ref: '#/definitions/Role'
       fields:
         additionalProperties:
           $ref: '#/definitions/ResourceSchema'
