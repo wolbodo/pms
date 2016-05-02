@@ -1,11 +1,13 @@
 
 var express = require('express');
 var proxy = require('express-http-proxy');
+var _ = require('lodash');
+var atob = require('atob');
 
 
 var app = express();
+// app.use('/', proxy('https://pms.wlbd.nl'));
 app.use('/', proxy('pms.zaphod'));
-
 
 /**
  * Testing the PMS API
@@ -20,9 +22,22 @@ var expect = require('chai').expect
 var path = require('path')
 var dereferencedSwagger
 
-function api(authorization) {
-  return hippie(app, dereferencedSwagger)
-    .header('Authorization', authorization)
+function api() {
+  // Wrap api to allow for sessions
+  var headers = {};
+
+  function api() {
+    var h = hippie(app, dereferencedSwagger);
+    // Add all the headers
+
+    if (api.token) {
+      h = h.header('Authorization', api.token);
+    }
+
+    return h;
+  }
+
+  return api;
 }
 
 function getError(body) {
@@ -38,6 +53,96 @@ function getError(body) {
   }
 }
 
+function baseAPIResource(resource, session) {
+  // test the API for basic functionalities.
+
+  describe('get', function () {
+    var fetched;
+    it('works', function () {
+      return session()
+      .get('/api/' + resource)
+      .expectStatus(200)
+      .end()
+      .then(function (res) {
+        fetched = JSON.parse(res.body);
+      })
+    })
+    
+    it('should only contain viewable fields', function () {
+      var resourcePermissions = _.get(session.permissions, [resource]);
+      _.each(_.get(fetched, resource), function (item, id) {
+
+        if (resourcePermissions.self && (_.toInteger(id) === session.user_id)) {
+          expect(
+            _.difference(
+              _.keys(item),
+              _.uniq(_.concat(resourcePermissions.self.view, resourcePermissions.view))
+            )
+          ).to.be.empty; 
+        } else {
+          expect(
+            _.difference(
+              _.keys(item),
+              resourcePermissions.view
+            )
+          ).to.be.empty; 
+        }
+
+      })
+    })
+
+    it('a single item', function () {
+      // Find a valid resource id from the fetched data
+      var resourceId = _.head(_.keys(_.get(fetched, resource)));
+      var resourceParam = resource + '_id';
+
+      return session()
+      .get('/api/' + resource + '/{' + resourceParam + '}')
+      .pathParams({
+        [resourceParam]: _.toInteger(resourceId)
+      })
+      .expectStatus(200)
+      .end()
+    });
+  })
+
+  describe('post', function () {
+    it('can not add empty data', function (done) {
+      session()
+      .post('/api/' + resource)
+      .send({})
+      .expectStatus(400)
+      .end(function (err, resp, body) {
+
+        // Error depends on permissions
+        if (_.has(session.permissions, [resource, 'create'])) {
+          expect(getError(body)).to.equal('Creating nothing is not allowed')
+        } else {
+          expect(getError(body)).to.equal('Creating "' + resource + '" not allowed')
+        }
+        done(err, resp, body)
+      })
+    })
+  })
+
+
+  describe('put', function () {
+    it('can update using correct gid');
+    it('can not update without gid');
+    it('can not update with incorrect gid');
+    it('can not write field without permissions');
+  })
+
+  describe('delete', function () {
+    it('can delete resources');
+  })
+}
+
+
+
+
+// Start of actual tests
+
 describe('Using pms', function () {
   before(function (done) {
     // if using mocha, dereferencing can be performed prior during initialization via the delay flag:
@@ -49,101 +154,114 @@ describe('Using pms', function () {
     })
   })
 
-  describe('as board', function () {
-    var authorization;
 
-    it('can login.', function (done) {
-      api()
-      .post('/api/login')
-      .send({
+  describe('as board', function () {
+    var session = api();
+
+    it('can login', function () {
+      return session()
+        .post('/api/login')
+        .send({
           'user': 'sammy@example.com',
           'password': '1234'
-      })
-      .expectStatus(200)
-      .end(function (err, resp, body) {
-        authorization = body.token;
-        done(err, resp, body);
-      })
+        })
+        .expectStatus(200)
+        .end()
+        .then(function (res) {
+          var data = JSON.parse(res.body)
+
+          session.token = data.token;
+          session.permissions = data.permissions;
+
+          session.user_id = JSON.parse(
+            atob(
+              data.token
+                  .split('.')[1]
+                  .replace(/-/g, '+')
+                  .replace(/_/g, '/')
+            )
+          ).user;
+        })
     })
 
-    it('can fetch people', function (done) {
-      api(authorization)
-      .get('/api/people')
-      .expectStatus(200)
-      .end(done)
+    describe('on people:', function () {
+      baseAPIResource('people', session)
     })
 
-    it('can fetch roles', function (done) {
-      api(authorization)
-      .get('/api/roles')
-      .expectStatus(200)
-      .end(done)
+    describe('on roles', function () {
+      baseAPIResource('roles', session)
     })
 
-    it('can fetch fields', function (done) {
-      api(authorization)
-      .get('/api/roles')
-      .expectStatus(200)
-      .end(done)
-    })
+    // describe('on fields', function () {
+    //   baseAPIResource('fields', session)
+    // })
+
   })
 
   describe('as member', function () {
-    var authorization;
+    var session = api();
 
-    it('can login.', function (done) {
-      api()
-      .post('/api/login')
-      .send({
+    it('can login', function () {
+      return session()
+        .post('/api/login')
+        .send({
           'user': 'wikkert@example.com',
           'password': '1234'
-      })
-      .expectStatus(200)
-      .end(function (err, resp, body) {
-        authorization = body.token;
-        done(err, resp, body);
-      })
+        })
+        .expectStatus(200)
+        .end()
+        .then(function (res) {
+          var data = JSON.parse(res.body)
+
+          session.token = data.token;
+          session.permissions = data.permissions;
+
+          session.user_id = JSON.parse(
+            atob(
+              data.token
+                  .split('.')[1]
+                  .replace(/-/g, '+')
+                  .replace(/_/g, '/')
+            )
+          ).user;
+        })
     })
 
-    it('can fetch people', function (done) {
-      api(authorization)
-      .get('/api/people')
-      .expectStatus(200)
-      .end(done)
+    describe('on people:', function () {
+      baseAPIResource('people', session)
     })
 
-    it('can fetch roles', function (done) {
-      api(authorization)
-      .get('/api/roles')
-      .expectStatus(200)
-      .end(done)
+    describe('on roles', function () {
+      baseAPIResource('roles', session)
     })
 
-    it('can fetch fields', function (done) {
-      api(authorization)
-      .get('/api/roles')
-      .expectStatus(200)
-      .end(done)
-    })
+    // describe('on fields', function () {
+    //   baseAPIResource('fields', session)
+    // })
   })
 
   describe('unauthorized', function () {
-    it('can not login.', function (done) {
-      api()
+    session = api()
+
+    it('can not login.', function () {
+      return session()
       .post('/api/login')
       .send({
           'user': 'wikkert@example.com',
           'password': '1234s'
       })
       .expectStatus(400)
-      .end(function (err, resp, body) {
-        expect(getError(body)).to.equal('Username or password wrong')
-        done(err, resp, body);
+      .end()
+      .then(function (res) {
+        var data = JSON.parse(res.body)
+
+        session.token = data.token;
+        session.permissions = data.permissions;
       })
     })
 
     it('should not get people without authorization.', function (done) {
-      api()
+      session()
       .get('/api/people')
       .expectStatus(400)
       .end(function (err, resp, body) {
@@ -153,7 +271,7 @@ describe('Using pms', function () {
     })
 
     it('should not get roles without authorization.', function (done) {
-      api()
+      session()
       .get('/api/roles')
       .expectStatus(400)
       .end(function (err, resp, body) {
@@ -163,7 +281,7 @@ describe('Using pms', function () {
     })
 
     it('should not get fields without authorization.', function (done) {
-      api()
+      session()
       .get('/api/fields')
       .expectStatus(400)
       .end(function (err, resp, body) {
@@ -171,43 +289,5 @@ describe('Using pms', function () {
         done(err, resp, body);
       })
     })
-
   })
-
-
-  // describe('things hippie-swagger will punish you for:', function () {
-  //   it('validates paths', function (done) {
-  //     try {
-  //       hippie(app, dereferencedSwagger)
-  //         .get('/api/undocumented-endpoint')
-  //         .end()
-  //     } catch (ex) {
-  //       expect(ex.message).to.equal('Swagger spec does not define path: /undocumented-endpoint')
-  //       done()
-  //     }
-  //   })
-
-  //   it('validates parameters', function (done) {
-  //     try {
-  //       hippie(app, dereferencedSwagger)
-  //         .get('/tags/{tagId}')
-  //         .qs({ username: 'not-in-swagger' })
-  //         .end()
-  //     } catch (ex) {
-  //       expect(ex.message).to.equal('query parameter not mentioned in swagger spec: \"username\", available params: tagId')
-  //       done()
-  //     }
-  //   })
-
-  //   it('validates responses', function (done) {
-  //     hippie(app, dereferencedSwagger)
-  //       .get('/tags/invalidResponse')
-  //       .end(function (err) {
-  //         expect(err.message).to.match(/Response failed validation/)
-  //         done()
-  //       })
-  //   })
-
-    // it('validates many other things!  See README for the complete list of validations.')
-  // })
 })

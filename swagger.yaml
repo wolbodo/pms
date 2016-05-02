@@ -44,7 +44,9 @@ paths:
           schema:
             $ref: '#/definitions/LoginResponse'
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
   /people:
     get:
@@ -64,7 +66,9 @@ paths:
             required:
               - people
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       description: Add a new `Person` object
       parameters:
@@ -83,13 +87,15 @@ paths:
             required:
               - people
         400:
-          $ref: '#/definitions/ErrorResponse'
-  /people/{person_id}:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /people/{people_id}:
     get:
       description: Get a single `person`
       parameters:
         - in: path
-          name: person_id
+          name: people_id
           description: the id of the `Person` being fetched
           required: true
           type: integer
@@ -103,12 +109,14 @@ paths:
             required:
               - people
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     put:
       description: Update a person
       parameters:
         - in: path
-          name: person_id
+          name: people_id
           description: the id of the `Person` being updated
           required: true
           type: integer
@@ -127,7 +135,9 @@ paths:
             required:
               - people
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
       
   /roles:
     get:
@@ -142,7 +152,9 @@ paths:
             required:
               - roles
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       description: Creates a new `Role`
       parameters:
@@ -161,14 +173,16 @@ paths:
             required:
               - roles
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
-  /roles/{role_id}:
+  /roles/{roles_id}:
     get:
       description: Get a single `Role`
       parameters:
         - in: path
-          name: role_id
+          name: roles_id
           description: the id of the `Role` being fetched
           required: true
           type: integer
@@ -182,12 +196,14 @@ paths:
             required:
               - roles
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     put:
       description: Update a `Role`
       parameters:
         - in: path
-          name: role_id
+          name: roles_id
           description: the id of the `Role` being updated
           required: true
           type: integer
@@ -206,7 +222,9 @@ paths:
             required:
               - roles
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
       
   /fields:
     get:
@@ -223,7 +241,30 @@ paths:
                 additionalProperties:
                   $ref: '#/definitions/Field'
         400:
-          $ref: '#/definitions/ErrorResponse'
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /fields/{resource_name}/{field_name}:
+    post:
+      description: Create new field
+      responses:
+        200:
+          description: Successfull
+        400:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+          
+    put:
+      description: Update the field
+      responses:
+        200:
+          description: Successfull
+        400:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
 
 definitions:
   BaseResource:
@@ -253,10 +294,6 @@ definitions:
         # format: date-time
       modified_by:
         type: integer
-    required:
-      - id
-      - gid
-      - valid_from
 
   DateTime:
     types:
@@ -270,7 +307,8 @@ definitions:
     title: Person
     type: object
     # required:
-      # - nickname
+    #   - nickname
+    #   - email
     properties:
       email:
         type: string
@@ -331,7 +369,12 @@ definitions:
     properties:
       people:
         additionalProperties:
-          $ref: '#/definitions/Person'
+          allOf:
+            - $ref: '#/definitions/Person'
+            - required:
+              - id
+              - gid
+              - valid_from
       roles:
         additionalProperties:
           oneOf:
@@ -343,10 +386,8 @@ definitions:
           $ref: '#/definitions/ResourceSchema'
               
   ErrorResponse:
-    description: An error has occurred on the server.
-    schema:
-      title: Error
-      type: object
-      properties:
-        error:
-          type: string
+    title: Error
+    type: object
+    properties:
+      error:
+        type: string
