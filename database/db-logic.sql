@@ -35,6 +35,16 @@ END
 $function$;
 
 
+CREATE OR REPLACE FUNCTION public.to_date(stamp TIMESTAMPTZ)
+ RETURNS VARCHAR
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN TO_CHAR(stamp, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"');
+END
+$function$;
+
+
 CREATE OR REPLACE FUNCTION public.parse_jwt(token TEXT)
  RETURNS JSONB
  LANGUAGE plpgsql
@@ -326,32 +336,35 @@ DECLARE
     people JSONB;
 BEGIN
     SELECT JSONB_BUILD_OBJECT('people', JSONB_OBJECT_AGG(object->>'id', object)) INTO people
-        FROM (
-            SELECT (
-                SELECT JSONB_OBJECT_AGG(key, value)
-                FROM (SELECT key, value FROM JSONB_EACH(data)
-                    UNION
-                    VALUES
-                        ('gid'::TEXT, TO_JSON(gid)::JSONB),
-                        ('id', TO_JSON(id)::JSONB),
-                        ('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_from)))::JSONB),
-                        ('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM valid_till))), 'null')::JSONB),
-                        ('email', COALESCE(TO_JSON(email), 'null')::JSONB),
-                        ('phone', COALESCE(TO_JSON(phone), 'null')::JSONB),
-                        ('password_hash', COALESCE(TO_JSON(password_hash), 'null')::JSONB),
-                        ('modified_by', TO_JSON(modified_by)::JSONB),
-                        ('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM modified))), 'null')::JSONB),
-                        ('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM created)))::JSONB)
-                ) alias
-                WHERE
-                    rights.permissions->'people'->'view' ? key
-                    OR (
-                        p.id = (rights.payload->>'user')::INT
-                        AND rights.permissions->'people'->'self'->'view' ? key
-                    )
+    FROM (
+        SELECT (
+            SELECT JSONB_OBJECT_AGG(key, value)
+            FROM JSONB_EACH(
+                p.data
+                || JSONB_BUILD_OBJECT(
+                    'gid', p.gid,
+                    'id', p.id,
+                    'valid_from', to_date(p.valid_from),
+                    'valid_till', to_date(p.valid_till),
+                    'email', p.email,
+                    'phone', p.phone,
+                    'password_hash', p.password_hash,
+                    'modified_by', p.modified_by,
+                    'modified', to_date(p.modified),
+                    'created', to_date(p.created)
+                )
             )
-            FROM people p WHERE valid_till IS NULL AND (id = people_id OR people_id IS NULL)
-        ) alias (object) WHERE object IS NOT NULL;
+            WHERE
+                rights.permissions->'people'->'view' ? key
+                OR (
+                    p.id = (rights.payload->>'user')::INT
+                    AND rights.permissions->'people'->'self'->'view' ? key
+                )
+        )
+        FROM people p
+        WHERE valid_till IS NULL AND (id = people_id OR people_id IS NULL)
+    ) alias (object)
+    WHERE object IS NOT NULL AND object ? 'id';
     RETURN people;
 END;
 $function$;
@@ -450,65 +463,54 @@ DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
 BEGIN
-    SELECT JSONB_BUILD_OBJECT('roles', JSONB_OBJECT_AGG(
-        r.id::TEXT,
-        (
-            SELECT JSONB_OBJECT_AGG(key, value) AS json2
-            FROM
-            (
-                SELECT key, value
-                FROM JSONB_EACH(
-                    r.data
-                    || JSONB_BUILD_OBJECT(
-                        'gid', r.gid,
-                        'id', r.id,
-                        'valid_from', TO_CHAR(r.valid_from, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                        'valid_till', TO_CHAR(r.valid_till, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                        'name', r.name,
-                        'modified_by', r.modified_by,
-                        'modified', TO_CHAR(r.modified, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                        'created', TO_CHAR(r.created, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                        'members', COALESCE(alias2.json, '[]'::JSONB)
-                    )
+    SELECT JSONB_BUILD_OBJECT('roles', COALESCE(JSONB_OBJECT_AGG(object->>'id', object), '{}'::JSONB)) INTO roles
+    FROM (
+        SELECT (
+            SELECT JSONB_OBJECT_AGG(key, value)
+            FROM JSONB_EACH(
+                r.data
+                || JSONB_BUILD_OBJECT(
+                    'gid', r.gid,
+                    'id', r.id,
+                    'valid_from', to_date(r.valid_from),
+                    'valid_till', to_date(r.valid_till),
+                    'name', r.name,
+                    'modified_by', r.modified_by,
+                    'modified', to_date(r.modified),
+                    'created', to_date(r.created),
+                    'members', COALESCE(people_roles.json, '[]'::JSONB)
                 )
-            ) alias
+            )
             WHERE
                 rights.permissions->'roles'->'view' ? key AND r.name != 'self'
         )
-    ) --FILTER (WHERE json2 IS NOT NULL)
-    ) INTO roles
-    FROM roles r
-    LEFT JOIN
-    (
-        SELECT pr.roles_id, JSONB_AGG(
-            (
-                SELECT JSONB_OBJECT_AGG(key, value) AS json
-                FROM
-                (
-                    SELECT key, value
-                    FROM JSONB_EACH(
-                        data
-                        || JSONB_BUILD_OBJECT(
-                            'gid', gid,
-                            '$ref', '/people/' || people_id,
-                            'people_id', people_id,
-                            'valid_from', TO_CHAR(valid_from, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                            'valid_till', TO_CHAR(valid_till, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                            'modified_by', modified_by,
-                            'modified', TO_CHAR(modified, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"'),
-                            'created', TO_CHAR(created, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF"00"')
-                        )
+        FROM roles r
+        LEFT JOIN (
+            SELECT pr.roles_id, JSONB_AGG((
+                SELECT JSONB_OBJECT_AGG(key, value) --FILTER (WHERE key IS NOT NULL)
+                FROM JSONB_EACH(
+                    data
+                    || JSONB_BUILD_OBJECT(
+                        'gid', gid,
+                        '$ref', '/people/' || people_id,
+                        'people_id', people_id,
+                        'valid_from', to_date(valid_from),
+                        'valid_till', to_date(valid_till),
+                        'modified_by', modified_by,
+                        'modified', to_date(modified),
+                        'created', to_date(created)
                     )
-                ) alias
+                )
                 WHERE
                     rights.permissions->'people_roles'->'view' ? key
-            )
-        ) AS json
-        FROM people_roles pr
-        WHERE valid_till IS NULL
-        GROUP BY pr.roles_id
-    ) alias2 ON alias2.roles_id = r.id
-    WHERE r.valid_till IS NULL AND (r.id = _roles_id OR _roles_id IS NULL);
+            )) AS json
+            FROM people_roles pr
+            WHERE valid_till IS NULL
+            GROUP BY pr.roles_id
+        ) people_roles ON people_roles.roles_id = r.id
+        WHERE r.valid_till IS NULL AND (r.id = _roles_id OR _roles_id IS NULL)
+    ) alias (object)
+    WHERE object IS NOT NULL AND object ? 'id';
     RETURN roles;
 END;
 $function$;
@@ -587,26 +589,20 @@ DECLARE
 BEGIN
     SELECT JSONB_BUILD_OBJECT('fields', JSONB_OBJECT_AGG(object->>'name', object)) INTO fields
         FROM (
-            SELECT JSONB_BUILD_OBJECT('name', f.ref_table) || JSONB_BUILD_OBJECT('type', 'object') || JSONB_BUILD_OBJECT('properties', JSONB_OBJECT_AGG(f.name, (
-                SELECT COALESCE(JSONB_OBJECT_AGG(key, value), '{}'::JSONB)
-                FROM (SELECT key, value FROM JSONB_EACH(f.data)
-                    UNION
-                    VALUES
-                        --('gid'::TEXT, TO_JSON(f.gid)::JSONB),
-                        ('id', TO_JSON(f.id)::JSONB)--,
-                        --('valid_from', TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.valid_from)))::JSONB),
-                        --('valid_till', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.valid_till))), 'null')::JSONB),
-                        --('name', COALESCE(TO_JSON(f.name), 'null')::JSONB),
-                        --('modified_by', TO_JSON(f.modified_by)::JSONB),
-                        --('modified', COALESCE(TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.modified))), 'null')::JSONB),
-                        --('created', TO_JSON(FLOOR(EXTRACT(EPOCH FROM f.created)))::JSONB)
-                ) alias)
-            )) || COALESCE(fm.data, '{}'::JSONB)
+            SELECT
+                JSONB_BUILD_OBJECT(
+                    'name', f.ref_table,
+                    'type', 'object',
+                    'properties', JSONB_OBJECT_AGG(
+                        f.name,
+                        COALESCE(f.data, '{}'::JSONB) || JSONB_BUILD_OBJECT('id', f.id)
+                    )
+                )
+                || COALESCE(fm.data, '{}'::JSONB)
             FROM fields f
                 LEFT JOIN fields fm ON fm.valid_till IS NULL AND fm.name IS NULL AND fm.ref_table = f.ref_table
             WHERE f.valid_till IS NULL AND (f.ref_table = _ref_table OR _ref_table IS NULL) AND f.name IS NOT NULL
             GROUP BY f.ref_table, fm.data
-            --GROUP BY f.gid, f.id, f.valid_from, f.valid_till, f.name, f.modified_by, f.modified, f.created, f.data
         ) alias (object);
     RETURN fields;
 END;
