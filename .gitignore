@@ -8,3 +8,4 @@ frontend/npm-debug.log
 frontend/build/
 frontend/dist/
 build/
+api-testing/node_modules/

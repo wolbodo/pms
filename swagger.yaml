@@ -43,6 +43,9 @@ paths:
           description: Login success
           schema:
             $ref: '#/definitions/LoginResponse'
+        400:
+          $ref: '#/definitions/ErrorResponse'
+
   /people:
     get:
       description: |
@@ -60,6 +63,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - people
+        400:
+          $ref: '#/definitions/ErrorResponse'
     post:
       description: Add a new `Person` object
       parameters:
@@ -77,6 +82,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - people
+        400:
+          $ref: '#/definitions/ErrorResponse'
   /people/{person_id}:
     get:
       description: Get a single `person`
@@ -95,6 +102,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - people
+        400:
+          $ref: '#/definitions/ErrorResponse'
     put:
       description: Update a person
       parameters:
@@ -117,6 +126,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - people
+        400:
+          $ref: '#/definitions/ErrorResponse'
       
   /roles:
     get:
@@ -130,6 +141,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - roles
+        400:
+          $ref: '#/definitions/ErrorResponse'
     post:
       description: Creates a new `Role`
       parameters:
@@ -147,6 +160,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - roles
+        400:
+          $ref: '#/definitions/ErrorResponse'
 
   /roles/{role_id}:
     get:
@@ -166,6 +181,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - roles
+        400:
+          $ref: '#/definitions/ErrorResponse'
     put:
       description: Update a `Role`
       parameters:
@@ -188,6 +205,8 @@ paths:
               - $ref: "#/definitions/ApiResult"
             required:
               - roles
+        400:
+          $ref: '#/definitions/ErrorResponse'
       
   /fields:
     get:
@@ -203,6 +222,8 @@ paths:
                 type: object
                 additionalProperties:
                   $ref: '#/definitions/Field'
+        400:
+          $ref: '#/definitions/ErrorResponse'
 
 definitions:
   BaseResource:
@@ -218,14 +239,18 @@ definitions:
         type: integer
         description: Globally unique version identifier
       valid_from:
-        type: string
-        format: date-time
+        $ref: '#/definitions/DateTime'
       valid_till:
-        type: string
-        format: date-time
+        types: 
+          - integer
+          - null
+        # type: string
+        # format: date-time
       modified:
-        type: string
-        format: date-time
+        types:
+          - string
+          - null
+        # format: date-time
       modified_by:
         type: integer
     required:
@@ -233,11 +258,19 @@ definitions:
       - gid
       - valid_from
 
+  DateTime:
+    types:
+      - integer
+      - string
+      - null
+    # type: string
+    # format: date-time
+
   Person:
     title: Person
     type: object
-    required:
-      - nickname
+    # required:
+      # - nickname
     properties:
       email:
         type: string
@@ -262,6 +295,10 @@ definitions:
 
   LoginResponse:
     type: object
+    required:
+      - token
+      - permissions
+
     properties:
       token:
         type: string
@@ -297,8 +334,19 @@ definitions:
           $ref: '#/definitions/Person'
       roles:
         additionalProperties:
-          $ref: '#/definitions/Role'
+          oneOf:
+          - $ref: '#/definitions/Role'
+          - type: 'null'
+            description: Should not be
       fields:
         additionalProperties:
           $ref: '#/definitions/ResourceSchema'
               
+  ErrorResponse:
+    description: An error has occurred on the server.
+    schema:
+      title: Error
+      type: object
+      properties:
+        error:
+          type: string
