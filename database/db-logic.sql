@@ -334,6 +334,7 @@ CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_
 AS $function$
 DECLARE
     people JSONB;
+    _people_id ALIAS FOR people_id;
 BEGIN
     SELECT JSONB_BUILD_OBJECT('people', JSONB_OBJECT_AGG(object->>'id', object)) INTO people
     FROM (
@@ -351,7 +352,8 @@ BEGIN
                     'password_hash', p.password_hash,
                     'modified_by', p.modified_by,
                     'modified', to_date(p.modified),
-                    'created', to_date(p.created)
+                    'created', to_date(p.created),
+                    'roles', COALESCE(people_roles.json, '[]'::JSONB)
                 )
             )
             WHERE
@@ -362,7 +364,30 @@ BEGIN
                 )
         )
         FROM people p
-        WHERE valid_till IS NULL AND (id = people_id OR people_id IS NULL)
+        LEFT JOIN (
+            SELECT pr.people_id, JSONB_AGG((
+                SELECT JSONB_OBJECT_AGG(key, value) --FILTER (WHERE key IS NOT NULL)
+                FROM JSONB_EACH(
+                    data
+                    || JSONB_BUILD_OBJECT(
+                        'gid', pr.gid,
+                        '$ref', '/roles/' || pr.roles_id,
+                        'roles_id', pr.roles_id,
+                        'valid_from', to_date(pr.valid_from),
+                        'valid_till', to_date(pr.valid_till),
+                        'modified_by', pr.modified_by,
+                        'modified', to_date(pr.modified),
+                        'created', to_date(pr.created)
+                    )
+                )
+                WHERE
+                    rights.permissions->'people_roles'->'view' ? key
+            )) AS json
+            FROM people_roles pr
+            WHERE valid_till IS NULL
+            GROUP BY pr.people_id
+        ) people_roles ON people_roles.people_id = p.id
+        WHERE valid_till IS NULL AND (p.id = _people_id OR _people_id IS NULL)
     ) alias (object)
     WHERE object IS NOT NULL AND object ? 'id';
     RETURN people;

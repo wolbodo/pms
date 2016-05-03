@@ -153,6 +153,22 @@ sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | 
 sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | psql -U pms -X
 ```
 
+## Destroy & recreate database
+```
+sudo -u postgres psql -X -c "UPDATE pg_database SET datallowconn = FALSE WHERE datname = 'pms';SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'pms';"
+sudo -u postgres psql -X -c "DROP DATABASE pms;"
+sudo -u postgres psql -X -c "CREATE DATABASE pms WITH OWNER pms;"
+sudo -u postgres psql -d pms -X -c "CREATE EXTENSION pgcrypto;"
+sudo -u pms psql -X -f database/create.sql
+sudo -u pms psql -X -f database/mock.sql
+sed "s/:'token_sha256_key'/'$(openssl rand -hex 64)'/g" database/db-logic.sql | sudo -u pms psql -X
+```
+
+Test setup:
+```
+sudo -u pms psql -X -t -c "SELECT people_get(login('wikkert@example.com', '1234')->>'token');" | jq '.'
+```
+
 # Backup Cycle
 
 Make a backup every 28 days.
