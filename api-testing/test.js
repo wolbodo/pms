@@ -90,9 +90,6 @@ function getError(body) {
   }
 }
 
-
-
-
 function baseAPIResource(resource, session) {
   // test the API for basic functionalities.
 
@@ -191,10 +188,6 @@ function baseAPIResource(resource, session) {
     it('can delete resources');
   })
 }
-
-
-
-
 
 // Start of actual tests
 

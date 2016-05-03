@@ -1,0 +1,6 @@
+piggly:
+  adapter: postgresql
+  database: pms
+  username: pms
+  password: secret
+  host: localhost
