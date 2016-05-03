@@ -60,9 +60,8 @@ paths:
           # A schema describing your response object.
           # Use JSON Schema format
           schema:
+            $ref: "#/definitions/ApiResult"
             title: PeopleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - people
         400:
@@ -81,9 +80,8 @@ paths:
         200:
           description: Returns the new person
           schema:
+            $ref: "#/definitions/ApiResult"
             title: PeopleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - people
         400:
@@ -103,9 +101,8 @@ paths:
         200:
           description: Successfull
           schema:
+            $ref: "#/definitions/ApiResult"
             title: PeopleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - people
         400:
@@ -129,9 +126,8 @@ paths:
         200:
           description: Successfull
           schema:
+            $ref: "#/definitions/ApiResult"
             title: PeopleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - people
         400:
@@ -146,9 +142,8 @@ paths:
         200:
           description: Successfull response, with roles.
           schema:
+            $ref: "#/definitions/ApiResult"
             title: RoleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - roles
         400:
@@ -167,9 +162,8 @@ paths:
         200:
           description: Returns the new role
           schema:
+            $ref: "#/definitions/ApiResult"
             title: RoleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - roles
         400:
@@ -190,9 +184,8 @@ paths:
         200:
           description: Successfull
           schema:
+            $ref: "#/definitions/ApiResult"
             title: RoleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - roles
         400:
@@ -216,9 +209,8 @@ paths:
         200:
           description: Successfull
           schema:
+            $ref: "#/definitions/ApiResult"
             title: RoleResult
-            allOf:
-              - $ref: "#/definitions/ApiResult"
             required:
               - roles
         400:
@@ -280,18 +272,10 @@ definitions:
         type: integer
         description: Globally unique version identifier
       valid_from:
-        $ref: '#/definitions/DateTime'
+        type: string
+        format: date-time
       valid_till:
-        types: 
-          - integer
-          - null
-        # type: string
-        # format: date-time
-      modified:
-        types:
-          - string
-          - null
-        # format: date-time
+        type: 'null'
       modified_by:
         type: integer
 
@@ -300,8 +284,6 @@ definitions:
       - integer
       - string
       - null
-    # type: string
-    # format: date-time
 
   Person:
     title: Person
@@ -369,18 +351,18 @@ definitions:
     properties:
       people:
         additionalProperties:
-          allOf:
-            - $ref: '#/definitions/Person'
-            - required:
-              - id
-              - gid
-              - valid_from
+          $ref: '#/definitions/Person'
+          required:
+            - id
+            - gid
+            - valid_from
       roles:
         additionalProperties:
-          oneOf:
-          - $ref: '#/definitions/Role'
-          - type: 'null'
-            description: Should not be
+          $ref: '#/definitions/Role'
+          required:
+            - id
+            - gid
+            - valid_from
       fields:
         additionalProperties:
           $ref: '#/definitions/ResourceSchema'

@@ -1,6 +1,5 @@
 import aiopg
 import asyncio
-import requests
 
 import tornado.concurrent
 import tornado.web
