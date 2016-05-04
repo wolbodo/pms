@@ -5,12 +5,12 @@ var _ = require('lodash');
 var atob = require('atob');
 
 
-const BASE = 'http://pms.zaphod';
-// app.use('/', proxy('https://pms.wlbd.nl'));
-// app.use('/api', proxy('localhost:4242'));
+const BASE = 'http://pms.zaphod', API_ROOT = '/';
+// const BASE = 'https://pms.wlbd.nl', API_ROOT = '/';
+// const BASE = 'http://localhost:4242', API_ROOT = '/api';
 
 var app = express();
-app.use('/', proxy(BASE));
+app.use(API_ROOT, proxy(BASE));
 
 /**
  * Testing the PMS API
@@ -31,50 +31,50 @@ function parseBody(res) {
   return JSON.parse(res.body);
 }
 
-function api() {
-  // Wrap api to allow for sessions
-  var headers = {};
+class Session {
+  // Keeps track of a session
+  // Exposes the api, either against swagger or not.
+  static swagger = hippieSwagger(app, dereferencedSwagger);
+  static hippie  = hippie(app);
 
   // Api Session singleton... 
-  function api() {
-    var h = hippieSwagger(app, dereferencedSwagger);
-    // Add all the headers
+  function API() {
 
+    // Add all the headers
     if (api.token) {
       h = h.header('Authorization', api.token);
     }
 
     return h;
   }
-  api.post = function post(url, body, expectedStatus) {
-    return api()
+
+  post(url, body, expectedStatus) {
+    return this.swagger()
       .post(url)
       .send(body)
       .expectStatus(expectedStatus)
       .end();
   }
 
-  api.get = function get(url, expectedStatus) {
-    return api()
+  get(url, expectedStatus) {
+    return this.swagger()
       .get(url)
       .expectStatus(expectedStatus)
       .end();
   }
 
-  api.put = function put(url, body, expectedStatus) {
-    return api()
+  put(url, body, expectedStatus) {
+    return this.swagger()
       .put(url)
       .send(body)
       .expectStatus(expectedStatus)
       .end();
   }
 
-  api.login = function (auth, expectedStatus) {
-      return api.post('/api/login', auth, expectedStatus)
+  login(auth, expectedStatus) {
+      return this.post('/api/login', auth, expectedStatus)
                 .then(parseBody)
   } 
-
-  return api;
 }
 
 function getError(body) {
@@ -93,6 +93,15 @@ function getError(body) {
 function baseAPIResource(resource, session) {
   // test the API for basic functionalities.
 
+  // Configure some utility functions on the session
+  const simpleHippie = function() {
+    return hippie(app)
+    .json()
+    .header('Authorization', session.token)
+  }
+  const swaggerHippie = function () {
+  }
+
   function getPermissions() {
     // Returns permissions based on the resource, and session properties.
 
@@ -100,7 +109,7 @@ function baseAPIResource(resource, session) {
     return _.get(session.permissions, resource, {});
   }
 
-  describe('get', function () {
+  describe('get /' + resource, function () {
     var fetched;
     it('should return resources', function () {
       return session()
@@ -150,13 +159,10 @@ function baseAPIResource(resource, session) {
     });
   })
 
-  describe('post', function () {
+  describe('post /' + resource, function () {
     it('can not add empty data', function (done) {
       // test with plain hippie
-      hippie()
-      .json()
-      .header('Authorization', session.token)
-      .base(BASE)
+      simpleHippie()
       .post('/api/' + resource)
       .send({})
       .expectStatus(400)
@@ -175,7 +181,7 @@ function baseAPIResource(resource, session) {
   })
 
 
-  describe('put', function () {
+  describe('put /' + resource, function () {
     it('can update using correct gid', function (done) {
       done();
     });
