@@ -5,6 +5,7 @@ pms:
     # - CERT_NAME=dxlb.nl
     - VIRTUAL_HOST=pms.dxlb.nl
     - LETSENCRYPT_HOST=pms.dxlb.nl
+    - LETSENCRYPT_EMAIL=d+letsencrypt@dxlb.nl
     # - VIRTUAL_HOST=pms.zaphod
   ports:
     - '80'
