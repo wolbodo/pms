@@ -27,104 +27,109 @@ var path = require('path')
 var dereferencedSwagger
 
 
-function parseBody(res) {
-  return JSON.parse(res.body);
-}
-
 class Session {
-  // Keeps track of a session
-  // Exposes the api, either against swagger or not.
-  static swagger = hippieSwagger(app, dereferencedSwagger);
-  static hippie  = hippie(app);
 
-  // Api Session singleton... 
-  function API() {
+  authorized(hippie) {
+    return (this.token) ? hippie.header('Authorization', this.token)
+                        : hippie;
+  }
 
-    // Add all the headers
-    if (api.token) {
-      h = h.header('Authorization', api.token);
+  swagger() {
+    // Returns hippie-swagger, tests validity against swagger
+
+    return this.authorized(
+      hippieSwagger(app, dereferencedSwagger)
+      .json()
+    )
+  }
+  hippie() {
+    // Returns hippie-swagger, tests validity against swagger
+
+    return this.authorized(
+      hippie(app)
+      .json()
+    )
+  }
+
+  getPermissions(resource) {
+    // Returns permissions based on the resource, and session properties.
+
+    // fetch the resources permissions
+    return _.get(this.permissions, resource, {});
+  }
+
+
+  getError(body) {
+    var err = body.error
+
+    try {
+      err = JSON.parse(err)
+      return err.error;
+    } catch (e) {
+      return err;
     }
-
-    return h;
+  }
+  parse(resp) {
+    return JSON.parse(resp.body)
   }
 
-  post(url, body, expectedStatus) {
+  parseLoginResponse(body) {
+    this.token = body.token;
+    this.permissions = body.permissions;
+    this.user_id = JSON.parse(
+      atob(
+        body.token
+            .split('.')[1]
+            .replace(/-/g, '+')
+            .replace(/_/g, '/')
+      )
+    ).user;
+  }
+
+  login(user, password) {
     return this.swagger()
-      .post(url)
-      .send(body)
-      .expectStatus(expectedStatus)
-      .end();
+      .post('/api/login')
+      .send({user, password})
+      .expectStatus(200)
+      .end()
+      .then(this.parse)
+      .then((body) => this.parseLoginResponse(body))
   }
-
-  get(url, expectedStatus) {
-    return this.swagger()
-      .get(url)
-      .expectStatus(expectedStatus)
-      .end();
-  }
-
-  put(url, body, expectedStatus) {
-    return this.swagger()
-      .put(url)
-      .send(body)
-      .expectStatus(expectedStatus)
-      .end();
-  }
-
-  login(auth, expectedStatus) {
-      return this.post('/api/login', auth, expectedStatus)
-                .then(parseBody)
-  } 
 }
 
-function getError(body) {
-  // Currently the body an error responds with contains a string with data. 
-  // parse that
-  expect(body.error).to.be.a('string');
-  try {
-    var json = JSON.parse(body.error);
-    expect(json.error).to.be.a('string');
-    return json.error
-  } catch (e) {
-    return body.error
+function error(message) {
+  // Returns a function which can be fed into an hippie expect call.
+
+  return (res, body, next) => {
+    expect(body.error).to.equal(message)
+    next()
   }
 }
+
 
 function baseAPIResource(resource, session) {
   // test the API for basic functionalities.
 
-  // Configure some utility functions on the session
-  const simpleHippie = function() {
-    return hippie(app)
-    .json()
-    .header('Authorization', session.token)
-  }
-  const swaggerHippie = function () {
-  }
+  describe('Fetching fields metadata', function () {
+    
+  })
 
-  function getPermissions() {
-    // Returns permissions based on the resource, and session properties.
 
-    // fetch the resources permissions
-    return _.get(session.permissions, resource, {});
-  }
-
-  describe('get /' + resource, function () {
+  describe('GET /' + resource, function () {
     var fetched;
     it('should return resources', function () {
-      return session()
+      return session.swagger()
       .get('/api/' + resource)
       .expectStatus(200)
       .end()
-      .then(function (res) {
-        fetched = JSON.parse(res.body);
-      })
+      .then(session.parse)
+      .then((data) => { fetched = data; })
     })
     
-    it('should only contain viewable fields', function () {
-      var resourcePermissions = getPermissions();
-      _.each(_.get(fetched, resource), function (item) {
+    it('should only contain viewable fields', () => function () {
+      var resourcePermissions = session.getPermissions(resource);
 
+      _.each(_.get(fetched, resource), function (item) {
         if (resourcePermissions.self && (item.id === session.user_id)) {
           expect(
             _.difference(
@@ -140,7 +145,6 @@ function baseAPIResource(resource, session) {
             )
           ).to.be.empty; 
         }
-
       })
     })
 
@@ -149,7 +153,7 @@ function baseAPIResource(resource, session) {
       var resourceId = _.head(_.keys(_.get(fetched, resource)));
       var resourceParam = resource + '_id';
 
-      return session()
+      return session.swagger()
       .get('/api/' + resource + '/{' + resourceParam + '}')
       .pathParams({
         [resourceParam]: _.toInteger(resourceId)
@@ -159,38 +163,37 @@ function baseAPIResource(resource, session) {
     });
   })
 
-  describe('post /' + resource, function () {
-    it('can not add empty data', function (done) {
+  describe('POST /' + resource, function () {
+    it('can not add empty data', function () {
       // test with plain hippie
-      simpleHippie()
+      return session.hippie()
       .post('/api/' + resource)
       .send({})
       .expectStatus(400)
-      .expect(function (res, body, next) {
-        // Error depends on permissions
-        if (_.has(session.permissions, [resource, 'create'])) {
-          expect(getError(body)).to.equal('Creating nothing is not allowed')
-        } else {
-          expect(getError(body)).to.equal('Creating "' + resource + '" not allowed')
-        }
-        // No need to call next
+      .expect((res, body, next) => {
+        var error = session.getError(body);
+        (_.has(session.permissions, [resource, 'create']))
+          // When the user has create permissions.
+          // It should warn about creating nothing
+          ? expect(error).to.equal('Creating nothing is not allowed')
+          // When it has no permissions,
+          // It should warn about not allowing creating.
+          : expect(error).to.equal('Creating "' + resource + '" not allowed');
+        
         next()
       })
-      .end(done)
+      .end()
     })
   })
 
-
-  describe('put /' + resource, function () {
-    it('can update using correct gid', function (done) {
-      done();
-    });
+  describe('PUT /' + resource, function () {
+    it('can update using correct gid');
     it('can not update without gid');
     it('can not update with incorrect gid');
     it('can not write field without permissions');
   })
 
-  describe('delete', function () {
+  describe('DELETE /' + resource, function () {
     it('can delete resources');
   })
 }
@@ -210,29 +213,11 @@ describe('Using pms', function () {
 
 
   describe('as board', function () {
-    var session = api();
+    const session = new Session()
 
-    it('can login', function () {
-      return session.login({
-          'user': 'sammy@example.com',
-          'password': '1234'
-        }, 200)
-        .then(function (body) {
-          expect(body.token).to.be.a('string')
-          expect(body.permissions).to.be.an('object')
-          session.token = body.token;
-          session.permissions = body.permissions;
-
-          session.user_id = JSON.parse(
-            atob(
-              body.token
-                  .split('.')[1]
-                  .replace(/-/g, '+')
-                  .replace(/_/g, '/')
-            )
-          ).user;
-        })
-    })
+    it('can login', () => 
+      session.login('sammy@example.com', '1234')
+    )
 
     describe('on people:', function () {
       baseAPIResource('people', session)
@@ -249,33 +234,11 @@ describe('Using pms', function () {
   })
 
   describe('as member', function () {
-    var session = api();
+    const session = new Session()
 
-    it('can login', function () {
-      return session()
-        .post('/api/login')
-        .send({
-          'user': 'wikkert@example.com',
-          'password': '1234'
-        })
-        .expectStatus(200)
-        .end()
-        .then(function (res) {
-          var data = JSON.parse(res.body)
-
-          session.token = data.token;
-          session.permissions = data.permissions;
-
-          session.user_id = JSON.parse(
-            atob(
-              data.token
-                  .split('.')[1]
-                  .replace(/-/g, '+')
-                  .replace(/_/g, '/')
-            )
-          ).user;
-        })
-    })
+    it('can login', () => 
+      session.login('wikkert@example.com', '1234')
+    )
 
     describe('on people:', function () {
       baseAPIResource('people', session)
@@ -291,54 +254,45 @@ describe('Using pms', function () {
   })
 
   describe('unauthorized', function () {
-    session = api()
-
+    const session = new Session()
 
     it('can not login.', function () {
-      return session.login({
-        'user': 'wikkert@example.com',
-        'password': '1234s'
-      }, 400)
-      .then(function (data) {
-        session.token = data.token;
-        session.permissions = data.permissions;
-      })
+      return session.swagger()
+        .post('/api/login')
+        .send({'user': 'wikkert@example.com', 'password': '1234s'})
+        .expectStatus(400)
+        .end()
     })
     it('can not login with null password', function () {
-      return session.login({
-        'user': 'wikkert@example.com', 
-        'password': null
-      }, 400)
+      return session.hippie()
+        .post('/api/login')
+        .send({'user': 'wikkert@example.com', 'password': null})
+        .expectStatus(400)
+        .end()
     })
 
-    it('should not get people without authorization.', function (done) {
-      return session.get('api/people', 400)
-      .then(parseBody)
-      .then(getError)
-      .then(function (err) {
-        expect(err).to.equal('No Authorization header found')
-        done()
-      })
+    it('should not get people without authorization.', function () {
+      return session.swagger()
+        .get('/api/people')
+        .expectStatus(400)
+        .expect(error('No Authorization header found'))
+        .end()
     })
 
-    it('should not get roles without authorization.', function (done) {
-      return session.get('api/roles', 400)
-      .then(parseBody)
-      .then(getError)
-      .then(function (err) {
-        expect(err).to.equal('No Authorization header found')
-        done()
-      })
+    it('should not get roles without authorization.', function () {
+      return session.swagger()
+        .get('/api/roles')
+        .expectStatus(400)
+        .expect(error('No Authorization header found'))
+        .end()
     })
 
-    it('should not get fields without authorization.', function (done) {
-      return session.get('api/fields', 400)
-      .then(parseBody)
-      .then(getError)
-      .then(function (err) {
-        expect(err).to.equal('No Authorization header found')
-        done()
-      })
+    it('should not get fields without authorization.', function () {
+      return session.swagger()
+        .get('/api/fields')
+        .expectStatus(400)
+        .expect(error('No Authorization header found'))
+        .end()
     })
   })
 })

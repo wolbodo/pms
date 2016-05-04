@@ -11,6 +11,8 @@ npm run build
 
 # Build backend
 cd ../backend
+cargo clean
+cargo update
 cargo build --release
 
 cd ..
