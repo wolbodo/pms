@@ -4,7 +4,6 @@ var proxy = require('express-http-proxy');
 var _ = require('lodash');
 var atob = require('atob');
 
-
 const BASE = 'http://pms.zaphod', API_ROOT = '/';
 // const BASE = 'https://pms.wlbd.nl', API_ROOT = '/';
 // const BASE = 'http://localhost:4242', API_ROOT = '/api';
@@ -25,7 +24,6 @@ var hippie = require('hippie')
 var expect = require('chai').expect
 var path = require('path')
 var dereferencedSwagger
-
 
 class Session {
 
@@ -106,12 +104,11 @@ function error(message) {
   }
 }
 
-
 function baseAPIResource(resource, session) {
   // test the API for basic functionalities.
 
   describe('Fetching fields metadata', function () {
-    
+
   })
 
 

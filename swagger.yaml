@@ -5,7 +5,7 @@ swagger: '2.0'
 
 # This is your document metadata
 info:
-  version: "0.5.0"
+  version: "0.5.1"
   title: PMS
 schemes:
   - http
@@ -43,7 +43,7 @@ paths:
           description: Login success
           schema:
             $ref: '#/definitions/LoginResponse'
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -61,7 +61,7 @@ paths:
           # Use JSON Schema format
           schema: 
             $ref: '#/definitions/PeopleResponse'
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -78,7 +78,7 @@ paths:
           description: Returns the new person
           schema:
             $ref: "#/definitions/RolesResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -96,7 +96,7 @@ paths:
           description: Successfull
           schema: 
             $ref: '#/definitions/PeopleResponse'
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -118,11 +118,34 @@ paths:
           description: Successfull
           schema: 
             $ref: '#/definitions/PeopleResponse'
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-      
+  /people/{people_id}/ref:
+    post:
+      description: Add a new ref, depending on ref_type, (eg. it creates a link between people and roles)
+      parameters:
+        - in: path
+          name: people_id
+          description: the id of the `Person` being changed
+          required: true
+          type: integer
+        - in: body
+          name: resource
+          required: true
+          schema:
+            $ref: '#/definitions/ResourceReference'
+      responses:
+        200:
+          description: Successfull
+          schema: 
+            $ref: '#/definitions/PeopleResponse'
+        default:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /roles:
     get:
       description: Returns all roles
@@ -131,7 +154,7 @@ paths:
           description: Successfull response, with roles.
           schema:
             $ref: "#/definitions/RolesResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -148,11 +171,10 @@ paths:
           description: Returns the new role
           schema:
             $ref: "#/definitions/RolesResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-
   /roles/{roles_id}:
     get:
       description: Get a single `Role`
@@ -167,7 +189,7 @@ paths:
           description: Successfull
           schema:
             $ref: "#/definitions/RolesResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -189,11 +211,34 @@ paths:
           description: Successfull
           schema:
             $ref: "#/definitions/RolesResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-      
+  /roles/{roles_id}/ref:
+    post:
+      description: Add a new ref, depending on ref_type, (eg. it creates a link between people and roles)
+      parameters:
+        - in: path
+          name: roles_id
+          description: the id of the `Role` being updated
+          required: true
+          type: integer
+        - in: body
+          name: resource
+          required: true
+          schema:
+            $ref: '#/definitions/ResourceReference'
+      responses:
+        200:
+          description: Successfull
+          schema: 
+            $ref: '#/definitions/RolesResponse'
+        default:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /fields:
     get:
       description: Return all fields
@@ -208,7 +253,7 @@ paths:
                 type: object
                 additionalProperties:
                   $ref: '#/definitions/Field'
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -228,7 +273,7 @@ paths:
           description: Successfull
           schema:
             $ref: "#/definitions/FieldsResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -246,7 +291,7 @@ paths:
           description: Successfull
           schema:
             $ref: "#/definitions/FieldsResponse"
-        400:
+        default:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
@@ -262,13 +307,45 @@ definitions:
     properties:
       nickname:
         type: string
+      email:
+        type: string
+        format: email
+      birthdate:
+        type: string
+        format: date-time
+      firstname:
+        type: string
+      infix:
+        type: string
+      
+      groups:
+        type: array
+        items:
+          $ref: '#/definitions/ResourceReference'
     additionalProperties: true
+    example:
+      nickname: Pietje
+      firstname: Pieter
+      email: piet@example.com
+      birthdate: 1916-05-04T12:21:25.497+00:00
+      groups:
+        - $ref: '/roles/3'
+        - $ref: '/roles/4'
+
+  ResourceReference:
+    type: object
+    properties:
+      $ref: 
+        type: string
+        description: JsonPath pointing to pms resource
 
   Role:
     title: Role
     type: object
     properties:
       name:
+        type: string
+      description:
         type: string
     additionalProperties: true
 
@@ -312,11 +389,13 @@ definitions:
     type: object
     properties:
       people:
+        type: object
         additionalProperties:
           allOf: 
             - $ref: '#/definitions/BaseResourceResponse'
             - $ref: '#/definitions/Person'
       roles:
+        type: object
         additionalProperties:
           allOf: 
             - $ref: '#/definitions/BaseResourceResponse'
