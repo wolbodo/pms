@@ -1,3 +1,7 @@
+--FIXME: security:
+--        - remove access of viewing functions who expose the SHA256 HMAC secret
+--        - limit access to internal functions, including "*_get(rights payload_permissions" functions
+
 CREATE OR REPLACE FUNCTION public.base64url_jsonb(json TEXT, info TEXT DEFAULT ''::TEXT)
  RETURNS JSONB
  LANGUAGE plpgsql
@@ -177,7 +181,6 @@ END;
 $function$;
 
 
-
 CREATE OR REPLACE FUNCTION public.roles_permissions_get(token TEXT)
  RETURNS JSONB
  LANGUAGE plpgsql
@@ -327,7 +330,6 @@ END;
 $function$;
 
 
---NOTE: ONLY expose this function internally! (otherwise we have a huuuuuge security issue)
 CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
@@ -455,6 +457,7 @@ BEGIN
 END;
 $function$;
 
+
 CREATE OR REPLACE FUNCTION public.people_del(token TEXT, people_id INT)
  RETURNS JSONB
  LANGUAGE plpgsql
@@ -478,9 +481,8 @@ BEGIN
 END;
 $function$;
 
---NOTE: fix self id
---NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
-CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT NULL)
+
+CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -488,6 +490,8 @@ DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
 BEGIN
+    --NOTE: only expose roles to people who can log in
+    PERFORM parse_jwt(token);
     SELECT JSONB_BUILD_OBJECT('roles', COALESCE(JSONB_OBJECT_AGG(object->>'id', object), '{}'::JSONB)) INTO roles
     FROM (
         SELECT (
@@ -537,17 +541,6 @@ BEGIN
     ) alias (object)
     WHERE object IS NOT NULL AND object ? 'id';
     RETURN roles;
-END;
-$function$;
-
-
-
-CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT NULL)
- RETURNS JSONB
- LANGUAGE plpgsql
-AS $function$
-BEGIN
-    RETURN roles_get(rights := permissions_get(token), roles_id := roles_id);
 END;
 $function$;
 
@@ -603,8 +596,7 @@ END;
 $function$;
 
 
---NOTE: ONLY expose this function internally! (because Dexter only wants to expose roles to people who can log in)
-CREATE OR REPLACE FUNCTION public.fields_get(rights payload_permissions, ref_table VARCHAR(255) DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.fields_get(token TEXT, ref_table VARCHAR(255) DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -612,6 +604,8 @@ DECLARE
     fields JSONB;
     _ref_table ALIAS FOR ref_table;
 BEGIN
+    --NOTE: only expose fields to people who can log in
+    PERFORM parse_jwt(token);
     SELECT JSONB_BUILD_OBJECT('fields', JSONB_OBJECT_AGG(object->>'name', object)) INTO fields
         FROM (
             SELECT
@@ -630,16 +624,6 @@ BEGIN
             GROUP BY f.ref_table, fm.data
         ) alias (object);
     RETURN fields;
-END;
-$function$;
-
-
-CREATE OR REPLACE FUNCTION public.fields_get(token TEXT, ref_table VARCHAR(255) DEFAULT NULL)
- RETURNS JSONB
- LANGUAGE plpgsql
-AS $function$
-BEGIN
-    RETURN fields_get(rights := permissions_get(token), ref_table := ref_table);
 END;
 $function$;
 
