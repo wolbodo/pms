@@ -322,7 +322,7 @@ AS $function$
 DECLARE
     field VARCHAR;
 BEGIN
-    FOREACH field IN ARRAY ARRAY['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
+    FOREACH field IN ARRAY ARRAY['gid', 'id'] LOOP --'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'
         base = base -field;
     END LOOP;
     RETURN base;
@@ -347,14 +347,8 @@ BEGIN
                 || JSONB_BUILD_OBJECT(
                     'gid', p.gid,
                     'id', p.id,
-                    'valid_from', to_date(p.valid_from),
-                    'valid_till', to_date(p.valid_till),
                     'email', p.email,
                     'phone', p.phone,
-                    'password_hash', p.password_hash,
-                    'modified_by', p.modified_by,
-                    'modified', to_date(p.modified),
-                    'created', to_date(p.created),
                     'roles', COALESCE(people_roles.json, '[]'::JSONB)
                 )
             )
@@ -374,12 +368,7 @@ BEGIN
                     || JSONB_BUILD_OBJECT(
                         'gid', pr.gid,
                         '$ref', '/roles/' || pr.roles_id,
-                        'roles_id', pr.roles_id,
-                        'valid_from', to_date(pr.valid_from),
-                        'valid_till', to_date(pr.valid_till),
-                        'modified_by', pr.modified_by,
-                        'modified', to_date(pr.modified),
-                        'created', to_date(pr.created)
+                        'roles_id', pr.roles_id
                     )
                 )
                 WHERE
@@ -501,12 +490,7 @@ BEGIN
                 || JSONB_BUILD_OBJECT(
                     'gid', r.gid,
                     'id', r.id,
-                    'valid_from', to_date(r.valid_from),
-                    'valid_till', to_date(r.valid_till),
                     'name', r.name,
-                    'modified_by', r.modified_by,
-                    'modified', to_date(r.modified),
-                    'created', to_date(r.created),
                     'members', COALESCE(people_roles.json, '[]'::JSONB)
                 )
             )
@@ -522,12 +506,7 @@ BEGIN
                     || JSONB_BUILD_OBJECT(
                         'gid', gid,
                         '$ref', '/people/' || people_id,
-                        'people_id', people_id,
-                        'valid_from', to_date(valid_from),
-                        'valid_till', to_date(valid_till),
-                        'modified_by', modified_by,
-                        'modified', to_date(modified),
-                        'created', to_date(created)
+                        'people_id', people_id
                     )
                 )
                 WHERE
