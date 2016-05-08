@@ -19,8 +19,6 @@ RUN curl -f -L https://static.rust-lang.org/rustup.sh -O && sh rustup.sh --chann
 
 ADD nginx/pms.nginx.conf /etc/nginx/sites-enabled/pms.conf
 
-RUN sed '/# TYPE/i local   pms    pms   trust' /etc/postgresql/9.5/main/pg_hba.conf > /etc/postgresql/9.5/main/pg_hba.conf
-
 RUN npm set progress=false
 
 RUN mkdir /app

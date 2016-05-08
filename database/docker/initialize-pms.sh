@@ -2,10 +2,9 @@
 #!/bin/bash
 set -e
 
-psql -v ON_ERROR_STOP=1 --username postgres <<-EOSQL
-    CREATE USER pms;
-    CREATE DATABASE pms WITH OWNER pms;
-	\c pms;
+# sed '/# TYPE/i local   pms    pms   trust' /etc/postgresql/9.5/main/pg_hba.conf > /etc/postgresql/9.5/main/pg_hba.conf
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$POSTGRES_DB" <<-EOSQL
 	CREATE EXTENSION pgcrypto;
 EOSQL
 

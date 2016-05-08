@@ -30,6 +30,7 @@ pms-dev:
     # - LETSENCRYPT_EMAIL=d+letsencrypt@dxlb.nl
   volumes:
     - ./:/app
+    - ./nginx:/etc/nginx/conf.d
   links: 
     - pms-db:postgres
   ports:
