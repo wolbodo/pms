@@ -559,7 +559,7 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'roles',
-        base := roles_get(rights, roles_id)->'roles'->roles_id::TEXT,
+        base := roles_get(token, roles_id)->'roles'->roles_id::TEXT,
         update := _data
     ));
 
@@ -569,7 +569,7 @@ BEGIN
         SELECT id, valid_till, _data->>'name', (rights.payload->>'user')::INT, _data -'name'
             FROM roles WHERE id = roles_id ORDER BY valid_till DESC LIMIT 1;
 
-    RETURN roles_get(rights, roles_id);
+    RETURN roles_get(token, roles_id);
 END;
 $function$;
 
@@ -593,7 +593,7 @@ BEGIN
     INSERT INTO roles (name, modified_by, data)
         VALUES (_data->>'name', (rights.payload->>'user')::INT, _data -'name') RETURNING id INTO roles_id;
 
-    RETURN roles_get(rights, roles_id);
+    RETURN roles_get(token, roles_id);
 END;
 $function$;
 
