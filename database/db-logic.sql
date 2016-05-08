@@ -489,9 +489,11 @@ AS $function$
 DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
+    rights payload_permissions;
 BEGIN
     --NOTE: only expose roles to people who can log in
     PERFORM parse_jwt(token);
+    rights = permissions_get(token);
     SELECT JSONB_BUILD_OBJECT('roles', COALESCE(JSONB_OBJECT_AGG(object->>'id', object), '{}'::JSONB)) INTO roles
     FROM (
         SELECT (
