@@ -1,14 +1,7 @@
-<<<<<<< Updated upstream
 # People Management System
-=======
-=======
-# Pms - People Management System
 
 # Authentication and access control in database layer. 
 Thats why there's a minimal backend.
-
-# Fully dynamic frontend configuration and state management.
-![Drag and drop functionality demoed](https://raw.githubusercontent.com/wolbodo/pms/master/drag.gif)
 
 # Fully dynamic frontend configuration and state management.
 ![Drag and drop functionality demoed](https://raw.githubusercontent.com/wolbodo/pms/master/drag.gif)
