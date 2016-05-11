@@ -214,7 +214,7 @@ function baseAPIResource(resource, session) {
       })
     })
 
-    it('a single item', function () {
+    it('returns a single item', function () {
       // Find a valid resource id from the fetched data
       var resourceId = _.head(_.keys(_.get(fetched, resource)));
 
@@ -227,8 +227,7 @@ function baseAPIResource(resource, session) {
       .end()
       .then(session.parse)
       .should.eventually.satisfy((data) => {
-        expect(data).to.have.keys(resource);
-        expect(_.keys(_.get(data, resource))).to.have.length.to.equal(1);
+        return _.has(data, resource) && _.keys(_.get(data, resource)).length === 1 
       })
     });
   })

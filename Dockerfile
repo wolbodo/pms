@@ -17,7 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -yyy nginx inotify-tools buil
 # Install rust
 RUN curl -f -L https://static.rust-lang.org/rustup.sh -O && sh rustup.sh --channel=nightly --disable-sudo
 
-ADD nginx/pms.nginx.conf /etc/nginx/sites-enabled/pms.conf
+ADD nginx/pms.nginx.conf /etc/nginx/sites-available/default
 
 RUN npm set progress=false
 
