@@ -1,14 +1,24 @@
 import React, { PropTypes } from 'react';
 import * as mdl from 'react-mdl';
 import * as _ from 'lodash';
+import * as schemaUtil from 'schema';
 
 import Field from './field';
+
+
+// Utility function for filtering fields from the schema
+// Used for rendering all visible fields.
+// Filter all readable nonempty fields, or writable fields
+// _.(readable && filled) || writable
+const mapFilter = (iterable, mapfun, filterfun) => _.filter(_.map(iterable, mapfun), filterfun);
+
 
 export default class ItemEdit extends React.Component {
   static propTypes = {
     item: PropTypes.object,
     schema: PropTypes.object,
     permissions: PropTypes.object,
+    resources: PropTypes.object, // Resources referenced by schema
     onChange: PropTypes.func,
   };
 
@@ -28,11 +38,7 @@ export default class ItemEdit extends React.Component {
     }
   }
   render() {
-    const { schema, item, permissions } = this.props;
-
-    // Filter all readable nonempty fields, or writable fields
-    // _.(readable && filled) || writable
-    const mapFilter = (arr, mapfun, filterfun) => _.filter(_.map(arr, mapfun), filterfun);
+    const { schema, item, permissions, resources } = this.props;
 
     let form = mapFilter(
       schema.form,
@@ -42,18 +48,23 @@ export default class ItemEdit extends React.Component {
           role.fields,
           (fieldset) => mapFilter(
             fieldset,
-            (field) => (
-              // Readable and nonempty          // writable
-              (_.includes(permissions.view, field) && !_.isEmpty(item[field]))
-                || _.includes(permissions.edit, field)
-            ) && {
-              // Then add the field, with all info zipped into an object.
-              schema: {
-                name: field,
-                ...schema.properties[field]
-              },
-              value: item[field],
-              writable: _.includes(permissions.edit, field)
+            (field) => {
+              const fieldSchema = _.get(schema, ['properties', field]);
+                    // Readable and nonempty          // writable
+              if ((_.includes(permissions.view, field) && !_.isEmpty(item[field]))
+                    || _.includes(permissions.edit, field)) {
+                // Then add the field, with all info zipped into an object.
+                return {
+                  schema: {
+                    name: field,
+                    ...fieldSchema
+                  },
+                  resource: schemaUtil.getReferencedResource(resources, fieldSchema),
+                  value: item[field],
+                  writable: _.includes(permissions.edit, field)
+                };
+              }
+              return null;
             },
             (field) => !!field
           ),
@@ -77,6 +88,7 @@ export default class ItemEdit extends React.Component {
               <Field
                 key={_key}
                 field={field.schema}
+                resource={field.resource}
                 tabIndex="0"
                 disabled={!field.writable}
                 onChange={this.handleChange}

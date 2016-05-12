@@ -1,11 +1,11 @@
-var path = require('path');
-var express = require('express');
-var webpack = require('webpack');
-var proxy = require('express-http-proxy');
-var config = require('./webpack.config.dev');
+const path = require('path');
+const express = require('express');
+const webpack = require('webpack');
+const proxy = require('express-http-proxy');
+const config = require('./webpack.config.dev');
 
-var app = express();
-var compiler = webpack(config);
+const app = express();
+const compiler = webpack(config);
 
 app.use(require('webpack-dev-middleware')(compiler, {
   noInfo: true, // informational debug logging in build console

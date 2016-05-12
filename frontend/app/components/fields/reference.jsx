@@ -8,7 +8,7 @@ import AutoComplete from 'material-ui/lib/auto-complete';
 import { Chip } from 'components';
 
 
-export default class Link extends React.Component {
+export default class List extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     title: PropTypes.string,
@@ -17,6 +17,7 @@ export default class Link extends React.Component {
     options: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired,
+    resource: PropTypes.object.isRequired,
     displayValue: PropTypes.string,
   };
   static defaultProps = {
@@ -61,10 +62,15 @@ export default class Link extends React.Component {
   }
 
   render() {
-    const { title, value, options, displayValue, onChange } = this.props;
+    const { title, value, options, displayValue, resource, onChange } = this.props;
     const { newValue } = this.state;
 
-    const listToDisplay = (item) => _.get(item, _.toPath(displayValue), `@${item.id}`);
+    const listToDisplay = (item) =>
+                            _.get(
+                              _.get(resource,
+                                ['items', _.get(item.$ref.match(/^\/roles\/(\d+)$/), 1)]
+                              ), _.toPath(displayValue), `@${item.$ref}`);
+
     // Shows an array of strings for now.
     return (
       <div

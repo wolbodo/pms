@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { PropTypes } from 'react';
 import { ItemEdit } from 'components';
+import * as schemaUtil from 'schema';
 
 import { connect } from 'react-redux';
 
@@ -16,37 +17,27 @@ function PersonEdit({ params, people, roles, fields, auth, update }) {
 
   const person = _.get(people, ['items', personId], {});
   const updates = _.get(people, ['updates', personId]);
-  // Find peson
+  const schema = _.get(fields, 'items.people');
+
+  // Find all resources referenced in the schema
+  const resources = schemaUtil.getResources({ people, roles }, schema);
 
   const item = _.mergeWith(
     person, updates,
-    { roles: _.filter(roles.items, (role) => _.includes(role.people_ids, person.id)) },
     (obj, src) => (_.isArray(obj) ? src : undefined)
   );
-
-  const schema = _.merge({}, fields.items.people, {
-    properties: {
-      roles: {
-        type: 'link',
-        title: 'Groepen',
-        target: 'roles',
-        displayValue: 'name',
-        options: roles.items,
-      }
-    }
-  });
-  schema.form[0].fields.push(['roles']);
-  permissions.view.push('roles');
 
   return (
     <ItemEdit
       schema={schema}
+      resources={resources}
       item={item}
       permissions={permissions}
       onChange={(value, key) => update(personId, value, key) }
     />
   );
 }
+
 PersonEdit.propTypes = {
   params: PropTypes.object,
   people: PropTypes.object,

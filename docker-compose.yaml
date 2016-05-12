@@ -34,6 +34,7 @@ pms-dev:
   volumes:
     - ./:/app
     - ./nginx:/etc/nginx/conf.d
+    - ./.docker-cache:/root
   links: 
     - pms-db:postgres
   ports:

@@ -40,7 +40,7 @@ export default class PeopleView extends React.Component {
     if (!this.loaded()) {
       return (<h1>Loading</h1>);
     }
-    debugger;
+
     const {
       people, fields, roles,
       pushState, routeParams } = this.props;
@@ -54,9 +54,11 @@ export default class PeopleView extends React.Component {
     const currentRole = _.find(roles.items, (role) =>
                                               role.name === routeParams.role_name);
 
-    // filter people
+    // filter people in current role
     const peopleSet = currentRole
-                    ? _.filter(items, (person) => _.includes(currentRole.people_ids, person.id))
+                    ? _.filter(items, (person) =>
+                        _.some(person.roles, _.matches({ $ref: `/roles/${currentRole.id}` }))
+                      )
                     : items;
 
     // Create a select title ;)
