@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
+// import * as schemaUtil from 'schema';
 import * as mdl from 'react-mdl';
 
 import { connect } from 'react-redux';
@@ -47,19 +48,22 @@ export default class RoleView extends React.Component {
 
   render() {
     const {
-      roles: { items, updates }, rolesUpdate,
+      roles, rolesUpdate,
       auth: { permissions },
       people,
       fields } = this.props;
 
     const schema = _.get(fields, 'items.roles');
 
-    const roles = _.merge(items, updates);
+    // merge items with updated items.
+    const items = _.mergeWith(roles.items, roles.updates, (obj, src) =>
+                                (_.isArray(obj) ? src : undefined));
+
     const editFields = ['description'];
 
     return (
       <div className="content">
-      {_.map(roles, (role) => (
+      {_.map(items, (role) => (
         <mdl.Card
           key={role.id}
           className="mdl-color--white mdl-shadow--2dp"
@@ -80,17 +84,11 @@ export default class RoleView extends React.Component {
           </div>
           <div className="people">
             <Field
-              value={_.map(role.people_ids, (id) => _.get(people.items, id))}
+              value={role.members}
               onBlur={(value, key) => console.log('blur', value, key)}
               onChange={(value, key) => console.log('change', value, key)}
-              field={{
-                type: 'link',
-                title: 'Mensen',
-                name: 'people',
-                target: 'people',
-                displayValue: 'nickname',
-                options: people.items,
-              }}
+              resource={people}
+              field={schema.properties.members}
             />
           </div>
         </mdl.Card>

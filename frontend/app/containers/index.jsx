@@ -1,5 +1,5 @@
 import fields from './fields';
-import role from './role';
+import roles from './roles';
 import people from './people';
 import permissions from './permissions';
 
@@ -10,7 +10,7 @@ import Login from './login/login';
 
 export {
 	fields,
-	role,
+	roles,
 	people,
 	HeaderBar,
 	permissions,

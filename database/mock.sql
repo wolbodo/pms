@@ -137,7 +137,7 @@ VALUES
     ('roles','id', '{}', -1),
 
     ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
-    ('roles','members', '{}', -1),
+    ('roles','members', '{"type": "reference","target":"people","title":"Leden","displayValue":"nickname"}', -1),
     ('roles','modified_by', '{}', -1),
     ('roles','name', '{"type":"string","title":"Naam"}', -1),
     ('roles','valid_from', '{}', -1),
