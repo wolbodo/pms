@@ -15,6 +15,8 @@ import 'app.less';
 import 'material';
 import 'favicon.png';
 
+
+console.log('blas');
 // Needed for onTouchTap
 // Can go away when react 1.0 release
 // Check this repo:

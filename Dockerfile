@@ -1,46 +1,27 @@
-# Use phusion/baseimage as base image. To make your builds reproducible, make
-# sure you lock down to a specific version, not to `latest`!
-# See https://github.com/phusion/baseimage-docker/blob/master/Changelog.md for
-# a list of version numbers.
-FROM phusion/baseimage:0.9.18
+FROM ubuntu
 
-# Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
-
-# Install postgres
-
-ENV PGDATA /usr/local/pgsql/data
-
+# Update apt for node and postgres
+ 
 RUN locale-gen en_US.UTF-8
-RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main' | tee /etc/apt/sources.list.d/pgdg.list
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y nginx postgresql-9.5
+RUN apt-get update && apt-get install -y curl
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+RUN curl -q -L https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 
-# Add Postgres to runit
-RUN mkdir /etc/service/postgres
-ADD database/run_postgres.sh /etc/service/postgres/run
-RUN chmod +x /etc/service/postgres/run
+# Install forego
+ADD https://github.com/jwilder/forego/releases/download/v0.16.1/forego /usr/local/bin/forego
+RUN chmod u+x /usr/local/bin/forego
 
-# # Setup database initdb
-ADD ./database/db-init.sh /docker-entrypoint-initdb.d/01_init_database.sh
-RUN chmod +x /docker-entrypoint-initdb.d/01_init_database.sh
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -yyy nginx inotify-tools build-essential curl nodejs gcc-multilib libssl-dev libreadline-dev bison flex postgresql-server-dev-9.5
 
-# Setup app
-ADD frontend /app/frontend
-ADD backend /app/backend
-ADD database /app/database
+# Install rust
+RUN curl -f -L https://static.rust-lang.org/rustup.sh -O && sh rustup.sh --channel=nightly --disable-sudo
 
-ADD nginx/pms.nginx.conf /etc/nginx/sites-enabled/default
+ADD nginx/pms.nginx.conf /etc/nginx/sites-available/default
 
-# Add Nginx to runit
-RUN mkdir /etc/service/nginx
-ADD nginx/run_nginx.sh /etc/service/nginx/run
-RUN chmod +x /etc/service/nginx/run
+RUN npm set progress=false
 
-# Add Backend to runit
-RUN mkdir /etc/service/backend
-ADD run_backend.sh /etc/service/backend/run
-RUN chmod +x /etc/service/backend/run
+RUN mkdir /app
+WORKDIR /app
 
-# Clean up APT when done.
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+CMD ["forego", "start", "-r"]

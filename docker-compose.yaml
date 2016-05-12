@@ -1,9 +1,41 @@
-pms:
+pms-prod:
   image: wolbodo/pms
+  hostname: pms
+  restart: always
+  environment:
+    # - CERT_NAME=dxlb.nl
+    - VIRTUAL_HOST=pms.dxlb.nl
+    - LETSENCRYPT_HOST=pms.dxlb.nl
+    - LETSENCRYPT_EMAIL=d+letsencrypt@dxlb.nl
+    # - VIRTUAL_HOST=pms.zaphod
+  ports:
+    - '80'
+
+pms-db:
+  image: kiasaki/alpine-postgres
+  restart: always
+  volumes:
+    - ./database/docker:/docker-entrypoint-initdb.d/
+    - ./database:/app/database
+  environment:
+    - POSTGRES_PASSWORD=pms
+    - POSTGRES_USER=pms
+    - POSTGRES_DB=pms
+
+pms-dev:
+  build: .
+  restart: always
   hostname: pms
   environment:
     # - CERT_NAME=dxlb.nl
-    # - VIRTUAL_HOST=pms.dxlb.nl
     - VIRTUAL_HOST=pms.zaphod
+    # - LETSENCRYPT_HOST=pms.dxlb.nl
+    # - LETSENCRYPT_EMAIL=d+letsencrypt@dxlb.nl
+  volumes:
+    - ./:/app
+    - ./nginx:/etc/nginx/conf.d
+  links: 
+    - pms-db:postgres
   ports:
     - '80'
+

@@ -11,6 +11,8 @@ npm run build
 
 # Build backend
 cd ../backend
+cargo clean
+cargo update
 cargo build --release
 
 cd ..
@@ -18,7 +20,7 @@ cd ..
 # Copy relevant info to the build dir to construct the image.
 rm -rf build
 mkdir build
-cp Dockerfile build/
+cp prod.Dockerfile build/Dockerfile
 cp -r frontend/dist/ build/frontend/
 cp swagger.yaml build/frontend/
 cp backend/target/release/backend build/backend

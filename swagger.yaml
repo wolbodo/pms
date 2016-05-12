@@ -5,7 +5,7 @@ swagger: '2.0'
 
 # This is your document metadata
 info:
-  version: "0.5.0"
+  version: "0.5.1"
   title: PMS
 schemes:
   - http
@@ -59,11 +59,8 @@ paths:
           description: Returns a resultobject
           # A schema describing your response object.
           # Use JSON Schema format
-          schema:
-            $ref: "#/definitions/ApiResult"
-            title: PeopleResult
-            required:
-              - people
+          schema: 
+            $ref: '#/definitions/PeopleResponse'
         400:
           description: An error has occurred on the server.
           schema:
@@ -80,10 +77,7 @@ paths:
         200:
           description: Returns the new person
           schema:
-            $ref: "#/definitions/ApiResult"
-            title: PeopleResult
-            required:
-              - people
+            $ref: "#/definitions/PeopleResponse"
         400:
           description: An error has occurred on the server.
           schema:
@@ -100,11 +94,8 @@ paths:
       responses:
         200:
           description: Successfull
-          schema:
-            $ref: "#/definitions/ApiResult"
-            title: PeopleResult
-            required:
-              - people
+          schema: 
+            $ref: '#/definitions/PeopleResponse'
         400:
           description: An error has occurred on the server.
           schema:
@@ -125,16 +116,36 @@ paths:
       responses:
         200:
           description: Successfull
-          schema:
-            $ref: "#/definitions/ApiResult"
-            title: PeopleResult
-            required:
-              - people
+          schema: 
+            $ref: '#/definitions/PeopleResponse'
         400:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-      
+  /people/{people_id}/ref:
+    post:
+      description: Add a new ref, depending on ref_type, (eg. it creates a link between people and roles)
+      parameters:
+        - in: path
+          name: people_id
+          description: the id of the `Person` being changed
+          required: true
+          type: integer
+        - in: body
+          name: resource
+          required: true
+          schema:
+            $ref: '#/definitions/ResourceReference'
+      responses:
+        200:
+          description: Successfull
+          schema: 
+            $ref: '#/definitions/PeopleResponse'
+        400:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /roles:
     get:
       description: Returns all roles
@@ -142,10 +153,7 @@ paths:
         200:
           description: Successfull response, with roles.
           schema:
-            $ref: "#/definitions/ApiResult"
-            title: RoleResult
-            required:
-              - roles
+            $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
           schema:
@@ -162,15 +170,11 @@ paths:
         200:
           description: Returns the new role
           schema:
-            $ref: "#/definitions/ApiResult"
-            title: RoleResult
-            required:
-              - roles
+            $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-
   /roles/{roles_id}:
     get:
       description: Get a single `Role`
@@ -184,10 +188,7 @@ paths:
         200:
           description: Successfull
           schema:
-            $ref: "#/definitions/ApiResult"
-            title: RoleResult
-            required:
-              - roles
+            $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
           schema:
@@ -209,39 +210,79 @@ paths:
         200:
           description: Successfull
           schema:
-            $ref: "#/definitions/ApiResult"
-            title: RoleResult
-            required:
-              - roles
+            $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-      
+  /roles/{roles_id}/ref:
+    post:
+      description: Add a new ref, depending on ref_type, (eg. it creates a link between people and roles)
+      parameters:
+        - in: path
+          name: roles_id
+          description: the id of the `Role` being updated
+          required: true
+          type: integer
+        - in: body
+          name: resource
+          required: true
+          schema:
+            $ref: '#/definitions/ResourceReference'
+      responses:
+        200:
+          description: Successfull
+          schema: 
+            $ref: '#/definitions/RolesResponse'
+        400:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
   /fields:
     get:
-      description: Return all fields
+      description: Return all schemas
       responses:
         200:
           description: Successfull response, with fields.
           schema:
-            title: FieldsResult
-            type: object
-            properties:
-              roles:
-                type: object
-                additionalProperties:
-                  $ref: '#/definitions/Field'
+            $ref: '#/definitions/FieldsResponse'
         400:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
-  /fields/{resource_name}/{field_name}:
+            
+  /fields/{resource_name}:
+    get:
+      description: Returns a schema
+      parameters:
+        - in: path
+          required: true
+          name: resource_name
+          description: The name of the resource type
+          type: string
+      responses:
+        200:
+          description: Successfull response, with a single schema.
+          schema:
+            $ref: '#/definitions/FieldsResponse'
+        400:
+          description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       description: Create new field
+      parameters:
+        - in: path
+          required: true
+          name: resource_name
+          description: The name of the resource type
+          type: string
       responses:
         200:
           description: Successfull
+          schema:
+            $ref: "#/definitions/FieldsResponse"
         400:
           description: An error has occurred on the server.
           schema:
@@ -249,9 +290,17 @@ paths:
           
     put:
       description: Update the field
+      parameters:
+        - in: path
+          required: true
+          name: resource_name
+          description: The name of the resource type
+          type: string
       responses:
         200:
           description: Successfull
+          schema:
+            $ref: "#/definitions/FieldsResponse"
         400:
           description: An error has occurred on the server.
           schema:
@@ -259,32 +308,6 @@ paths:
 
 
 definitions:
-  BaseResource:
-    type: object
-    description: |
-      The base object structure for every api base resource.
-      Contains an id and a gid, and some timestamps
-    properties:
-      id:
-        type: integer
-        description: The unique id for its type.
-      gid:
-        type: integer
-        description: Globally unique version identifier
-      valid_from:
-        type: string
-        format: date-time
-      valid_till:
-        type: 'null'
-      modified_by:
-        type: integer
-
-  DateTime:
-    types:
-      - integer
-      - string
-      - null
-
   Person:
     title: Person
     type: object
@@ -292,13 +315,41 @@ definitions:
     #   - nickname
     #   - email
     properties:
-      email:
-        type: string
       nickname:
         type: string
-    allOf: 
-      - $ref: '#/definitions/BaseResource'
+      email:
+        type: string
+        format: email
+      birthdate:
+        type: string
+        format: date
+      firstname:
+        type: string
+      infix:
+        type: string
+      
+      roles:
+        type: array
+        items:
+          $ref: '#/definitions/ResourceReference'
     additionalProperties: true
+    example:
+      nickname: Pietje
+      firstname: Pieter
+      email: piet@example.com
+      birthdate: 1916-05-04T12:21:25.497+00:00
+      roles:
+        - '\$ref': '/roles/3'
+        - '\$ref': '/roles/4'
+
+  ResourceReference:
+    type: object
+    properties:
+      $ref: 
+        type: string
+        description: JsonPath pointing to pms resource
+    required:
+      - $ref
 
   Role:
     title: Role
@@ -306,12 +357,23 @@ definitions:
     properties:
       name:
         type: string
-    allOf: 
-      - $ref: '#/definitions/BaseResource'
+      description:
+        type: string
     additionalProperties: true
+    example:
+      name: Bestuur
+      description: Het bestuur
+      members:
+        - '\$ref': '/member/13'
+        - '\$ref': '/member/42'
 
   Field:
     type: object
+    properties:
+      type:
+        type: string
+      title:
+        type: string
 
   LoginResponse:
     type: object
@@ -333,40 +395,100 @@ definitions:
     properties:
       properties:
         type: object
+        additionalProperties:
+          $ref: '#/definitions/Field'
       form:
         type: array
         items: 
           type: object
+          parameters:
+            fields:
+              type: array
+              description: Rows of fieldsets
+              items:
+                type: array
+                description: An array of fields
+                items:
+                  type: string
+                  description: A reference to a field
+            title:
+              type: string
       header:
         type: array
         items: 
-          type: object
+          type: string
       required:
         type: array
         items: 
-          type: object
+          type: string
+  
+  PeopleResponse:
+    type: object
+    properties:
+      people:
+        type: object
+        additionalProperties:
+          allOf: 
+            - $ref: '#/definitions/BaseResourceResponse'
+            - $ref: '#/definitions/Person'
+      roles:
+        type: object
+        additionalProperties:
+          allOf: 
+            - $ref: '#/definitions/BaseResourceResponse'
+            - $ref: '#/definitions/Role'
+    required:
+      - people
 
-  ApiResult:
+  RolesResponse:
     type: object
     properties:
       people:
         additionalProperties:
-          $ref: '#/definitions/Person'
-          required:
-            - id
-            - gid
-            - valid_from
+          allOf: 
+            - $ref: '#/definitions/BaseResourceResponse'
+            - $ref: '#/definitions/Person'
       roles:
         additionalProperties:
-          $ref: '#/definitions/Role'
-          required:
-            - id
-            - gid
-            - valid_from
+          allOf: 
+            - $ref: '#/definitions/BaseResourceResponse'
+            - $ref: '#/definitions/Role'
+    required:
+      - roles
+
+  FieldsResponse:
+    type: object
+    properties:
       fields:
         additionalProperties:
           $ref: '#/definitions/ResourceSchema'
-              
+    required:
+      - fields
+
+  BaseResourceResponse:
+    type: object
+    description: |
+      The base object structure for every api base resource.
+      Contains an id and a gid, and some timestamps
+    properties:
+      id:
+        type: integer
+        description: The unique id for its type.
+      gid:
+        type: integer
+        description: Globally unique version identifier
+      valid_from:
+        type: string
+        format: date-time
+      valid_till:
+        type: 'null'
+      modified_by:
+        type: integer
+    required:
+      - id
+      - gid
+      - valid_from
+
   ErrorResponse:
     title: Error
     type: object
