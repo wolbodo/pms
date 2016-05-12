@@ -223,7 +223,7 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.data_merge(rights payload_permissions, ref_table VARCHAR, base JSONB = '{}'::JSONB, update JSONB = '{}'::JSONB, remove BOOL DEFAULT FALSE)
+CREATE OR REPLACE FUNCTION public.data_merge(rights payload_permissions, ref_table VARCHAR, base JSONB = '{}'::JSONB, update JSONB = '{}'::JSONB, remove_fields TEXT[] DEFAULT NULL, remove BOOL DEFAULT FALSE)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -233,6 +233,7 @@ DECLARE
     editfields JSONB;
     createfields JSONB;
     changed BOOL;
+    remove_field VARCHAR;
 BEGIN
     --OK construct: this construct is chosen because a IF NOT(NULL) => NULL,
     -- since we resolve quite some JSONB paths (which resolves to NULL if the key/path doesn't exist)
@@ -276,6 +277,31 @@ BEGIN
             RAISE EXCEPTION '%', jsonb_error('Removing "%s" not allowed', ref_table);
         END IF;
     END IF;
+    IF remove_fields IS NULL THEN
+        remove_fields = ARRAY[]::TEXT[];
+    END IF;
+    FOREACH remove_field IN ARRAY remove_fields
+    LOOP
+        IF rights.permissions->ref_table->'edit' ? remove_field THEN
+            --OK construct
+        ELSE
+            RAISE EXCEPTION '%', jsonb_error('Removing "%s" not allowed', remove_field);
+            RETURN NULL;
+        END IF;
+        IF NOT update ? remove_field THEN
+            --OK construct
+        ELSE
+            RAISE EXCEPTION '%', jsonb_error('Removing and updating "%s" is not allowed (doing both is ambiguous)', remove_field);
+            RETURN NULL;
+        END IF;
+        IF base ? remove_field THEN
+            --OK construct
+        ELSE
+            RAISE EXCEPTION '%', jsonb_error('Removing "%s" not allowed (not present)', remove_field);
+            RETURN NULL;
+        END IF;
+        changed = TRUE;
+    END LOOP;
     FOR kv IN (SELECT * FROM JSONB_EACH(update))
     LOOP
         IF editfields ? kv.key THEN
@@ -310,10 +336,24 @@ BEGIN
     ELSEIF NOT remove AND update = '{}'::JSONB THEN
         RAISE EXCEPTION '%', jsonb_error('Creating nothing is not allowed');
     END IF;
-    RETURN base || update;
+    RETURN remove_fields(base, remove_fields) || update;
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.remove_fields(base JSONB, fields TEXT[])
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    field VARCHAR;
+BEGIN
+    FOREACH field IN ARRAY fields
+    LOOP
+        base = base -field;
+    END LOOP;
+    RETURN base;
+END;
+$function$;
 
 CREATE OR REPLACE FUNCTION public.remove_base(base JSONB)
  RETURNS JSONB
@@ -322,7 +362,7 @@ AS $function$
 DECLARE
     field VARCHAR;
 BEGIN
-    FOREACH field IN ARRAY ARRAY['gid', 'id', 'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'] LOOP
+    FOREACH field IN ARRAY ARRAY['gid', 'id'] LOOP --'valid_from', 'valid_till', 'password_hash', 'modified_by', 'modified', 'created'
         base = base -field;
     END LOOP;
     RETURN base;
@@ -330,7 +370,7 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_id INT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.people_get(rights payload_permissions, people_id INT DEFAULT NULL, return_refs BOOLEAN DEFAULT TRUE)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -347,16 +387,15 @@ BEGIN
                 || JSONB_BUILD_OBJECT(
                     'gid', p.gid,
                     'id', p.id,
-                    'valid_from', to_date(p.valid_from),
-                    'valid_till', to_date(p.valid_till),
                     'email', p.email,
-                    'phone', p.phone,
-                    'password_hash', p.password_hash,
-                    'modified_by', p.modified_by,
-                    'modified', to_date(p.modified),
-                    'created', to_date(p.created),
-                    'roles', COALESCE(people_roles.json, '[]'::JSONB)
+                    'phone', p.phone
                 )
+                || CASE
+                    WHEN return_refs THEN
+                        JSONB_BUILD_OBJECT('roles', COALESCE(people_roles.json, '[]'::JSONB))
+                    ELSE
+                        '{}'::JSONB
+                END
             )
             WHERE
                 rights.permissions->'people'->'view' ? key
@@ -373,13 +412,7 @@ BEGIN
                     data
                     || JSONB_BUILD_OBJECT(
                         'gid', pr.gid,
-                        '$ref', '/roles/' || pr.roles_id,
-                        'roles_id', pr.roles_id,
-                        'valid_from', to_date(pr.valid_from),
-                        'valid_till', to_date(pr.valid_till),
-                        'modified_by', pr.modified_by,
-                        'modified', to_date(pr.modified),
-                        'created', to_date(pr.created)
+                        '$ref', '/roles/' || pr.roles_id
                     )
                 )
                 WHERE
@@ -388,7 +421,7 @@ BEGIN
             FROM people_roles pr
             WHERE valid_till IS NULL
             GROUP BY pr.people_id
-        ) people_roles ON people_roles.people_id = p.id
+        ) people_roles ON return_refs AND people_roles.people_id = p.id
         WHERE valid_till IS NULL AND (p.id = _people_id OR _people_id IS NULL)
     ) alias (object)
     WHERE object IS NOT NULL AND object ? 'id';
@@ -397,17 +430,17 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.people_get(token TEXT, people_id INT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.people_get(token TEXT, people_id INT DEFAULT NULL, return_refs BOOLEAN DEFAULT TRUE)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 BEGIN
-    RETURN people_get(rights := permissions_get(token), people_id := people_id);
+    RETURN people_get(rights := permissions_get(token), people_id := people_id, return_refs:= return_refs);
 END;
 
 
 $function$;
-CREATE OR REPLACE FUNCTION public.people_set(token TEXT, people_id INT, data JSONB)
+CREATE OR REPLACE FUNCTION public.people_set(token TEXT, people_id INT, data JSONB, remove_fields TEXT[] DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -419,8 +452,9 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'people',
-        base := people_get(rights, people_id)->'people'->people_id::TEXT,
-        update := _data
+        base := people_get(rights, people_id, false)->'people'->people_id::TEXT,
+        update := _data,
+        remove_fields := remove_fields
     ));
 
     UPDATE people SET valid_till = NOW() WHERE id = people_id AND valid_till IS NULL;
@@ -482,18 +516,14 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.roles_get(rights payload_permissions, roles_id INT DEFAULT NULL, return_refs BOOLEAN DEFAULT TRUE)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
 DECLARE
     roles JSONB;
     _roles_id ALIAS FOR roles_id;
-    rights payload_permissions;
 BEGIN
-    --NOTE: only expose roles to people who can log in
-    PERFORM parse_jwt(token);
-    rights = permissions_get(token);
     SELECT JSONB_BUILD_OBJECT('roles', COALESCE(JSONB_OBJECT_AGG(object->>'id', object), '{}'::JSONB)) INTO roles
     FROM (
         SELECT (
@@ -503,12 +533,7 @@ BEGIN
                 || JSONB_BUILD_OBJECT(
                     'gid', r.gid,
                     'id', r.id,
-                    'valid_from', to_date(r.valid_from),
-                    'valid_till', to_date(r.valid_till),
                     'name', r.name,
-                    'modified_by', r.modified_by,
-                    'modified', to_date(r.modified),
-                    'created', to_date(r.created),
                     'members', COALESCE(people_roles.json, '[]'::JSONB)
                 )
             )
@@ -523,13 +548,7 @@ BEGIN
                     data
                     || JSONB_BUILD_OBJECT(
                         'gid', gid,
-                        '$ref', '/people/' || people_id,
-                        'people_id', people_id,
-                        'valid_from', to_date(valid_from),
-                        'valid_till', to_date(valid_till),
-                        'modified_by', modified_by,
-                        'modified', to_date(modified),
-                        'created', to_date(created)
+                        '$ref', '/people/' || people_id
                     )
                 )
                 WHERE
@@ -547,7 +566,17 @@ END;
 $function$;
 
 
-CREATE OR REPLACE FUNCTION public.roles_set(token TEXT, roles_id INT, data JSONB)
+CREATE OR REPLACE FUNCTION public.roles_get(token TEXT, roles_id INT DEFAULT NULL, return_refs BOOLEAN DEFAULT TRUE)
+ RETURNS JSONB
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN roles_get(rights := permissions_get(token), roles_id := roles_id, return_refs:= return_refs);
+END;
+$function$;
+
+
+CREATE OR REPLACE FUNCTION public.roles_set(token TEXT, roles_id INT, data JSONB, remove_fields TEXT[] DEFAULT NULL)
  RETURNS JSONB
  LANGUAGE plpgsql
 AS $function$
@@ -559,8 +588,9 @@ BEGIN
     _data = remove_base(data_merge(
         rights := rights,
         ref_table := 'roles',
-        base := roles_get(token, roles_id)->'roles'->roles_id::TEXT,
-        update := _data
+        base := roles_get(rights, roles_id, false)->'roles'->roles_id::TEXT,
+        update := _data,
+        remove_fields := remove_fields
     ));
 
     UPDATE roles SET valid_till = NOW() WHERE id = roles_id AND valid_till IS NULL;
@@ -569,7 +599,7 @@ BEGIN
         SELECT id, valid_till, _data->>'name', (rights.payload->>'user')::INT, _data -'name'
             FROM roles WHERE id = roles_id ORDER BY valid_till DESC LIMIT 1;
 
-    RETURN roles_get(token, roles_id);
+    RETURN roles_get(rights, roles_id);
 END;
 $function$;
 
@@ -593,7 +623,7 @@ BEGIN
     INSERT INTO roles (name, modified_by, data)
         VALUES (_data->>'name', (rights.payload->>'user')::INT, _data -'name') RETURNING id INTO roles_id;
 
-    RETURN roles_get(token, roles_id);
+    RETURN roles_get(rights, roles_id);
 END;
 $function$;
 
