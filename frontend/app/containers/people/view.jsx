@@ -65,6 +65,7 @@ export default class PeopleView extends React.Component {
     const title = (
       <fieldComponents.Enum
         value={_.get(currentRole, 'name', 'all')}
+        permissions={{ edit: true }}
         options={_.fromPairs(_.map(roles.items, ({ name }) => [name, name]))}
         style={{
           fontSize: '22px',

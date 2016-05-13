@@ -15,9 +15,10 @@ const mapFilter = (iterable, mapfun, filterfun) => _.filter(_.map(iterable, mapf
 
 export default class ItemEdit extends React.Component {
   static propTypes = {
+    type: PropTypes.string,
     item: PropTypes.object,
     schema: PropTypes.object,
-    permissions: PropTypes.object,
+    auth: PropTypes.object,
     resources: PropTypes.object, // Resources referenced by schema
     onChange: PropTypes.func,
   };
@@ -33,12 +34,43 @@ export default class ItemEdit extends React.Component {
     console.log('Setting store');
 
     // did value change?
-    if ((item[key] !== value) && onChange) {
+    if (!_.eq(item[key], value) && onChange) {
       onChange(value, key);
     }
   }
   render() {
-    const { schema, item, permissions, resources } = this.props;
+    const { schema, item, auth, type, resources } = this.props;
+
+    // const permissions = ((type === 'people') && (item.id === auth.user.user)) ?
+    //   _.merge({}, auth.permissions.people.self, auth.permissions.people)
+    //   :
+    //   _.get(auth, ['permissions', type]);
+
+    function createField(field) {
+      // Creates the field for use in the DOM
+
+
+      const fieldSchema = _.get(schema, ['properties', field]);
+
+      const permissions = schemaUtil.getResourceFieldPermissions(
+        type, item.id, fieldSchema, field, auth
+      );
+
+      if ((permissions.view && !_.isEmpty(item[field])) || permissions.edit || permissions.create) {
+        // Then add the field, with all info zipped into an object.
+
+        return {
+          schema: {
+            name: field,
+            ...fieldSchema
+          },
+          resource: schemaUtil.getReferencedResource(resources, fieldSchema),
+          value: item[field],
+          permissions,
+        };
+      }
+      return null;
+    }
 
     let form = mapFilter(
       schema.form,
@@ -46,28 +78,7 @@ export default class ItemEdit extends React.Component {
         title: role.title,
         fields: mapFilter(
           role.fields,
-          (fieldset) => mapFilter(
-            fieldset,
-            (field) => {
-              const fieldSchema = _.get(schema, ['properties', field]);
-                    // Readable and nonempty          // writable
-              if ((_.includes(permissions.view, field) && !_.isEmpty(item[field]))
-                    || _.includes(permissions.edit, field)) {
-                // Then add the field, with all info zipped into an object.
-                return {
-                  schema: {
-                    name: field,
-                    ...fieldSchema
-                  },
-                  resource: schemaUtil.getReferencedResource(resources, fieldSchema),
-                  value: item[field],
-                  writable: _.includes(permissions.edit, field)
-                };
-              }
-              return null;
-            },
-            (field) => !!field
-          ),
+          (fieldset) => mapFilter(fieldset, createField, (field) => !!field),
           (fieldset) => !_.isEmpty(fieldset)
         )
       }),
@@ -90,7 +101,7 @@ export default class ItemEdit extends React.Component {
                 field={field.schema}
                 resource={field.resource}
                 tabIndex="0"
-                disabled={!field.writable}
+                permissions={field.permissions}
                 onChange={this.handleChange}
                 value={field.value}
               />

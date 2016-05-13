@@ -13,7 +13,7 @@ export default class Field extends React.Component {
     ]),
     field: PropTypes.object,
     resource: PropTypes.object,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     onChange: PropTypes.func,
   };
 
@@ -56,7 +56,7 @@ export default class Field extends React.Component {
   }
 
   render() {
-    const { field, disabled, resource, onChange } = this.props;
+    const { field, permissions, resource, onChange } = this.props;
     const { value } = this.state;
 
     // select field edit component. Default to string
@@ -65,7 +65,7 @@ export default class Field extends React.Component {
     return (
       <Comp
         {...field}
-        disabled={disabled}
+        permissions={permissions}
         value={value}
         resource={resource} // For links
         onChange={(_value) => {

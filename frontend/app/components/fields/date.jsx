@@ -7,7 +7,7 @@ export default class Date extends React.Component {
   static propTypes = {
     title: PropTypes.string,
     value: PropTypes.string,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
@@ -17,7 +17,7 @@ export default class Date extends React.Component {
 
   // TODO: OnChange, and properly showing dates
   render() {
-    const { value, title, disabled, onChange, onBlur } = this.props;
+    const { value, title, permissions, onChange, onBlur } = this.props;
 
     // return (
     //   <DatePicker
@@ -44,7 +44,7 @@ export default class Date extends React.Component {
           label={title}
           name={name}
           value={value}
-          disabled={disabled}
+          disabled={!permissions.edit}
           onBlur={(event) => onBlur(event.target.value)}
           onChange={(event) => onChange(event.target.value)}
           floatingLabel

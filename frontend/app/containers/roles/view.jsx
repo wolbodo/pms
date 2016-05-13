@@ -8,6 +8,8 @@ import { connect } from 'react-redux';
 
 import { Field } from 'components';
 
+import * as schemaUtil from 'schema';
+
 import * as rolesActions from 'redux/modules/roles';
 import * as fieldsActions from 'redux/modules/fields';
 
@@ -49,7 +51,7 @@ export default class RoleView extends React.Component {
   render() {
     const {
       roles, rolesUpdate,
-      auth: { permissions },
+      auth,
       people,
       fields } = this.props;
 
@@ -76,7 +78,7 @@ export default class RoleView extends React.Component {
               <Field
                 key={field}
                 field={_.get(schema.properties, field)}
-                disabled={!_.includes(permissions.roles.edit, field)}
+                permissions={{ edit: _.includes(_.get(auth, 'permissions.roles.edit'), field) }}
                 onChange={(value) => rolesUpdate(role.id, { [field]: value })}
                 value={role[field]}
               />
@@ -87,6 +89,9 @@ export default class RoleView extends React.Component {
               value={role.members}
               onBlur={(value, key) => console.log('blur', value, key)}
               onChange={(value, key) => console.log('change', value, key)}
+              permissions={schemaUtil.getResourceFieldPermissions(
+                          'roles', role.id, schema.properties.members, 'members', auth
+                        )}
               resource={people}
               field={schema.properties.members}
             />

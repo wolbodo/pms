@@ -6,7 +6,7 @@ export default class Boolean extends React.Component {
   static propTypes = {
     title: PropTypes.string,
     value: PropTypes.bool,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
@@ -15,14 +15,14 @@ export default class Boolean extends React.Component {
   };
 
   render() {
-    const { title, value, disabled,
+    const { title, value, permissions,
         onChange, onBlur } = this.props;
 
     return (
       <mdl.Checkbox
         checked={!!value || false}
         label={title}
-        disabled={disabled}
+        disabled={!permissions.edit}
         onBlur={(event) => onBlur(event.target.checked)}
         onChange={(event) => onChange(event.target.checked)}
       />

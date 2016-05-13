@@ -10,10 +10,9 @@ import * as peopleActions from 'redux/modules/people';
 function PersonEdit({ params, people, roles, fields, auth, update }) {
   const personId = params.id || auth.user.user;
 
-  const permissions = (parseInt(personId, 10) === auth.user.user)
-    ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
-    : auth.permissions.people;
-
+  // const permissions = (parseInt(personId, 10) === auth.user.user)
+  //   ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
+  //   : auth.permissions.people;
 
   const person = _.get(people, ['items', personId], {});
   const updates = _.get(people, ['updates', personId]);
@@ -29,10 +28,11 @@ function PersonEdit({ params, people, roles, fields, auth, update }) {
 
   return (
     <ItemEdit
+      type="people"
       schema={schema}
       resources={resources}
       item={item}
-      permissions={permissions}
+      auth={auth}
       onChange={(value, key) => update(personId, value, key) }
     />
   );

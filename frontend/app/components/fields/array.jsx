@@ -10,7 +10,7 @@ export default class Array extends React.Component {
     name: PropTypes.string,
     title: PropTypes.string,
     value: PropTypes.array,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     options: PropTypes.array,
     onBlur: PropTypes.func.isRequired
   };

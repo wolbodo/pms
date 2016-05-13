@@ -10,7 +10,7 @@ export default class Option extends React.Component {
     title: PropTypes.string,
     value: PropTypes.array,
     options: PropTypes.object.isRequired,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
@@ -19,7 +19,7 @@ export default class Option extends React.Component {
   };
 
   render() {
-    const { name, value, disabled, options,
+    const { name, value, permissions, options,
         onChange, onBlur } = this.props;
 
     return (
@@ -35,7 +35,7 @@ export default class Option extends React.Component {
             (optValue, optName) => (
               <mdl.Radio
                 key={optName}
-                disabled={disabled}
+                disabled={!permissions.edit}
                 name={optName}
                 value={optName}
                 ripple
