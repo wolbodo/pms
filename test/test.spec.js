@@ -266,7 +266,9 @@ function baseAPIResource(resource, session) {
         .expectStatus(200)
         .end()
       } else {
-        return expect(permissions.edit).to.be.empty
+        if (permissions.create) {
+          return expect(permissions.edit).to.be.empty
+        }
       }
     })
     it('cannot add unwritable fields')
@@ -288,6 +290,9 @@ function baseAPIResource(resource, session) {
 
 function testUser(user, password) {
   const session = new Session()
+
+  // TODO:, login to fetch permissions
+  // Delay the calls to the returned functions until promise resolves.
 
   return function () {
     it('can login', () => session.login(user, password))
@@ -319,6 +324,8 @@ describe('Using pms', function () {
   describe('as board', testUser('sammy@example.com', '1234'))
 
   describe('as member', testUser('wikkert@example.com', '1234'))
+
+  describe('as admin', testUser('admin@example.com', '1234'))
 
   describe('unauthorized', function () {
     const session = new Session()

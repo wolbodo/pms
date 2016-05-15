@@ -12,9 +12,21 @@ export default class Field extends React.Component {
       React.PropTypes.number,
     ]),
     field: PropTypes.object,
-    disabled: PropTypes.bool,
+    resource: PropTypes.object,
+    permissions: PropTypes.object,
     onChange: PropTypes.func,
   };
+
+  static FieldTypeMap = {
+    string: fields.Text,
+    option: fields.Option,
+    enum: fields.Enum,
+    boolean: fields.Boolean,
+    array: fields.Array,
+    date: fields.Date,
+    reference: fields.List,
+  };
+
   constructor(props) {
     super(props);
 
@@ -44,26 +56,18 @@ export default class Field extends React.Component {
   }
 
   render() {
-    const { field, disabled, onChange } = this.props;
+    const { field, permissions, resource, onChange } = this.props;
     const { value } = this.state;
 
-    // select field edit component.
-    let Comp = {
-      string: fields.Text,
-      option: fields.Option,
-      enum: fields.Enum,
-      boolean: fields.Boolean,
-      array: fields.Array,
-      date: fields.Date,
-      link: fields.Link,
-    }[_.get(field, 'type', 'string')];
-    // Default to string
+    // select field edit component. Default to string
+    let Comp = _.get(Field.FieldTypeMap, _.get(field, 'type', 'string'));
 
     return (
       <Comp
         {...field}
-        disabled={disabled}
+        permissions={permissions}
         value={value}
+        resource={resource} // For links
         onChange={(_value) => {
           this.setState({ value: _value });
         }}

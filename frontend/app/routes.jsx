@@ -3,7 +3,7 @@ import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 
 import {
-  role,
+  roles,
   people,
   fields,
   permissions,
@@ -107,13 +107,13 @@ export default (store) => (
     <Route
       name="Groepen"
       path="groepen"
-      components={{ main: role.View, header: HeaderBar }}
+      components={{ main: roles.View, header: HeaderBar }}
       onEnter={requireLogin(store)}
     />
     <Route
       name="Groep"
       path="groepen/:groep"
-      components={{ main: role.Edit, header: HeaderBar }}
+      components={{ main: roles.Edit, header: HeaderBar }}
       onEnter={requireLogin(store)}
     />
     <Route

@@ -8,15 +8,16 @@ import AutoComplete from 'material-ui/lib/auto-complete';
 import { Chip } from 'components';
 
 
-export default class Link extends React.Component {
+export default class List extends React.Component {
   static propTypes = {
     name: PropTypes.string,
     title: PropTypes.string,
     value: PropTypes.array,
-    disabled: PropTypes.bool,
-    options: PropTypes.object,
+    permissions: PropTypes.object,
+    target: PropTypes.string,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired,
+    resource: PropTypes.object.isRequired,
     displayValue: PropTypes.string,
   };
   static defaultProps = {
@@ -61,10 +62,24 @@ export default class Link extends React.Component {
   }
 
   render() {
-    const { title, value, options, displayValue, onChange } = this.props;
+    const { title, value, displayValue, resource, onBlur, target, permissions } = this.props;
     const { newValue } = this.state;
 
-    const listToDisplay = (item) => _.get(item, _.toPath(displayValue), `@${item.id}`);
+    const listToDisplay = (item) =>
+                            _.get(
+                              _.get(resource,
+                                ['items', _.get(item.$ref.match(`^\\/${target}\\/(\\d+)$`), 1)]
+                              ), _.toPath(displayValue), `@${item.$ref}`);
+
+    const resourceReferences = _.chain(resource.items)
+      // Filter based on possible permissions.
+      .filter((item) => (
+        _.isEmpty(permissions.filter) || _.includes(permissions.filter, item.id)
+      ))
+      .map((item) => ({ $ref: `/${target}/${item.id}` }))
+      .value();
+
+    // TODO: Add filtering by permissions.filter
     // Shows an array of strings for now.
     return (
       <div
@@ -75,11 +90,14 @@ export default class Link extends React.Component {
         { _.map(_.map(value, listToDisplay), (item, i) => (
           <Chip key={i}>
             {item}
-            <i className="material-icons"
-              onClick={() => onChange(_.filter(value, (val, key) => key !== i))}
-            >cancel</i>
+            {(permissions.edit) && (
+              <i className="material-icons"
+                onClick={() => onBlur(_.filter(value, (val, key) => key !== i))}
+              >cancel</i>
+            )}
           </Chip>
         ))}
+        {(permissions.edit) && (
           <AutoComplete className="auto-complete"
             ref={(el) => {this._input = el;}}
             floatingLabelText="Nieuw..."
@@ -95,15 +113,16 @@ export default class Link extends React.Component {
               this.setState({
                 newValue: ''
               });
-              onChange(
+              onBlur(
                 _(value)
-                .concat(_.find(options, (opt) => _.get(opt, _.toPath(displayValue)) === val))
-                .uniq()
+                .concat(_.find(resourceReferences, (opt) => listToDisplay(opt) === val))
+                .uniqBy('$ref')
                 .value()
               );
             }}
-            dataSource={_.map(options, listToDisplay)}
+            dataSource={_.map(resourceReferences, listToDisplay)}
           />
+        )}
         </div><label className="link-list--label">{title}</label>
       </div>
     );

@@ -8,7 +8,7 @@ export default class Text extends React.Component {
     name: PropTypes.string,
     title: PropTypes.string,
     value: PropTypes.string,
-    disabled: PropTypes.bool,
+    permissions: PropTypes.object,
     onBlur: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired
   };
@@ -17,7 +17,7 @@ export default class Text extends React.Component {
   };
 
   render() {
-    const { name, title, value, disabled,
+    const { name, title, value, permissions,
         onChange, onBlur } = this.props;
 
     return (
@@ -28,7 +28,7 @@ export default class Text extends React.Component {
           label={title}
           name={name}
           value={value}
-          disabled={disabled}
+          disabled={!permissions.edit}
           onBlur={(event) => onBlur(event.target.value)}
           onChange={(event) => onChange(event.target.value)}
           floatingLabel

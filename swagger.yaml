@@ -487,7 +487,6 @@ definitions:
     required:
       - id
       - gid
-      - valid_from
 
   ErrorResponse:
     title: Error

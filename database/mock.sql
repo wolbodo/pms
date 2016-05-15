@@ -88,7 +88,7 @@ SELECT people.id, roles.id, -1 FROM
 
 INSERT INTO fields (ref_table, name, data, modified_by)
 VALUES
-    ('people', NULL, '{"required":["email","nickname"],"header":["nickname","firstname","lastname","city","gender","mobile","email"],"form":[{"title":"Persoon","fields":[["nickname"],["firstname","infix","lastname"],["gender"],["birthdate","deathdate"]]},{"title":"Adres","fields":[["street","housenumber"],["zipcode","city"],["country"]]},{"title":"Bank","fields":[["iban"],["directdebit"],["email"],["mobile"],["phone"],["emergencyinfo"]]},{"title":"Status","fields":[["membertype"],["membersince","membertill"],["functions"],["notes"],["wantscontact"]]},{"title":"Sleutel","fields":[["keycode"],["coasters"],["cashregister"],["frontdoor"],["isadmin"]]},{"title":"System","fields":[["passwordhash"]]}]}', -1),
+    ('people', NULL, '{"required":["email","nickname"],"header":["nickname","firstname","lastname","city","gender","mobile","email"],"form":[{"title":"Persoon","fields":[["nickname"],["firstname","infix","lastname"],["gender"],["birthdate","deathdate"]]},{"title":"Adres","fields":[["street","housenumber"],["zipcode","city"],["country"]]},{"title":"Bank","fields":[["iban"],["directdebit"],["email"],["mobile"],["phone"],["emergencyinfo"]]},{"title":"Status","fields":[["membertype", "roles"],["membersince","membertill"],["functions"],["notes"],["wantscontact"]]},{"title":"Sleutel","fields":[["keycode"],["coasters"],["cashregister"],["frontdoor"],["isadmin"]]},{"title":"System","fields":[["passwordhash"]]}]}', -1),
     ('people','gid', '{}', -1),
     ('people','id', '{}', -1),
 
@@ -124,7 +124,7 @@ VALUES
     ('people','peoplesince', '{}', -1),
     ('people','phone','{"type":"string","title":"Telefoon"}', -1),
     ('people','privatenotes', '{}', -1),
-    ('people','roles', '{}', -1),
+    ('people','roles', '{"type": "reference","target":"roles","title":"Groepen","displayValue":"name"}', -1),
     ('people','state', '{}', -1),
     ('people','street','{"type":"string","title":"Straat"}', -1),
     ('people','valid_from', '{}', -1),
@@ -137,7 +137,7 @@ VALUES
     ('roles','id', '{}', -1),
 
     ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
-    ('roles','members', '{}', -1),
+    ('roles','members', '{"type": "reference","target":"people","title":"Leden","displayValue":"nickname"}', -1),
     ('roles','modified_by', '{}', -1),
     ('roles','name', '{"type":"string","title":"Naam"}', -1),
     ('roles','valid_from', '{}', -1),
