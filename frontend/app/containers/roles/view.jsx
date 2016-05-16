@@ -79,7 +79,7 @@ export default class RoleView extends React.Component {
                 key={field}
                 field={_.get(schema.properties, field)}
                 permissions={{ edit: _.includes(_.get(auth, 'permissions.roles.edit'), field) }}
-                onChange={(value) => rolesUpdate(role.id, { [field]: value })}
+                onChange={(value) => rolesUpdate(role.id, field, value)}
                 value={role[field]}
               />
             ))}
@@ -88,7 +88,9 @@ export default class RoleView extends React.Component {
             <Field
               value={role.members}
               onBlur={(value, key) => console.log('blur', value, key)}
-              onChange={(value, key) => console.log('change', value, key)}
+              onChange={(value) => (
+                (!_.eq(role.members, value) && rolesUpdate(role.id, 'members', value))
+              )}
               permissions={schemaUtil.getResourceFieldPermissions(
                           'roles', role.id, schema.properties.members, 'members', auth
                         )}

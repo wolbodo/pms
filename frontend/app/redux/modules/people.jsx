@@ -35,12 +35,13 @@ export function fetch() {
 }
 
 export function update(id, value, key) {
+  const _id = id.toString();
   return (dispatch, getState) => (
     dispatch({
       type: UPDATE,
       data: {
-        id: id.toString(),
-        gid: getState().getIn(['people', 'items', id, 'gid']),
+        id: _id,
+        gid: getState().getIn(['people', 'items', _id, 'gid']),
         value, key
       }
     })

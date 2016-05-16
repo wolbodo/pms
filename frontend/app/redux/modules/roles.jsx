@@ -30,14 +30,18 @@ export function fetch() {
   });
 }
 
-export function update(id, role) {
-  return {
-    type: UPDATE,
-    data: {
-      id: id.toString(), // TODO: is a string for now parseInt(id, 10),
-      role
-    }
-  };
+export function update(id, value, key) {
+  const _id = id.toString();
+  return (dispatch, getState) => (
+    dispatch({
+      type: UPDATE,
+      data: {
+        id: _id,
+        gid: getState().getIn(['roles', 'items', _id, 'gid']),
+        value, key
+      }
+    })
+  );
 }
 
 export function create() {
@@ -168,11 +172,13 @@ const reducers = {
     }),
 
   [UPDATE]: (roles, { data }) =>
-    roles.mergeDeep({
-      updates: {
-        [data.id]: data.role
-      }
-    }),
+    roles.updateIn(
+      ['updates', data.id],
+      (role = new Map()) => role.merge({
+        [data.key]: data.value,
+        gid: data.gid
+      })
+    ),
 
   [CLEAR]: () => initialState
 };
