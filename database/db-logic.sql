@@ -126,8 +126,8 @@ END;
 $function$;
 
 
-DROP TYPE IF EXISTS "payload_permissions" CASCADE;
-CREATE TYPE "payload_permissions" AS (
+DROP TYPE IF EXISTS payload_permissions CASCADE;
+CREATE TYPE payload_permissions AS (
   payload   JSONB,
   permissions  JSONB
 );
