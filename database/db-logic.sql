@@ -532,21 +532,24 @@ BEGIN
     SELECT JSONB_BUILD_OBJECT('history', JSONB_BUILD_OBJECT('people', JSONB_BUILD_OBJECT(_people_id::TEXT, JSONB_AGG(obj)))) INTO history
     FROM (
         SELECT DISTINCT ON (FIRST_VALUE(gid) OVER w) JSONB_BUILD_OBJECT(
+                'gid', TO_JSON(FIRST_VALUE(gid) OVER w)::JSONB,
+                'id', TO_JSON(FIRST_VALUE(id) OVER w)::JSONB,
                 'valid_from', to_date(LAST_VALUE(valid_from) OVER w),
                 'valid_till', to_date(FIRST_VALUE(valid_till) OVER w),
                 'modified_by', LAST_VALUE(modified_by) OVER w
             )
-            || JSONB_SET(
-                LAST_VALUE(object) OVER w,
-                ARRAY['record', 'gid'],
-                FIRST_VALUE(gid) OVER w::TEXT::JSONB
-            ) AS obj
+            || LAST_VALUE(object) OVER w AS obj
+            --JSONB_SET(
+            --    LAST_VALUE(object) OVER w,
+            --    ARRAY['record', 'gid'],
+            --    FIRST_VALUE(gid) OVER w::TEXT::JSONB
+            --) AS obj
         FROM (
-            SELECT gid, valid_from, valid_till, modified_by, object,
+            SELECT gid, id, valid_from, valid_till, modified_by, object,
                 ROW_NUMBER() OVER (ORDER BY valid_from DESC) - ROW_NUMBER() OVER (PARTITION BY object->'record' ORDER BY valid_from DESC) AS grouping
             FROM (
-                SELECT gid, valid_from, valid_till, modified_by, (
-                    SELECT JSONB_BUILD_OBJECT('record', JSONB_BUILD_OBJECT('id', id) || JSONB_OBJECT_AGG(base.key, base.value) FILTER (WHERE base.key IS NOT NULL))
+                SELECT gid, id, valid_from, valid_till, modified_by, (
+                    SELECT JSONB_BUILD_OBJECT('record', JSONB_OBJECT_AGG(base.key, base.value) FILTER (WHERE base.key IS NOT NULL))
                         || JSONB_STRIP_NULLS(JSONB_BUILD_OBJECT(
                             'added', JSONB_OBJECT_AGG(base.key, base.value) FILTER (WHERE lastdata.key IS NULL),
                             'updated', JSONB_OBJECT_AGG(base.key, lastdata.value) FILTER (WHERE lastdata.key IS NOT NULL AND base.value != lastdata.value),
