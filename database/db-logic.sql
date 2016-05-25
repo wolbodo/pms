@@ -134,7 +134,6 @@ CREATE TYPE payload_permissions AS (
   permissions  JSONB
 );
 
---FIXME: rewrite this with JSONB_SET for setting self?
 CREATE OR REPLACE FUNCTION public.permissions_get(token TEXT)
  RETURNS payload_permissions
  LANGUAGE plpgsql
@@ -144,30 +143,32 @@ DECLARE
     permissions JSONB;
 BEGIN
     payload = parse_jwt(token);
-    SELECT JSONB_OBJECT_AGG(ref_table, json) INTO permissions FROM (
-        SELECT
-            ref_table,
-            JSONB_OBJECT_AGG(rule.key, rule.value) FILTER (WHERE rule.key IS NOT NULL) ||
-                COALESCE(NULLIF(
-                    JSONB_BUILD_OBJECT('self', COALESCE(JSONB_OBJECT_AGG(selfrule.key, selfrule.value) FILTER (WHERE selfrule.key IS NOT NULL), '{}'::JSONB)),
-                    '{"self":{}}'
-                ),'{}') || 
-                COALESCE(NULLIF(
-                    JSONB_BUILD_OBJECT('create', COALESCE(JSONB_OBJECT_AGG(createrule.key, createrule.value) FILTER (WHERE createrule.key IS NOT NULL), '{}'::JSONB)),
-                    '{"create":{}}'
-                ),'{}') AS json
+    SELECT JSONB_OBJECT_AGG(key, value) INTO permissions FROM (
+        SELECT ref_table AS key, JSONB_STRIP_NULLS(JSONB_OBJECT_AGG(key, value) FILTER (WHERE NOT self AND NOT "create")
+            || JSONB_BUILD_OBJECT('create', CASE
+                    WHEN COUNT(*) FILTER (WHERE "create" AND key IS NULL) > 0 THEN '{}'::JSONB
+                    ELSE JSONB_OBJECT_AGG(key, value) FILTER (WHERE "create" AND key IS NOT NULL)
+                END)
+            || JSONB_BUILD_OBJECT('self', JSONB_OBJECT_AGG(key, value) FILTER (WHERE self))) AS value
         FROM (
-            SELECT pm.ref_table,
+            SELECT
+                pm.ref_table,
+                CASE
+                    WHEN type IN ('custom'::permissions_type, 'create'::permissions_type) THEN ref_key
+                    ELSE type::TEXT
+                END AS key,
+                r.name = 'self' AS self,
+                type = 'create'::permissions_type AS "create",
                 CASE
                     WHEN NOT (r.name = 'self') AND type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
-                        JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name))
+                        JSONB_AGG(DISTINCT f.name)
                     WHEN type IN ('view'::permissions_type, 'edit'::permissions_type) THEN
-                        JSONB_BUILD_OBJECT('self', JSONB_BUILD_OBJECT(type, JSONB_AGG(DISTINCT f.name)))
+                        JSONB_AGG(DISTINCT f.name)
                     WHEN type = 'create'::permissions_type THEN
-                        JSONB_BUILD_OBJECT(type, CASE WHEN ref_key IS NULL THEN '{}'::JSONB ELSE JSONB_BUILD_OBJECT(ref_key, CASE WHEN JSONB_AGG(ref_value) @> 'null'::JSONB THEN '"*"'::JSONB ELSE JSONB_AGG(ref_value) END) END)
+                        CASE WHEN JSONB_AGG(ref_value) @> 'null'::JSONB THEN '"*"'::JSONB ELSE JSONB_AGG(ref_value) END
                     WHEN type = 'custom'::permissions_type THEN
-                        JSONB_BUILD_OBJECT(ref_key, COALESCE(NULLIF(JSONB_AGG(ref_value),'[null]'),'true'::JSONB))
-                END AS json
+                        COALESCE(NULLIF(JSONB_AGG(ref_value),'[null]'), 'true'::JSONB)
+                END AS value
             FROM permissions pm
                 JOIN roles_permissions rpm ON pm.id = rpm.permissions_id AND pm.valid_till IS NULL AND rpm.valid_till IS NULL
                 JOIN roles r ON r.id = rpm.roles_id AND r.valid_till IS NULL
@@ -176,12 +177,8 @@ BEGIN
                 LEFT JOIN fields f ON pm.ref_key = 'fields' AND pm.ref_value = f.id AND f.valid_till IS NULL
             WHERE pr.people_id = (payload->>'user')::INT
             GROUP BY pm.ref_table, pm.type, pm.ref_key, r.name = 'self'
-            ORDER BY ref_key NULLS FIRST --so "create": {} will be overwritten by "create": {"key":[values]}
-        ) rules
-            LEFT JOIN JSONB_EACH(rules.json - 'self' - 'create') rule ON TRUE
-            LEFT JOIN JSONB_EACH(rules.json->'self') selfrule ON TRUE
-            LEFT JOIN JSONB_EACH(rules.json->'create') createrule ON TRUE
-        GROUP BY rules.ref_table
+        ) alias
+        GROUP BY ref_table
     ) alias;
     RETURN (payload, permissions);
 END;
