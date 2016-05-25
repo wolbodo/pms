@@ -6,8 +6,8 @@ BEGIN;
 
 -- "WOLBODOISAWESOME, itmysupersecretpassword"
 INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
-('admin@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1, '{}'),
-('wikkert@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1,
+('admin@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
+('wikkert@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1,
     '{
          "nickname": "Wikkert",
          "firstname": "Willem",
@@ -37,7 +37,7 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution", "coasters"]
     }'
 ),
-('sammy@example.com', '+31600000001', crypt('1234',gen_salt('bf',13)), -1,
+('sammy@example.com', '+31600000001', crypt('1234',gen_salt('bf',4)), -1,
     '{
          "nickname": "Sammy",
          "firstname": "Sam",
@@ -59,8 +59,8 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution"]
     }'
 ),
-('keymaster@example.com', '+31152121516', crypt('1234',gen_salt('bf',13)), -1, '{}'),
-('aivd@example.com', '+31793205050', crypt('1234',gen_salt('bf',13)), -1, '{}');
+('keymaster@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
+('aivd@example.com', '+31793205050', crypt('1234',gen_salt('bf',4)), -1, '{}');
 
 INSERT INTO roles (name, modified_by)
 VALUES
@@ -117,7 +117,6 @@ VALUES
     ('people','membertill','{"type":"string","title":"Lid tot"}', -1),
     ('people','membertype','{"type":"string","title":"Lid type"}', -1),
     ('people','mobile','{"type":"string","title":"Mobiel"}', -1),
-    ('people','modified_by', '{}', -1),
     ('people','nickname','{"type":"string","title":"Bijnaam"}', -1),
     ('people','notes','{"type":"string","title":"Opmerkingen"}', -1),
     ('people','password_hash','{"type":"string","title":"Wachtwoord"}', -1),
@@ -127,8 +126,6 @@ VALUES
     ('people','roles', '{"type": "reference","target":"roles","title":"Groepen","displayValue":"name"}', -1),
     ('people','state', '{}', -1),
     ('people','street','{"type":"string","title":"Straat"}', -1),
-    ('people','valid_from', '{}', -1),
-    ('people','valid_till', '{}', -1),
     ('people','wantscontact','{"type":"boolean","title":"Wil contact"}', -1),
     ('people','zipcode','{"type":"string","title":"Postcode"}', -1),
 
@@ -138,20 +135,14 @@ VALUES
 
     ('roles','description', '{"type":"string","title":"Omschrijving"}', -1),
     ('roles','members', '{"type": "reference","target":"people","title":"Leden","displayValue":"nickname"}', -1),
-    ('roles','modified_by', '{}', -1),
     ('roles','name', '{"type":"string","title":"Naam"}', -1),
-    ('roles','valid_from', '{}', -1),
-    ('roles','valid_till', '{}', -1),
 
     ('people_roles','name', '{"type":"string","title":"Naam"}', -1),
     ('people_roles','gid', '{}', -1),
     ('people_roles','id', '{}', -1),
 
-    ('people_roles','$ref', '{}', -1),
-    ('people_roles','modified_by', '{}', -1),
     ('people_roles','people_id', '{}', -1),
-    ('people_roles','valid_from', '{}', -1),
-    ('people_roles','valid_till', '{}', -1),
+    ('people_roles','roles_id', '{}', -1),
 
     ('fields', NULL, '{"title":"Wijzig veld","form":[{"title":"Veld","fields":[["name"],["title"],["type"]]}]}', -1),
     ('fields', 'name', '{"name":"name","title":"Naam","type":"string","readonly":true}', -1),
@@ -172,14 +163,15 @@ VALUES ('custom'::permissions_type, 'website', 'createPosts', NULL::INT, -1),
        ('custom'::permissions_type, 'website', 'editTemplateIds', 2100, -1),
        ('custom'::permissions_type, 'website', 'editTemplateIds', 2500, -1),
        ('custom'::permissions_type, 'website', 'viewLogs', NULL, -1),
-       ('create'::permissions_type, 'people_roles', 'roles_id', NULL, -1) UNION
+       ('create'::permissions_type, 'people_roles', 'roles_id', NULL, -1),
+       ('create'::permissions_type, 'people_roles', 'people_id', NULL, -1) UNION
 SELECT 'create'::permissions_type, 'people_roles', 'roles_id', id, -1 FROM roles WHERE name IN ('board','member','keymanager','keyobserver','admin');
 
 INSERT INTO roles_permissions (roles_id, permissions_id, modified_by)
 SELECT DISTINCT roles.id, permissions.id, -1 FROM
     (VALUES
         --(array['view'],         array['member'],       array[]),
-        (array['view'],         array['login'],        array['gid', 'id', 'valid_from', 'valid_till', 'modified_by', '$ref', 'people_id', 'name', 'members', 'roles', 'email','phone','nickname','firstname','infix','lastname']),
+        (array['view'],         array['login'],        array['gid', 'id', 'people_id', 'name', 'members', 'roles', 'email','phone','nickname','firstname','infix','lastname']),
         (array['view'],         array['member'],       array['mobile','street','housenumber','zipcode','city','state','country','functions','emergencyinfo','membertype','peoplesince','favoritenumber','notes']),
         (array['view','edit'],  array['self'],         array['favoritenumber','privatenotes','coasters']),
         (array['edit'],         array['self','admin'], array['password_hash']),
@@ -212,9 +204,9 @@ SELECT DISTINCT roles.id, permissions.id, -1 FROM
         AND permissions.ref_key IS NULL
         AND permissions.ref_value IS NULL
     UNION
-SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'people_roles' AND ref_value IN (SELECT id FROM roles WHERE name IN ('board','member','keymanager','keyobserver'))
+SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'people_roles' AND ((ref_key = 'roles_id' AND ref_value IN (SELECT id FROM roles WHERE name IN ('board','member','keymanager','keyobserver'))) OR ref_key = 'people_id')
     UNION
-SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'admin' AND ref_table = 'people_roles' AND (ref_value IN (SELECT id FROM roles WHERE name IN ('board','admin')) OR ref_value IS NULL)
+SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'admin' AND ref_table = 'people_roles' AND ((ref_key = 'roles_id' AND ref_value IN (SELECT id FROM roles WHERE name IN ('board','admin'))) OR (ref_key = 'people_id' AND ref_value IS NULL))
     UNION
 SELECT roles.id, permissions.id, -1 FROM roles, permissions WHERE roles.name = 'board' AND ref_table = 'website';
 

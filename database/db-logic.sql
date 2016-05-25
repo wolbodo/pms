@@ -1,6 +1,8 @@
 --FIXME: security:
 --        - remove access of viewing functions who expose the SHA256 HMAC secret
 --        - limit access to internal functions, including "*_get(rights payload_permissions" functions
+--       other:
+--        - check if RAISE EXCEPTION without RETURN NULL in data_merge are all ok paths or if some returns can be removed.
 
 CREATE OR REPLACE FUNCTION public.base64url_jsonb(json TEXT, info TEXT DEFAULT ''::TEXT)
  RETURNS JSONB
@@ -149,6 +151,10 @@ BEGIN
                 COALESCE(NULLIF(
                     JSONB_BUILD_OBJECT('self', COALESCE(JSONB_OBJECT_AGG(selfrule.key, selfrule.value) FILTER (WHERE selfrule.key IS NOT NULL), '{}'::JSONB)),
                     '{"self":{}}'
+                ),'{}') || 
+                COALESCE(NULLIF(
+                    JSONB_BUILD_OBJECT('create', COALESCE(JSONB_OBJECT_AGG(createrule.key, createrule.value) FILTER (WHERE createrule.key IS NOT NULL), '{}'::JSONB)),
+                    '{"create":{}}'
                 ),'{}') AS json
         FROM (
             SELECT pm.ref_table,
@@ -172,8 +178,9 @@ BEGIN
             GROUP BY pm.ref_table, pm.type, pm.ref_key, r.name = 'self'
             ORDER BY ref_key NULLS FIRST --so "create": {} will be overwritten by "create": {"key":[values]}
         ) rules
-            LEFT JOIN JSONB_EACH(rules.json - 'self') rule ON TRUE
+            LEFT JOIN JSONB_EACH(rules.json - 'self' - 'create') rule ON TRUE
             LEFT JOIN JSONB_EACH(rules.json->'self') selfrule ON TRUE
+            LEFT JOIN JSONB_EACH(rules.json->'create') createrule ON TRUE
         GROUP BY rules.ref_table
     ) alias;
     RETURN (payload, permissions);
@@ -270,7 +277,7 @@ BEGIN
                 IF createfields->kv.key = '*' OR base ? kv.key AND base->kv.key @> kv.value THEN
                     --OK construct
                 ELSE
-                    RAISE EXCEPTION '%', jsonb_error('Removing "%s" value %s not allowed', kv.key, kv.value);
+                    RAISE EXCEPTION '%', jsonb_error('Removing "%s" value %s not allowed', kv.key, kv.value::TEXT);
                 END IF;
             END LOOP;
         ELSE
@@ -319,10 +326,10 @@ BEGIN
             --OK construct
         ELSEIF base = '{}'::JSONB THEN
             IF createfields ? kv.key THEN
-                IF createfields->kv.key = '*' OR createfields->kv.key <@ kv.value THEN
+                IF createfields->>kv.key = '*' OR createfields->kv.key @> kv.value THEN
                     --OK construct
                 ELSE
-                    RAISE EXCEPTION '%', jsonb_error('Creating "%s" with value %s is not allowed', kv.key, kv.value);
+                    RAISE EXCEPTION '%', jsonb_error('Creating "%s" with value %s is not allowed', kv.key, kv.value::TEXT);
                 END IF;
             ELSE
                 RAISE EXCEPTION '%', jsonb_error('Creating "%s" is not allowed', kv.key);
