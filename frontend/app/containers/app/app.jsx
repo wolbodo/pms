@@ -3,10 +3,6 @@ import { connect } from 'react-redux';
 import * as mdl from 'react-mdl';
 import { Link } from 'react-router';
 
-import * as peopleActions from 'redux/modules/people';
-import * as rolesActions from 'redux/modules/roles';
-import * as fieldsActions from 'redux/modules/fields';
-
 // Action imports
 import { push } from 'react-router-redux';
 
@@ -17,9 +13,6 @@ import logo from 'img/logo.svg'; // eslint-disable-line
     auth: state.get('auth').toJS(),
   }), {
     pushState: push,
-    peopleFetch: peopleActions.fetch,
-    rolesFetch: rolesActions.fetch,
-    fieldsFetch: fieldsActions.fetch
   })
 export default class App extends React.Component {
   static propTypes = {
@@ -32,27 +25,20 @@ export default class App extends React.Component {
     roles: PropTypes.object,
 
     pushState: PropTypes.func,
-    peopleFetch: PropTypes.func,
-    rolesFetch: PropTypes.func,
-    fieldsFetch: PropTypes.func,
   }
   constructor(props) {
     super(props);
 
     this.state = { infoOpen: false };
   }
-  componentWillReceiveProps(nextProps) {
-    const { auth,
-      pushState, peopleFetch, rolesFetch, fieldsFetch } = this.props;
 
+  componentWillReceiveProps(nextProps) {
+    const { auth, pushState } = this.props;
+
+    // Auth flow
     if (!auth.loggedIn && nextProps.auth.loggedIn) {
       // login
       pushState('/');
-
-      // Trigger fetch
-      peopleFetch();
-      rolesFetch();
-      fieldsFetch();
     } else if (auth.loggedIn && !nextProps.auth.loggedIn) {
       // logout
       pushState('/login');

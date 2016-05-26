@@ -21,9 +21,19 @@ function PersonEdit({ params, people, roles, fields, auth, update }) {
   // Find all resources referenced in the schema
   const resources = schemaUtil.getResources({ people, roles }, schema);
 
-  const item = _.mergeWith(
-    person, updates,
-    (obj, src) => (_.isArray(obj) ? src : undefined)
+  // Generate references from updates in resources.
+  // This is needed due to ref updates (trough the references field)
+  // not creating the reverse ref. This function generates those
+
+  const reverseRefs = schemaUtil.generateReverseRefs('people', person, resources, fields);
+
+  console.log(reverseRefs);
+
+  const item = _.merge(
+    _.mergeWith(
+      person, updates,
+      (obj, src) => (_.isArray(obj) ? src : undefined)
+    )
   );
 
   return (

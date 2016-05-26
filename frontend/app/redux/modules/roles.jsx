@@ -20,7 +20,11 @@ const CREATE = 'pms/roles/CREATE';
 const COMMIT_FINISHED = 'pms/roles/COMMIT_FINISHED';
 
 const initialState = Immutable.fromJS({
-  fetching: false
+  items: {},
+  updates: {},
+  loaded: false,
+  fetching: false,
+  pushing: false
 });
 
 export function fetch() {
@@ -161,7 +165,7 @@ const reducers = {
     }),
 
   [REVERT]: (roles) =>
-    roles.set('updates', new Immutable.Map()),
+    roles.set('updates', Immutable.Map()),
 
   // Local changes and push
   [CREATE]: (roles, { data }) =>
@@ -174,7 +178,7 @@ const reducers = {
   [UPDATE]: (roles, { data }) =>
     roles.updateIn(
       ['updates', data.id],
-      (role = new Map()) => role.merge({
+      (role = Immutable.Map()) => role.merge({
         [data.key]: data.value,
         gid: data.gid
       })

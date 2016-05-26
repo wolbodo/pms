@@ -89,7 +89,7 @@ export default class RoleView extends React.Component {
               value={role.members}
               onBlur={(value, key) => console.log('blur', value, key)}
               onChange={(value) => (
-                (!_.eq(role.members, value) && rolesUpdate(role.id, 'members', value))
+                (!_.eq(role.members, value) && rolesUpdate(role.id, value, 'members'))
               )}
               permissions={schemaUtil.getResourceFieldPermissions(
                           'roles', role.id, schema.properties.members, 'members', auth

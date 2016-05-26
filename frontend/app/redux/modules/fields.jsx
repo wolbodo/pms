@@ -3,12 +3,17 @@ import Immutable from 'immutable';
 import { CLEAR } from './clearState';
 import { apiAction } from 'redux/apiWrapper';
 
-const initialState = Immutable.Map();
+const initialState = Immutable.fromJS({
+  items: {},
+  updates: {},
+  loaded: false,
+  fetching: false,
+  pushing: false
+});
 
 const MOVE_SCHEMAFIELD = 'pms/fields/MOVE_SCHEMAFIELD';
 const CREATE_FIELDSET = 'pms/fields/CREATE_FIELDSET';
 const UPDATE_FIELD = 'pms/fields/UPDATE_FIELD';
-
 
 const FETCH = 'pms/fields/FETCH';
 const FETCH_SUCCESS = 'pms/fields/FETCH_SUCCESS';
