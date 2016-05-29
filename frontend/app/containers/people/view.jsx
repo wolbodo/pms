@@ -10,11 +10,13 @@ import fieldComponents from 'components/fields';
 
 import { connectResources, PeopleResource, RolesResource } from 'resources';
 
-@connect(...connectResources(
-  {
+@connect(
+  ...connectResources({
     people: PeopleResource,
     roles: RolesResource,
-  }, { pushState: push }))
+  },
+  { pushState: push })
+)
 export default class PeopleView extends React.Component {
 
   static propTypes = {
@@ -44,14 +46,10 @@ export default class PeopleView extends React.Component {
       pushState, routeParams } = this.props;
 
     // Get the current role/role
-    const currentRole = roles.find((value) => value.get('name') === routeParams.role_name);
+    const currentRole = roles.getByName(routeParams.role_name);
 
     // filter people in current role
-    const peopleSet = currentRole ?
-      people.filter(
-        (person) => person.get('roles')
-                          .some((role) => role.$ref === `/roles/${currentRole.id}`)
-      ) : people.all();
+    const peopleSet = people.filterByRole(currentRole);
 
     // Create a select title ;)
     const title = (

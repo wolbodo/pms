@@ -1,7 +1,11 @@
-
+import React from 'react';
 import { Map, List } from 'immutable';
 import _ from 'lodash';
 import { memoizeMethod } from './util';
+
+// Components
+import { ItemEdit } from 'components';
+
 
 const splitCase = (str) => str.replace(/([a-z0-9])([A-Z])/, '$1 $2').toLowerCase().split(' ');
 
@@ -44,6 +48,14 @@ export default class BaseResource {
     }
   }
 
+  getResources() {
+    return _.chain(this.schema.properties)
+        .filter(_.matches({ type: 'reference' }))
+        .keyBy((property) => property.target)
+        .mapValues((property) => _.get(this.resources, property.target))
+        .value();
+  }
+
   setDispatch(dispatch) {
     // Bind dispatch to the constructor's actions, and set them on the resource
     this.actions = _.mapValues(
@@ -54,6 +66,10 @@ export default class BaseResource {
     this.checkState();
   }
 
+  setAuth(auth) {
+    this.auth = auth;
+  }
+
   checkState() {
     // !!! Should have a populated state and dispatch function
     // Check whether we should trigger a fetch from the api.
@@ -62,6 +78,10 @@ export default class BaseResource {
       // Trigger fetch
       this.actions.fetch();
     }
+  }
+
+  get(id, notSetValue) {
+    return this.items.get(_.toString(id), notSetValue).toJS();
   }
 
   // Utility functions which return normal js objects
@@ -75,5 +95,34 @@ export default class BaseResource {
   filter(...args) {
     const result = this.items.filter(...args);
     return result ? result.toJS() : undefined;
+  }
+  map(...args) {
+    const result = this.items.map(...args);
+    return result ? result.toJS() : undefined;
+  }
+
+  // Component renderers
+  renderItemEdit(person) {
+    // const permissions = (parseInt(personId, 10) === auth.user.user)
+    //   ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
+    //   : auth.permissions.people;
+
+    // // Generate references from updates in resources.
+    // // This is needed due to ref updates (trough the references field)
+    // // not creating the reverse ref. This function generates those
+    // const reverseRefs = schemaUtil.generateReverseRefs('people', person, resources, fields);
+
+    // console.log(reverseRefs);
+
+    return (
+      <ItemEdit
+        type={this.resourceSlug}
+        schema={this.schema}
+        resources={this.getResources()}
+        item={person}
+        auth={this.auth.toJS()}
+        onChange={(value, key) => this.actions.update(person.id, value, key) }
+      />
+    );
   }
 }

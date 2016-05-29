@@ -7,7 +7,7 @@ export function memoizeMethod(target, name, description) {
   return _.memoize(description.value);
 }
 
-export function connectResources(resources, defaultActions) {
+export function connectResources(resources, defaultActions = {}) {
   // ActionCreators select the resources to map...
 
   // Make sure fields are in the resources
@@ -26,6 +26,7 @@ export function connectResources(resources, defaultActions) {
 
     // Set resources on every state object so they can interact.
     _.each(stateResources, (resource) => resource.setResources(stateResources));
+    _.each(stateResources, (resource) => resource.setAuth(state.get('auth')));
 
     return stateResources;
   }
