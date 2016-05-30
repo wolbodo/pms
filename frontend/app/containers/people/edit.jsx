@@ -1,21 +1,20 @@
-import { PropTypes } from 'react';
-import { connect } from 'react-redux';
+import React, { PropTypes } from 'react';
 import { connectResources, PeopleResource } from 'resources';
 
-function PersonEdit({ params, people }) {
-  // Get the person to be edited, either params.id or self.
-  const person = people.get(params.id, people.self);
+@connectResources({
+  people: PeopleResource,
+})
+export default class PersonEdit extends React.Component {
+  static propTypes = {
+    params: PropTypes.object,
+    people: PropTypes.object,
+  };
 
-  return people.renderItemEdit(person);
+  render() {
+    const { params, people } = this.props;
+    // Get the person to be edited, either params.id or self.
+    const person = people.get(params.id, people.self);
+
+    return people.renderItemEdit(person);
+  }
 }
-
-PersonEdit.propTypes = {
-  params: PropTypes.object,
-  people: PropTypes.object,
-};
-
-export default connect(
-  ...connectResources({
-    people: PeopleResource,
-  })
-)(PersonEdit);

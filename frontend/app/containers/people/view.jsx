@@ -1,27 +1,23 @@
+import _ from 'lodash';
+import { push } from 'react-router-redux';
 import React, { PropTypes } from 'react';
 
 import { List, Head, Row } from 'components/list';
-
-import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
-
-import _ from 'lodash';
 import fieldComponents from 'components/fields';
 
 import { connectResources, PeopleResource, RolesResource } from 'resources';
 
-@connect(
-  ...connectResources({
-    people: PeopleResource,
-    roles: RolesResource,
-  },
-  { pushState: push })
-)
+@connectResources({
+  people: PeopleResource,
+  roles: RolesResource,
+},
+{ pushState: push })
 export default class PeopleView extends React.Component {
 
   static propTypes = {
     roles: PropTypes.object,
     people: PropTypes.object,
+    fields: PropTypes.object,
     pushState: PropTypes.func,
 
     routeParams: PropTypes.object,
@@ -30,14 +26,14 @@ export default class PeopleView extends React.Component {
     people: []
   };
 
-  loaded() {
+  get loaded() {
     const { people, roles } = this.props;
 
     return people.loaded && roles.loaded;
   }
 
   render() {
-    if (!this.loaded()) {
+    if (!this.loaded) {
       return (<h1>Loading</h1>);
     }
 

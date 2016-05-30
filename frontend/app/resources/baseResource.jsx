@@ -62,8 +62,6 @@ export default class BaseResource {
       this.constructor.actions,
       (action) => _.flow(action, dispatch)
     );
-
-    this.checkState();
   }
 
   setAuth(auth) {
@@ -81,7 +79,8 @@ export default class BaseResource {
   }
 
   get(id, notSetValue) {
-    return this.items.get(_.toString(id), notSetValue).toJS();
+    const result = this.items.get(_.toString(id));
+    return result ? result.toJS() : notSetValue;
   }
 
   // Utility functions which return normal js objects
@@ -102,7 +101,7 @@ export default class BaseResource {
   }
 
   // Component renderers
-  renderItemEdit(person) {
+  renderItemEdit(item) {
     // const permissions = (parseInt(personId, 10) === auth.user.user)
     //   ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
     //   : auth.permissions.people;
@@ -119,9 +118,9 @@ export default class BaseResource {
         type={this.resourceSlug}
         schema={this.schema}
         resources={this.getResources()}
-        item={person}
+        item={item}
         auth={this.auth.toJS()}
-        onChange={(value, key) => this.actions.update(person.id, value, key) }
+        onChange={(value, key) => this.actions.update(item.id, value, key) }
       />
     );
   }

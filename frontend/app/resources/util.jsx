@@ -1,5 +1,7 @@
 
 import _ from 'lodash';
+import { connect } from 'react-redux';
+
 import FieldsResource from './fields';
 
 export function memoizeMethod(target, name, description) {
@@ -40,8 +42,28 @@ export function connectResources(resources, defaultActions = {}) {
     );
   }
 
-  return [
+  const wrapper = connect(
     mapStateToProps,
     mapDispatchToProps
-  ];
+  );
+
+  return function wrapComponent(component) {
+    // Add a resource fetcher to the component
+    const oldWillMount = component.prototype.componentWillMount;
+
+    // TODO: Fix this uglyness. (but how?)
+    /* eslint no-param-reassign: "off" */
+    component.prototype.componentWillMount = function test() {
+      // Trigger updates on resources
+      _.each(stateResources, (resource) => resource.checkState());
+
+      if (oldWillMount) {
+        return oldWillMount.call(this);
+      }
+      return undefined;
+    };
+
+    const newComponent = wrapper(component);
+    return newComponent;
+  };
 }
