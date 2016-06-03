@@ -21,14 +21,20 @@ export default class BaseResource {
     // merge each item with updates.
     return new this(state);
   }
+  static setDispatch(dispatch) {
+    this._actions = _.mapValues(
+      this.actions,
+      (action) => _.flow(action, dispatch)
+    );
+  }
 
   constructor(state) {
     this.loaded = state.get('loaded');
     this.fetching = state.get('fetching');
     this.pushing = state.get('pushing');
-    this.items = state.get('items')
+    this._items = state.get('items')
                       .mergeWith(
-                        (prev, next) => (List.isList(prev) ? next : undefined),
+                        (prev, next) => (List.isList(prev) ? next : prev.merge(next)),
                         state.get('updates', Map())
                       );
   }
@@ -36,6 +42,15 @@ export default class BaseResource {
   get resourceSlug() {
     // Returns the slug on which the resource is identified
     return _.head(splitCase(this.constructor.name));
+  }
+
+  get actions() {
+    // Bind dispatch to the constructor's actions, and set them on the resource
+    if (_.has(this.constructor, '_actions')) {
+      return this.constructor._actions;
+    }
+    throw new Error('No actions loaded (dispatch not attached to resource');
+    // return undefined;
   }
 
   setResources(resources) {
@@ -56,51 +71,128 @@ export default class BaseResource {
         .value();
   }
 
-  setDispatch(dispatch) {
-    // Bind dispatch to the constructor's actions, and set them on the resource
-    this.actions = _.mapValues(
-      this.constructor.actions,
-      (action) => _.flow(action, dispatch)
-    );
-  }
-
   setAuth(auth) {
-    this.auth = auth;
+    this._permissions = auth.getIn(['permissions', this.resourceSlug], Map());
+    this._auth = auth;
   }
 
   checkState() {
     // !!! Should have a populated state and dispatch function
     // Check whether we should trigger a fetch from the api.
 
-    if (!(this.loaded || this.fetching)) {
+    if (this.actions && !(this.loaded || this.fetching)) {
       // Trigger fetch
       this.actions.fetch();
     }
   }
 
   get(id, notSetValue) {
-    const result = this.items.get(_.toString(id));
+    const result = this._items.get(_.toString(id));
     return result ? result.toJS() : notSetValue;
   }
 
-  // Utility functions which return normal js objects
+  /*
+   * Utility functions which return normal js objects
+   */
   all() {
-    return this.items.toJS();
+    return this._items.toJS();
   }
   find(...args) {
-    const result = this.items.find(...args);
+    const result = this._items.find(...args);
     return result ? result.toJS() : undefined;
   }
   filter(...args) {
-    const result = this.items.filter(...args);
+    const result = this._items.filter(...args);
     return result ? result.toJS() : undefined;
   }
   map(...args) {
-    const result = this.items.map(...args);
+    const result = this._items.map(...args);
     return result ? result.toJS() : undefined;
   }
 
-  // Component renderers
+  /*
+   * Permission functions
+   */
+  getPermissionsFor(resourceId) {
+    if (this._permissions.has('self') && (this._auth.getIn(['user', 'user']) === resourceId)) {
+      // Check whether resourceId is equal to auth.user.user
+      return this._permissions.merge(this._permissions.get('self')).delete('self').toJS();
+    }
+    return this._permissions.toJS();
+  }
+
+  getSchemaForField(field) {
+    return _.get(this.schema, ['properties', field]);
+  }
+
+  getPermissionsForField(resourceId, field) {
+    const permissions = this.getPermissionsFor(resourceId);
+    const fieldSchema = this.getSchemaForField(field);
+
+    if (_.get(fieldSchema, 'type') === 'reference') {
+      // Figure out permissions due to indirect permissions
+
+      const referenceTable = _.join(_.sortBy([fieldSchema.target, this.resourceSlug]), '_');
+
+      // Map create permissions on the specific resourceId.
+      // if any properties defined on permissions.create, check on which type it is mapped.
+      const refPermissions = this._auth.getIn(['permissions', referenceTable, 'create']);
+
+      // Figure out the filtering.
+      const currentResource = `${this.resourceSlug}_id`;
+      const targetResource = `${fieldSchema.target}_id`;
+
+      if (_.has(refPermissions, currentResource)) {
+        // The current resource is being filtered by some ids.
+
+        // Permissions for this resource?
+        if (_.includes(refPermissions[currentResource], resourceId)) {
+          return {
+            edit: true
+          };
+        }
+        // Else
+        return {}; // No permissions
+      } else if (_.has(refPermissions, targetResource)) {
+        // permissions are being filtered by the refPermissions on target resource
+        return {
+          edit: true,
+          filter: _.get(refPermissions, targetResource)
+        };
+      }
+
+      return {
+        edit: !!refPermissions
+      };
+    }
+    return {
+      edit: _.includes(permissions.edit, field),
+      view: _.includes(permissions.view, field),
+    };
+  }
+
+  getReferencedResource(field) {
+    const fieldSchema = this.getSchemaForField(field);
+
+    return _.get(this.resources, fieldSchema.target);
+  }
+
+  /*
+   * Crud functions
+   */
+  updateItem(itemId, value, key) {
+    // Sets key/value on item.
+
+    const item = this.get(itemId);
+    // Check whether it has changed
+    if (!_.eq(item[key], value)) {
+      this.actions.update(itemId, value, key);
+    }
+  }
+
+  /*
+   * Component renderers
+   */
   renderItemEdit(item) {
     // const permissions = (parseInt(personId, 10) === auth.user.user)
     //   ? _.merge({}, auth.permissions.people.self, auth.permissions.people)
@@ -115,12 +207,8 @@ export default class BaseResource {
 
     return (
       <ItemEdit
-        type={this.resourceSlug}
-        schema={this.schema}
-        resources={this.getResources()}
+        resource={this}
         item={item}
-        auth={this.auth.toJS()}
-        onChange={(value, key) => this.actions.update(item.id, value, key) }
       />
     );
   }

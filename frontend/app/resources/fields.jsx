@@ -7,6 +7,6 @@ export default class FieldsResource extends BaseResource {
 
   getSchema(resourceSlug) {
     // Returns the schema for the given resourec.
-    return this.items.get(resourceSlug).toJS();
+    return this._items.get(resourceSlug).toJS();
   }
 }

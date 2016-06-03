@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react';
 import * as mdl from 'react-mdl';
 import * as _ from 'lodash';
-import * as schemaUtil from 'schema';
 
 import Field from './field';
 
@@ -15,70 +14,49 @@ const mapFilter = (iterable, mapfun, filterfun) => _.filter(_.map(iterable, mapf
 
 export default class ItemEdit extends React.Component {
   static propTypes = {
-    type: PropTypes.string,
     item: PropTypes.object,
-    schema: PropTypes.object,
-    auth: PropTypes.object,
-    resources: PropTypes.object, // Resources referenced by schema
-    onChange: PropTypes.func,
+    resource: PropTypes.object, // Resource referenced by schema
+    // onChange: PropTypes.func,
   };
 
-  constructor(props) {
-    super(props);
+  createField(field) {
+    // Creates the field for use in the DOM
 
-    this.handleChange = this.handleChange.bind(this);
-  }
-  handleChange(value, key) {
-    const { onChange, item } = this.props;
+    const { resource, item } = this.props;
+    const fieldSchema = resource.getSchemaForField(field);
+    const permissions = resource.getPermissionsForField(item.id, field);
 
-    console.log('Setting store');
+    if ((permissions.view && !_.isEmpty(item[field])) || permissions.edit || permissions.create) {
+      // Then add the field, with all info zipped into an object.
 
-    // did value change?
-    if (!_.eq(item[key], value) && onChange) {
-      onChange(value, key);
+      return {
+        schema: {
+          name: field,
+          ...fieldSchema
+        },
+        resource: resource.getReferencedResource(field),
+        value: item[field],
+        permissions,
+      };
     }
+    return null;
   }
+
   render() {
-    const { schema, item, auth, type, resources } = this.props;
+    const { resource, item } = this.props;
 
     // const permissions = ((type === 'people') && (item.id === auth.user.user)) ?
     //   _.merge({}, auth.permissions.people.self, auth.permissions.people)
     //   :
     //   _.get(auth, ['permissions', type]);
 
-    function createField(field) {
-      // Creates the field for use in the DOM
-
-
-      const fieldSchema = _.get(schema, ['properties', field]);
-
-      const permissions = schemaUtil.getResourceFieldPermissions(
-        type, item.id, fieldSchema, field, auth
-      );
-
-      if ((permissions.view && !_.isEmpty(item[field])) || permissions.edit || permissions.create) {
-        // Then add the field, with all info zipped into an object.
-
-        return {
-          schema: {
-            name: field,
-            ...fieldSchema
-          },
-          resource: schemaUtil.getReferencedResource(resources, fieldSchema),
-          value: item[field],
-          permissions,
-        };
-      }
-      return null;
-    }
-
     let form = mapFilter(
-      schema.form,
+      resource.schema.form,
       (role) => ({
         title: role.title,
         fields: mapFilter(
           role.fields,
-          (fieldset) => mapFilter(fieldset, createField, (field) => !!field),
+          (fieldset) => mapFilter(fieldset, this.createField.bind(this), (field) => !!field),
           (fieldset) => !_.isEmpty(fieldset)
         )
       }),
@@ -86,7 +64,7 @@ export default class ItemEdit extends React.Component {
     );
 
     return (
-      <form className="content" onSubmit={this.handleSubmit}>
+      <form className="content">
       {_.map(form, (role, i) => (
         <mdl.Card key={i} className="mdl-color--white mdl-shadow--2dp">
           <mdl.CardTitle>
@@ -102,7 +80,7 @@ export default class ItemEdit extends React.Component {
                 resource={field.resource}
                 tabIndex="0"
                 permissions={field.permissions}
-                onChange={this.handleChange}
+                onChange={(value) => resource.updateItem(item.id, value, field.schema.name)}
                 value={field.value}
               />
             ))}

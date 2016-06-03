@@ -53,7 +53,7 @@ export default class PeopleView extends React.Component {
         value={_.get(currentRole, 'name', 'all')}
         permissions={{ edit: true }}
         options={
-          roles.items
+          roles._items
                .map((role) => role.get('name'))
                .toMap()
                .flip()

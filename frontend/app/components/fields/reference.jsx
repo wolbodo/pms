@@ -65,19 +65,18 @@ export default class List extends React.Component {
     const { title, value, displayValue, resource, onBlur, target, permissions } = this.props;
     const { newValue } = this.state;
 
-    const listToDisplay = (item) =>
-                            _.get(
-                              _.get(resource,
-                                ['items', _.get(item.$ref.match(`^\\/${target}\\/(\\d+)$`), 1)]
-                              ), _.toPath(displayValue), `@${item.$ref}`);
+    const listToDisplay = (item) => _.get(
+                                resource.get(
+                                  _.get(item.$ref.match(`^\\/${target}\\/(\\d+)$`), 1)
+                                ), _.toPath(displayValue), `@${item.$ref}`);
 
-    const resourceReferences = _.chain(resource.items)
-      // Filter based on possible permissions.
+    // Filter based on possible permissions.
+    const resourceReferences = resource._items
       .filter((item) => (
-        _.isEmpty(permissions.filter) || _.includes(permissions.filter, item.id)
+        _.isEmpty(permissions.filter) || _.includes(permissions.filter, item.get('id'))
       ))
-      .map((item) => ({ $ref: `/${target}/${item.id}` }))
-      .value();
+      .map((item) => ({ $ref: `/${target}/${item.get('id')}` }))
+      .toJS();
 
     // TODO: Add filtering by permissions.filter
     // Shows an array of strings for now.

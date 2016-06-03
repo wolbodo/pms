@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { connect } from 'react-redux';
 
 import FieldsResource from './fields';
+import RolesResource from './roles';
 
 export function memoizeMethod(target, name, description) {
   // TODO: Only cache the last call, since state rarely repeats.
@@ -13,7 +14,7 @@ export function connectResources(resources, defaultActions = {}) {
   // ActionCreators select the resources to map...
 
   // Make sure fields are in the resources
-  const _resources = { fields: FieldsResource, ...resources };
+  const _resources = { fields: FieldsResource, roles: RolesResource, ...resources };
   let stateResources;
 
   function mapStateToProps(state) {
@@ -34,7 +35,7 @@ export function connectResources(resources, defaultActions = {}) {
   }
   function mapDispatchToProps(dispatch) {
     // Map defaultActions to a flow connected with dispatch
-    _.each(stateResources, (resource) => resource.setDispatch(dispatch));
+    _.each(_resources, (resource) => resource.setDispatch(dispatch));
 
     return _.mapValues(
       defaultActions,

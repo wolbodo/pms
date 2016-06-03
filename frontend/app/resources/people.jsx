@@ -6,7 +6,7 @@ export default class PeopleResource extends BaseResource {
 
   get self() {
     // Returns the resource of the current user.
-    const userId = this.auth.getIn(['user', 'user']);
+    const userId = this._auth.getIn(['user', 'user']);
     return this.get(userId);
   }
 
