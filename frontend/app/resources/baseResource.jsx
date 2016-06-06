@@ -53,6 +53,10 @@ export default class BaseResource {
     // return undefined;
   }
 
+  get size() {
+    return this._items.size;
+  }
+
   setResources(resources) {
     this.resources = resources;
 
@@ -103,11 +107,11 @@ export default class BaseResource {
   }
   filter(...args) {
     const result = this._items.filter(...args);
-    return result ? result.toJS() : undefined;
+    return result ? result.toList().toJS() : undefined;
   }
   map(...args) {
     const result = this._items.map(...args);
-    return result ? result.toJS() : undefined;
+    return result ? result.toList().toJS() : undefined;
   }
 
   /*
@@ -116,7 +120,14 @@ export default class BaseResource {
   getPermissionsFor(resourceId) {
     if (this._permissions.has('self') && (this._auth.getIn(['user', 'user']) === resourceId)) {
       // Check whether resourceId is equal to auth.user.user
-      return this._permissions.merge(this._permissions.get('self')).delete('self').toJS();
+      return this._permissions
+        .mergeWith(
+          (prev, next) => (List.isList(prev) ? prev.concat(next) : prev.merge(next)),
+          this._permissions.get('self')
+        )
+        .delete('self')
+        .toJS();
+      // return this._permissions.merge(this._permissions.get('self')).delete('self').toJS();
     }
     return this._permissions.toJS();
   }

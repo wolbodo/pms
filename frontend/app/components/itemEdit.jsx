@@ -52,15 +52,15 @@ export default class ItemEdit extends React.Component {
 
     let form = mapFilter(
       resource.schema.form,
-      (role) => ({
-        title: role.title,
+      (formGroup) => ({
+        title: formGroup.title,
         fields: mapFilter(
-          role.fields,
+          formGroup.fields,
           (fieldset) => mapFilter(fieldset, this.createField.bind(this), (field) => !!field),
           (fieldset) => !_.isEmpty(fieldset)
         )
       }),
-      (role) => !_.isEmpty(role.fields)
+      (formGroup) => !_.isEmpty(formGroup.fields)
     );
 
     return (
