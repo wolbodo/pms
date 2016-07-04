@@ -7,6 +7,6 @@ export default class RolesResource extends BaseResource {
   static actions = actions.roles;
 
   getByName(name) {
-    return this.find((value) => value.get('name') === name);
+    return this.find((value) => value.name === name);
   }
 }

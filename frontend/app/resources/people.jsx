@@ -1,6 +1,8 @@
 import BaseResource from './baseResource';
 import actions from 'redux/modules';
 
+import _ from 'lodash';
+
 export default class PeopleResource extends BaseResource {
   static actions = actions.people;
 
@@ -12,9 +14,13 @@ export default class PeopleResource extends BaseResource {
 
   filterByRole(role) {
     return role ?
-      this.filter(
-        (person) => person.get('roles')
-                          .some((_role) => _role.get('$ref') === `/roles/${role.id}`)
+      _.filter(
+        this.wrap(),
+        (person) => {
+          debugger;
+          return person.get('roles')
+                          .some((_role) => _role.get('$ref') === `/roles/${role.id}`);
+        }
       ) : this.all();
   }
 }

@@ -28,14 +28,14 @@ export default class ItemEdit extends React.Component {
 
     if ((permissions.view && !_.isEmpty(item[field])) || permissions.edit || permissions.create) {
       // Then add the field, with all info zipped into an object.
-
+      const itemValue = item[field];
       return {
         schema: {
           name: field,
           ...fieldSchema
         },
         resource: resource.getReferencedResource(field),
-        value: item[field],
+        value: _.isFunction(itemValue) ? itemValue() : itemValue,
         permissions,
       };
     }
