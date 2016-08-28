@@ -12,7 +12,7 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 ADD https://github.com/jwilder/forego/releases/download/v0.16.1/forego /usr/local/bin/forego
 RUN chmod u+x /usr/local/bin/forego
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -yyy nginx inotify-tools build-essential curl nodejs gcc-multilib libssl-dev libreadline-dev bison flex postgresql-server-dev-9.5
+RUN DEBIAN_FRONTEND=noninteractive apt-get update &&  apt-get install -yyy nginx inotify-tools build-essential curl nodejs gcc-multilib libssl-dev libreadline-dev bison flex postgresql-server-dev-9.5
 
 # Install rust
 RUN curl -f -L https://static.rust-lang.org/rustup.sh -O && sh rustup.sh --channel=nightly --disable-sudo

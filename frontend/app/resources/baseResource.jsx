@@ -44,57 +44,157 @@ class Reference {
       console.log('-> Description changed');
       this.resources[resource.resourceSlug] = resource;
     }
+  }
 
-    // if (resource.loaded) {
-    //   // Store the reference mappings
-    //   const desc = _.get(this.descriptions, resource.resourceSlug);
-    //   this.references[resource.resourceSlug] = resource._items.map(
-    //     (item) => item.get(desc.key)
-    //                   .map((ref) =>
-    //                     _.parseInt(_.replace(ref.get('$ref'), `/${desc.target}/`, ''))
-    //                   )
-    //   ).toJS();
-    // }
+  findUpdatedByRef(fieldName, itemId) {
+    // Returns the updates in the backReference.
+    const description = _.find(this.descriptions, _.matches({ key: fieldName }));
+    const target = this.resources[description.target];
+    const targetDesc = _.get(this.descriptions, description.target);
+
+    return target._updates.filter(
+            (value) =>
+              value.get(targetDesc.key, List())
+                   .some((ref) =>
+                      ref.get('$ref') === `/${targetDesc.target}/${itemId}`
+                   )
+          )
+          .map((value, key) => Map({
+            $ref: `/${description.target}/${key}`
+          })).toList();
+  }
+  findDeletedByRef(fieldName, itemId) {
+    const description = _.find(this.descriptions, _.matches({ key: fieldName }));
+    const target = this.resources[description.target];
+    const targetDesc = _.get(this.descriptions, description.target);
+
+    return target._updates.map(
+              // All values in _items and not in _updates
+              (update, updateId) =>
+                // update should contain ref field
+                update.has(targetDesc.key) &&
+                target._items
+                      .getIn([updateId, targetDesc.key])
+                      // Filter out only refs referencing this item
+                      .filter((ref) =>
+                        ref.get('$ref') === `/${targetDesc.target}/${itemId}`
+                      )
+                      // Filter the ones not present in updates (was removed)
+                      .filterNot((ref) =>
+                        update.get(targetDesc.key, List())
+                              .some((updateRef) => updateRef.get('$ref') === ref.get('$ref'))
+                      )
+    ).filterNot((i) => (!i) || i.isEmpty())
+     .map((value, key) =>
+        Map({
+          $ref: `/${description.target}/${key}`
+        })
+      ).toList();
   }
 
   generateField(fieldName, itemId, currentValue) {
-    console.log(':: generateField', fieldName, itemId, currentValue);
     // console.log(fieldName, itemId, currentValue);
-    const description = _.find(this.descriptions, _.matches({ key: fieldName }));
-    const otherDesc = _.get(this.descriptions, description.target);
-    const updates = _.get(this, [
-      'resources',
-      description.target,
-      '_updates'
-    ]);
+    const resourceName = _.findKey(this.descriptions, _.matches({ key: fieldName }));
+    const itemUpdates = this.resources[resourceName]._updates
+                        .getIn([itemId.toString(), fieldName]);
 
     // Find updates in referenced resource. and merge them
-    const itemUpdates = updates.filter(
-                          (value) => value.get(otherDesc.key)
-                                          .includes(Map({ $ref: `/roles/${itemId}` }))
-                        )
-                        .map((value, key) => Map({
-                          $ref: `/${description.target}/${key}`
-                        })).toList();
+    const updatesByRef = this.findUpdatedByRef(fieldName, itemId);
 
-    if (itemUpdates && !itemUpdates.isEmpty()) {
-      // console.log(fieldName, itemId, currentValue, itemUpdates);
-      // reverse itemUpdates, to be merged with currentValue
-      return currentValue.concat(itemUpdates);
-    }
-    return currentValue;
+    const deletedByRef = this.findDeletedByRef(fieldName, itemId);
+
+    const value = itemUpdates ? itemUpdates.toJS() : currentValue;
+    const result = (updatesByRef && !updatesByRef.isEmpty()) ?
+        _.uniqBy(value.concat(updatesByRef.toJS()), '$ref')
+         :
+        value;
+
+    // Remove values deleted by ref from the result
+    return _.filter(result,
+      (ref) => !deletedByRef.some((_ref) => ref.$ref === _ref.get('$ref'))
+    );
   }
 
   createPropertyGetter(key, itemId) {
-    return () => {
-      console.log('getting', this, key, itemId, this);
-      debugger;
-    };
+    const resourceName = _.findKey(this.descriptions, (desc) => desc.key === key);
+    const resource = this.resources[resourceName];
+
+    return () =>
+      this.generateField(
+        key,
+        itemId,
+        resource._items.getIn([itemId.toString(), key]).toJS()
+      );
   }
 
   update(itemId, value, key) {
     console.log(':: update', itemId, value, key);
-    debugger;
+    const resourceName = _.findKey(this.descriptions, (desc) => desc.key === key);
+    const description = this.descriptions[resourceName];
+    const targetDescription = this.descriptions[description.target];
+    const resource = this.resources[resourceName];
+    const target = this.resources[description.target];
+
+    // An update can mean several things for references.
+    // It can be a new reference, than just update the current resource.
+    // When it undoes a reference deleted by target resource. Undo that action.
+    // When it undoes a reference deleted by this resource, undo that action.
+
+    const _value = value; // Only keep the values
+
+    // WHen an update is also reflected in target updates, send an action to remove that.
+    // Find those updates where this item is touched
+
+    this.findUpdatedByRef(key, itemId)
+      .forEach((updateValue) => {
+        const targetId = _.get(
+          updateValue.get('$ref').match(`\/${description.target}\/(.+)`),
+          1
+        );
+        debugger;
+        // Find all updates where this resource is referenced.
+        if (!_.some(value, (ref) => ref.$ref === updateValue.get('$ref'))) {
+          // Trigger update on target reference to remove the value.
+          target.actions.update(
+            targetId,
+            target._updates
+                  .getIn([targetId, targetDescription.key])
+                  .filter((ref) =>
+                    ref.get('$ref') !== `/${targetDescription.target}/${itemId}`
+            ),
+            targetDescription.key
+          );
+          debugger;
+        // } else if () {
+        }
+      });
+
+    // if a value is removed, undo that remove.
+    this.findDeletedByRef(key, itemId)
+      .forEach((updateValue) => {
+        const targetId = _.get(
+          updateValue.get('$ref').match(`\/${description.target}\/(.+)`),
+          1
+        );
+        debugger;
+        if (_.some(value, (ref) => ref.$ref === updateValue.get('$ref'))) {
+          target.actions.update(
+            targetId,
+            target._updates
+                  .getIn([targetId, targetDescription.key], List())
+                  .concat([
+                    target._items
+                          .getIn([targetId, targetDescription.key])
+                          .find((ref) =>
+                            ref.get('$ref') === `/${targetDescription.target}/${itemId}`
+                          )
+                  ]).toJS(),
+            targetDescription.key
+          );
+        }
+      });
+
+    resource.actions.update(itemId, _value, key);
   }
 }
 
@@ -122,11 +222,11 @@ export default class BaseResource {
     this.fetching = state.get('fetching');
     this.pushing = state.get('pushing');
     this._updates = state.get('updates', Map());
-    this._items = state.get('items')
-                      .mergeWith(
-                        (prev, next) => (List.isList(prev) ? next : prev.merge(next)),
-                        this._updates
-                      );
+    this._items = state.get('items');
+                      // .mergeWith(
+                      //   (prev, next) => (List.isList(prev) ? next : prev.merge(next)),
+                      //   this._updates
+                      // );
 
     // For keeping a mapping between fields and references.
     this._references = {};
@@ -221,7 +321,12 @@ export default class BaseResource {
   }
   wrap() {
     // return a js list of objects with getters
-    return this._items.map(this.wrapReferencedResource.bind(this));
+    return this._items
+               .mergeWith(
+                 (prev, next) => (List.isList(prev) ? next : prev.merge(next)),
+                 this._updates
+               )
+               .map(this.wrapReferencedResource.bind(this));
   }
 
   get(id, notSetValue) {
