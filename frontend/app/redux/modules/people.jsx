@@ -9,6 +9,7 @@ import { push } from 'react-router-redux';
 const initialState = fromJS({
   items: {},
   updates: {},
+  loaded: false,
   fetching: false,
   pushing: false
 });

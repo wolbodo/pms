@@ -1,27 +1,23 @@
+import _ from 'lodash';
+import { push } from 'react-router-redux';
 import React, { PropTypes } from 'react';
 
 import { List, Head, Row } from 'components/list';
-
-import { connect } from 'react-redux';
-import { push } from 'react-router-redux';
-
-import _ from 'lodash';
 import fieldComponents from 'components/fields';
 
-@connect((state) => ({
-  people: state.get('people').toJS(),
-  auth: state.get('auth').toJS(),
-  fields: state.get('fields').toJS(),
-  roles: state.get('roles').toJS()
-}), {
-  pushState: push
-})
+import { connectResources, PeopleResource, RolesResource } from 'resources';
+
+@connectResources({
+  people: PeopleResource,
+  roles: RolesResource,
+},
+{ pushState: push })
 export default class PeopleView extends React.Component {
 
   static propTypes = {
-    fields: PropTypes.object,
     roles: PropTypes.object,
     people: PropTypes.object,
+    fields: PropTypes.object,
     pushState: PropTypes.func,
 
     routeParams: PropTypes.object,
@@ -30,43 +26,39 @@ export default class PeopleView extends React.Component {
     people: []
   };
 
-  loaded() {
-    const { fields, roles } = this.props;
+  get loaded() {
+    const { people, roles } = this.props;
 
-    return fields.loaded && roles.loaded;
+    return people.loaded && roles.loaded;
   }
 
   render() {
-    if (!this.loaded()) {
+    if (!this.loaded) {
       return (<h1>Loading</h1>);
     }
 
     const {
-      people, fields, roles,
+      people, roles,
       pushState, routeParams } = this.props;
-    const schema = _.get(fields, 'items.people');
-
-    // merge items with updated items.
-    const items = _.mergeWith(people.items, people.updates, (obj, src) =>
-                                (_.isArray(obj) ? src : undefined));
 
     // Get the current role/role
-    const currentRole = _.find(roles.items, (role) =>
-                                              role.name === routeParams.role_name);
+    const currentRole = roles.getByName(routeParams.role_name);
 
     // filter people in current role
-    const peopleSet = currentRole
-                    ? _.filter(items, (person) =>
-                        _.some(person.roles, _.matches({ $ref: `/roles/${currentRole.id}` }))
-                      )
-                    : items;
+    const peopleSet = people.filterByRole(currentRole);
 
     // Create a select title ;)
     const title = (
       <fieldComponents.Enum
         value={_.get(currentRole, 'name', 'all')}
         permissions={{ edit: true }}
-        options={_.fromPairs(_.map(roles.items, ({ name }) => [name, name]))}
+        options={
+          roles._items
+               .map((role) => role.get('name'))
+               .toMap()
+               .flip()
+               .map((value, key) => key).toJS()
+        }
         style={{
           fontSize: '22px',
           fontWeight: 'bold',
@@ -78,13 +70,13 @@ export default class PeopleView extends React.Component {
 
     return (
       <List title={title}>
-        <Head schema={schema} editLink />
+        <Head schema={people.schema} editLink />
         {_.map(peopleSet, (person) => (
           <Row
             className="click"
             key={person.id}
             item={person}
-            fields={schema.header}
+            fields={people.schema.header}
             edit={() => pushState(`/lid-${person.id}`)}
           />
         ))}
