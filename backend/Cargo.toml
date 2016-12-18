@@ -7,13 +7,13 @@ publish = false
 [dependencies]
 bodyparser = "*"
 iron = "*"
-iron-postgres-middleware = { git = "https://github.com/neoel/iron-postgres-middleware" }
+iron-postgres-middleware = { git = "https://github.com/wolbodo/iron-postgres-middleware" }
 persistent = "*"
-postgres = { version = "*", features = ["serde_json", "unix_socket"]}
-postgres_macros = "*"
+postgres = { version = "*", features = ["with-serde_json"]}
+postgres_macros = { git = "https://github.com/wolbodo/rust-postgres-macros" }
 router = "*"
 rust-crypto = "*"
 rustc-serialize = "*"
 serde = "*"
 serde_json = "*"
-serde_macros = "*"
+serde_derive = "*"

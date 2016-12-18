@@ -1,5 +1,5 @@
-#![feature(custom_derive, plugin)]
-#![plugin(postgres_macros, serde_macros)]
+#![feature(custom_derive, plugin, proc_macro)]
+#![plugin(postgres_macros)]
 extern crate bodyparser;
 extern crate crypto;
 extern crate iron;
@@ -11,6 +11,8 @@ extern crate router;
 extern crate rustc_serialize as serialize;
 extern crate serde;
 extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
@@ -318,32 +320,32 @@ impl AfterMiddleware for JsonResponse {
 fn main() {
 
     let router = router!(
-        post "/login"           => handle_login,
+        login:           post "/login"           => handle_login,
 
-        post "/people"          => handle_people_add,
-        get  "/people"          => handle_people_get,
-        get  "/people/:id"      => handle_people_get,
-        put  "/people/:id"      => handle_people_set,
+        people_add:      post "/people"          => handle_people_add,
+        people_get:      get  "/people"          => handle_people_get,
+        people_get_i:    get  "/people/:id"      => handle_people_get,
+        people_set:      put  "/people/:id"      => handle_people_set,
 
-        post "/roles"           => handle_roles_add,
-        get  "/roles"           => handle_roles_get,
-        get  "/roles/:id"       => handle_roles_get,
-        put  "/roles/:id"       => handle_roles_set,
+        roles_add:       post "/roles"           => handle_roles_add,
+        roles_get:       get  "/roles"           => handle_roles_get,
+        roles_get_i:     get  "/roles/:id"       => handle_roles_get,
+        roles_set:       put  "/roles/:id"       => handle_roles_set,
 
         // post "/permissions"     => handle_permissions_add,
-        get  "/permissions"     => handle_permissions_get,
+        permissions_get: get  "/permissions"     => handle_permissions_get,
         // get  "/permissions/:id" => handle_permissions_get,
         // put  "/permissions/:id" => handle_permissions_set,
 
-        get  "/fields"          => handle_fields_get,
-        get  "/fields/:table"   => handle_fields_get,
-        put  "/fields"          => handle_fields_edit
+        fields_get:      get  "/fields"          => handle_fields_get,
+        fields_get_i:    get  "/fields/:table"   => handle_fields_get,
+        fields_set:      put  "/fields"          => handle_fields_edit
     );
 
     let mut chain = Chain::new(router);
 
     // for unix domain sockets use: postgres://pms@%2Frun%2Fpostgresql
-    match PostgresMiddleware::new("postgres://pms:pms@postgres") {
+    match PostgresMiddleware::new("postgres://pms@%2Frun%2Fpostgresql") {
         Ok(pg_middleware) => {
             chain.link_before(pg_middleware);
             println!("Connected to database.");
