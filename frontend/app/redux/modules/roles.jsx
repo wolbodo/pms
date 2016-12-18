@@ -74,21 +74,9 @@ export function commit() {
 
     function post(/* body*/) {
       throw new Error('Not implemented');
-      // creates new person.
-      // TODO: Check for double post...
-      // return {
-      //   types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
-      //   uri: 'roles',
-      //   promise:
-      //     // Create new person in api.
-      //     API(token, 'roles', {
-      //       body
-      //     })
-      // };
     }
 
     function put(id, data) {
-      // Updates a person with data.
       // Fetches
       return {
         types: [PUSH, PUSH_SUCCESS, PUSH_FAIL],
@@ -175,14 +163,28 @@ const reducers = {
       }
     }),
 
-  [UPDATE]: (roles, { data }) =>
-    roles.updateIn(
+  [UPDATE]: (roles, { data }) => {
+    if (Immutable.is(roles.getIn(['items', data.id, data.key]), Immutable.fromJS(data.value))) {
+      // Remove value from updates, since it returns state to original.
+      // If the updates object becomes empty, filter it from the updates object
+      return roles.deleteIn(['updates', data.id, data.key])
+                   .update('updates',
+                      (updates) =>
+                       updates.filter((upObj) =>
+                          !upObj.filter((value, key) => key !== 'gid')
+                               .isEmpty()
+                       ) // update should contain more than just gid
+                    );
+    }
+
+    return roles.updateIn(
       ['updates', data.id],
-      (role = Immutable.Map()) => role.merge({
+      (role = new Map()) => role.merge({
         [data.key]: data.value,
         gid: data.gid
       })
-    ),
+    );
+  },
 
   [CLEAR]: () => initialState
 };

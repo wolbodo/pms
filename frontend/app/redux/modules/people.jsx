@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { fromJS, Map } from 'immutable';
+import { fromJS, Map, is } from 'immutable';
 
 import { apiAction, API } from 'redux/apiWrapper';
 import { CLEAR } from './clearState';
@@ -37,7 +37,7 @@ export function fetch() {
 
 export function update(id, value, key) {
   const _id = id.toString();
-  return (dispatch, getState) => (
+  return (dispatch, getState) =>
     dispatch({
       type: UPDATE,
       data: {
@@ -45,8 +45,7 @@ export function update(id, value, key) {
         gid: getState().getIn(['people', 'items', _id, 'gid']),
         value, key
       }
-    })
-  );
+    });
 }
 
 export function create() {
@@ -167,14 +166,28 @@ const reducers = {
   [REVERT]: (people) =>
     people.set('updates', Map()),
 
-  [UPDATE]: (people, { data }) =>
-    people.updateIn(
+  [UPDATE]: (people, { data }) => {
+    if (is(people.getIn(['items', data.id, data.key]), fromJS(data.value))) {
+      // Remove value from updates, since it returns state to original.
+      // If the updates object becomes empty, filter it from the updates object
+      return people.deleteIn(['updates', data.id, data.key])
+                   .update('updates',
+                      (updates) =>
+                       updates.filter((upObj) =>
+                          !upObj.filter((value, key) => key !== 'gid')
+                               .isEmpty()
+                       ) // update should contain more than just gid
+                    );
+    }
+
+    return people.updateIn(
       ['updates', data.id],
       (person = new Map()) => person.merge({
         [data.key]: data.value,
         gid: data.gid
       })
-    ),
+    );
+  },
 
   [CREATE]: (people, { data }) =>
     people.update('updates', (updates) =>

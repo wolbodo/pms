@@ -36,29 +36,29 @@ export default class RoleView extends React.Component {
       <div className="content">
       {roles.map((role) => (
         <mdl.Card
-          key={role.get('id')}
+          key={role.id}
           className="mdl-color--white mdl-shadow--2dp"
         >
           <mdl.CardTitle>
-            {role.get('name')}
+            {role.name}
           </mdl.CardTitle>
           <div className="fieldset">
             {_.map(editFields, (field) => (
               <Field
                 key={field}
                 field={roles.getSchemaForField(field)}
-                permissions={roles.getPermissionsForField(role.get('id'), field)}
-                onChange={(value) => roles.updateItem(role.get('id'), value, field)}
-                value={role.get(field)}
+                permissions={roles.getPermissionsForField(role.id, field)}
+                onChange={(value) => roles.updateItem(role.id, value, field)}
+                value={role[field]}
               />
             ))}
           </div>
           <div className="people">
             <Field
-              value={role.get('members').toJS()}
+              value={role.members()}
               onBlur={(value, key) => console.log('blur', value, key)}
-              onChange={(value) => roles.updateItem(role.get('id'), value, 'members')}
-              permissions={roles.getPermissionsForField(role.get('id'), 'members')}
+              onChange={(value) => roles.updateItem(role.id, value, 'members')}
+              permissions={roles.getPermissionsForField(role.id, 'members')}
               resource={roles.getReferencedResource('members')}
               field={roles.getSchemaForField('members')}
             />
