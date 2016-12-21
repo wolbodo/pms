@@ -7,10 +7,10 @@ publish = false
 [dependencies]
 bodyparser = "*"
 iron = "*"
-iron-postgres-middleware = { git = "https://github.com/wolbodo/iron-postgres-middleware" }
+iron-postgres-middleware = { git = "https://github.com/martinsp/iron-postgres-middleware" }
 persistent = "*"
 postgres = { version = "*", features = ["with-serde_json"]}
-postgres_macros = { git = "https://github.com/wolbodo/rust-postgres-macros" }
+postgres_macros = { git = "https://github.com/sfackler/rust-postgres-macros" }
 router = "*"
 rust-crypto = "*"
 rustc-serialize = "*"

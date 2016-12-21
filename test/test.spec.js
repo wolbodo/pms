@@ -21,9 +21,9 @@ const parser = new SwaggerParser()
 var dereferencedSwagger
 
 
-const BASE = 'http://pms.zaphod', API_ROOT = '/';
+// const BASE = 'http://pms.zaphod', API_ROOT = '/';
 // const BASE = 'https://pms.wlbd.nl', API_ROOT = '/';
-// const BASE = 'http://localhost:4242', API_ROOT = '/api';
+const BASE = 'http://localhost:4242', API_ROOT = '/api';
 
 var app = express();
 app.use(API_ROOT, proxy(BASE));

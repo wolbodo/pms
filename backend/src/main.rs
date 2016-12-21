@@ -344,6 +344,8 @@ fn main() {
 
     let mut chain = Chain::new(router);
 
+    println!("Connecting to database...");
+
     // for unix domain sockets use: postgres://pms@%2Frun%2Fpostgresql
     match PostgresMiddleware::new("postgres://pms@%2Frun%2Fpostgresql") {
         Ok(pg_middleware) => {
