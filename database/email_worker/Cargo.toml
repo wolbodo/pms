@@ -1,0 +1,15 @@
+[package]
+name = "emailnotifier"
+version = "0.0.1"
+authors = ["Benjamin W. Broersma <bw@broersma.com>"]
+publish = false
+
+[dependencies]
+postgres = { version = "*", features = ["with-serde_json"]}
+postgres_macros = "*"
+fallible-iterator = "*"
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
+chan = "*"
+chan-signal = "*"
