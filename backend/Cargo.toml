@@ -5,15 +5,15 @@ authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.c
 publish = false
 
 [dependencies]
-bodyparser = "*"
-iron = "*"
+bodyparser = "0.4.1"
+iron = "0.4.0"
 iron-postgres-middleware = { git = "https://github.com/martinsp/iron-postgres-middleware" }
-persistent = "*"
-postgres = { version = "*", features = ["with-serde_json"]}
+persistent = "0.2.1"
+postgres = { version = "0.13.4", features = ["with-serde_json"]}
 postgres_macros = { git = "https://github.com/sfackler/rust-postgres-macros" }
-router = "*"
-rust-crypto = "*"
-rustc-serialize = "*"
-serde = "*"
+router = "0.4.0"
+rust-crypto = "0.2.36"
+rustc-serialize = "0.3.22"
+serde = "0.8.20"
 serde_json = "*"
-serde_derive = "*"
+serde_derive = "0.8.20"

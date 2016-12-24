@@ -158,4 +158,25 @@ CREATE TRIGGER roles_permissions_modified BEFORE UPDATE ON roles_permissions FOR
 
 CREATE UNIQUE INDEX ON roles_permissions (roles_id, permissions_id) WHERE valid_till IS NULL;
 
+
+-- Create the email queue database.
+
+-- Usecases:
+-- send notification emails
+-- to: user
+-- store user gid
+-- store state for email processing
+-- 
+
+DROP TABLE IF EXISTS email_queue CASCADE;
+CREATE TABLE email_queue
+(
+    gid               INT NOT NULL DEFAULT NEXTVAL('gid_seq'),
+    data              JSONB NOT NULL DEFAULT '{}',
+    state             VARCHAR(255) default 'pending',
+    created           TIMESTAMPTZ DEFAULT NOW() NOT NULL
+
+)
+
+
 COMMIT;
