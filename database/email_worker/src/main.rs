@@ -15,14 +15,13 @@ use fallible_iterator::FallibleIterator;
 use std::time::Duration;
 use std::thread;
 use chan_signal::Signal;
-use std::sync::atomic::AtomicBool;
+// use std::sync::atomic::AtomicBool;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Message {
     gid: i64
 }
 
-let static exit = AtomicBool::new(false);
 
 fn main() {
 
@@ -44,7 +43,7 @@ fn main() {
 
 fn notify_worker(_sender: chan::Sender<()>) {
     let connection = Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None).unwrap();
-    connection.execute(sql!("LISTEN channelname"), &[]).unwrap();
+    connection.execute(sql!("LISTEN worker_queue"), &[]).unwrap();
     let notifications = connection.notifications();
 
     //timeout_iter & check None/Some/Err + None + signal-exit => exit

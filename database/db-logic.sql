@@ -93,8 +93,8 @@ BEGIN
         ) INTO STRICT payload
         FROM people p
             JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
-            JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
-        WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash AND r.name = 'login';
+            JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL AND r.name = 'login'
+        WHERE p.email = emailaddress AND CRYPT(password, p.password_hash) = p.password_hash;
     content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
     signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
     token = content || '.' || signature;
@@ -858,5 +858,131 @@ BEGIN
         VALUES (_people_id, _roles_id, (rights.payload->>'user')::INT, _data - 'people_id' - 'roles_id');
 
     RETURN people_get(rights, people_id);
+END;
+$function$;
+
+
+-- Email handing functions 
+
+-- create email
+CREATE OR REPLACE FUNCTION public.email_create(template TEXT, data JSONB)
+    RETURNS INT
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    email_id INT;
+BEGIN
+    INSERT INTO worker_queue (type, template, data)
+        VALUES ('email', template, data)
+        RETURNING gid INTO email_id;
+
+    PERFORM pg_notify('worker_queue', JSON_BUILD_OBJECT('gid', email_id)::TEXT);
+
+    RETURN email_id;
+END;
+$function$;
+
+
+-- Update state of email
+CREATE OR REPLACE FUNCTION public.claim_queue_item(gid INT, worker_id TEXT)
+    RETURNS INT
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    _gid ALIAS FOR gid;
+    _worker_id ALIAS FOR worker_id;
+    affected_id INT;
+BEGIN
+    UPDATE worker_queue
+        SET (state, worker_id) = ('claimed', _worker_id)
+        WHERE worker_queue.gid = _gid AND worker_queue.worker_id IS NULL
+        RETURNING worker_queue.gid INTO STRICT affected_id;
+    RETURN affected_id;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE EXCEPTION '%', jsonb_error('Other worker (%s) has claimed item with gid (%s)', worker_id, _gid::TEXT);
+END;
+$function$;
+
+
+
+
+-- Create password reset email
+CREATE OR REPLACE FUNCTION create_password_reset_token(user_id INT)
+    RETURNS JSONB
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    header JSONB;
+    payload JSONB;
+    content TEXT;
+    signature TEXT;
+    token TEXT;
+BEGIN
+    header = '{"type":"jwt", "alg":"hs256"}'::JSONB;
+    SELECT
+        JSONB_BUILD_OBJECT(
+            'user_gid', p.gid,
+            'exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '1q5 minutes'))
+        ) INTO STRICT payload
+        FROM people p
+            JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
+            JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL
+        WHERE p.id = user_id AND r.name = 'login';
+    content = jsonb_base64url(header) || '.' || jsonb_base64url(payload);
+    signature = TRANSLATE(ENCODE(HMAC(content, :'token_sha256_key', 'sha256'), 'base64'), '+/=', '-_');
+    token = content || '.' || signature;
+    RETURN JSONB_BUILD_OBJECT('token', token, 'user_id', user_id) || payload;
+END;
+$function$;
+
+
+
+-- Create password reset email
+CREATE OR REPLACE FUNCTION public.password_reset(user_email TEXT)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    email_context JSONB;
+    email_count INT;
+    user_id INT;
+    user_gid INT;
+BEGIN
+    -- Verify the user has a valid email and may login (fetches user_id)
+    SELECT INTO STRICT user_id, user_gid p.id, p.gid
+        FROM people p
+        JOIN people_roles pr ON pr.people_id = p.id AND pr.valid_till IS NULL
+        JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL AND r.name = 'login'
+        WHERE
+            p.email = user_email
+            AND p.valid_till IS NULL;
+
+    -- Verify the user doesn't have a password reset outstanding
+    SELECT COUNT(*) INTO email_count 
+    FROM worker_queue wq
+        WHERE
+            wq.template = 'password_reset'
+            AND wq.valid_till > NOW()
+            AND (wq.data->>'user_gid')::INT = user_gid;
+
+    IF email_count != 0 THEN
+        RAISE EXCEPTION '%', jsonb_error('A password reset email is already in the queue');
+    END IF;
+
+    -- Generate token
+    email_context = create_password_reset_token(user_id);
+
+    -- Create email
+    PERFORM email_create(
+        'password_reset',
+        email_context
+    );
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Triggered by validating the user email.
+        RAISE EXCEPTION '%', jsonb_error('Unknown user %s', user_email);
 END;
 $function$;

@@ -12,3 +12,4 @@ node_modules/
 npm-debug.log
 *.sublime-project
 *.sublime-workspace
+database/email_worker/target/
