@@ -906,8 +906,6 @@ END;
 $function$;
 
 
-
-
 -- Create password reset email
 CREATE OR REPLACE FUNCTION create_password_reset_token(user_id INT)
     RETURNS JSONB
@@ -924,7 +922,7 @@ BEGIN
     SELECT
         JSONB_BUILD_OBJECT(
             'user_gid', p.gid,
-            'exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '1q5 minutes'))
+            'exp', FLOOR(EXTRACT(EPOCH FROM NOW() + INTERVAL '15 minutes'))
         ) INTO STRICT payload
         FROM people p
             JOIN people_roles pr ON pr.people_id = p.id AND p.valid_till IS NULL AND pr.valid_till IS NULL
@@ -940,34 +938,34 @@ $function$;
 
 
 -- Create password reset email
-CREATE OR REPLACE FUNCTION public.password_reset(user_email TEXT)
-    RETURNS VOID
+CREATE OR REPLACE FUNCTION public.password_forgot(user_email TEXT)
+    RETURNS JSONB
     LANGUAGE plpgsql
 AS $function$
 DECLARE
     email_context JSONB;
-    email_count INT;
+    email_sent BOOL;
     user_id INT;
     user_gid INT;
 BEGIN
     -- Verify the user has a valid email and may login (fetches user_id)
-    SELECT INTO STRICT user_id, user_gid p.id, p.gid
+    -- Verify the user doesn't have a password reset outstanding
+    SELECT INTO STRICT user_id, user_gid, email_sent p.id, p.gid, wq.id IS NOT NULL
         FROM people p
         JOIN people_roles pr ON pr.people_id = p.id AND pr.valid_till IS NULL
         JOIN roles r ON pr.roles_id = r.id AND r.valid_till IS NULL AND r.name = 'login'
+
+        LEFT JOIN worker_queue wq
+            ON wq.template = 'password_reset'
+            AND wq.valid_till > NOW()
+            AND (wq.data->>'user_gid')::INT = p.gid
         WHERE
             p.email = user_email
-            AND p.valid_till IS NULL;
+            AND p.valid_till IS NULL
+        LIMIT 1
+        FOR UPDATE OF p; -- Lock people table when creating the password reset email
 
-    -- Verify the user doesn't have a password reset outstanding
-    SELECT COUNT(*) INTO email_count 
-    FROM worker_queue wq
-        WHERE
-            wq.template = 'password_reset'
-            AND wq.valid_till > NOW()
-            AND (wq.data->>'user_gid')::INT = user_gid;
-
-    IF email_count != 0 THEN
+    IF email_sent THEN
         RAISE EXCEPTION '%', jsonb_error('A password reset email is already in the queue');
     END IF;
 
@@ -980,9 +978,39 @@ BEGIN
         email_context
     );
 
+    RETURN JSONB_BUILD_OBJECT('success', 'Sending the email.');
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         -- Triggered by validating the user email.
         RAISE EXCEPTION '%', jsonb_error('Unknown user %s', user_email);
 END;
 $function$;
+
+
+CREATE OR REPLACE FUNCTION public.password_reset(reset_token TEXT, new_password TEXT)
+    RETURNS JSONB
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    token_payload JSONB;
+    people_id INT;
+BEGIN
+    -- Decode the reset_token
+    token_payload = parse_jwt(reset_token);
+
+    -- Set the new password
+    UPDATE people SET valid_till = NOW() WHERE gid = (token_payload->>'user_gid')::INT AND valid_till IS NULL RETURNING id INTO people_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '%', jsonb_error('Update not allowed, token not valid');
+    END IF;
+
+    INSERT INTO people (id, valid_from, email, phone, password_hash, modified_by, data)
+        SELECT id, valid_till, email, phone, crypt(new_password, gen_salt('bf', 4)), -1, data
+            FROM people WHERE id = people_id ORDER BY valid_till DESC LIMIT 1;
+
+
+    RETURN JSONB_BUILD_OBJECT('success', 'Password updated');
+END;
+$function$;
+
