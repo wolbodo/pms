@@ -1014,3 +1014,26 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.fetch_email_context(email_gid INT) 
+    RETURNS JSONB
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    email_context JSONB;
+BEGIN
+    SELECT JSON_BUILD_OBJECT(
+        'email_id', wq.id,
+        'data', wq.data || p.data,
+        'email', p.email
+    ) INTO STRICT email_context
+    FROM worker_queue wq
+    JOIN people p
+        ON p.id = (wq.data->>'user_id')::int
+        AND p.gid = (wq.data->>'user_gid')::int
+        AND p.valid_till IS NULL
+    WHERE wq.gid = email_gid
+        AND wq.valid_till > NOW();
+
+    RETURN email_context;
+END;
+$function$;

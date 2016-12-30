@@ -13,3 +13,4 @@ npm-debug.log
 *.sublime-project
 *.sublime-workspace
 database/email_worker/target/
+database/email_worker/.env
