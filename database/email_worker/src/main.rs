@@ -17,7 +17,6 @@ use std::path::Path;
 use std::thread;
 use std::time::Duration;
 use std::collections::HashMap;
-use std::io;
 
 use dotenv::dotenv;
 use std::env;
@@ -90,10 +89,20 @@ fn main() {
     println!("Clean exit.");
 }
 
+macro_rules! get_env_var {
+    ($name:expr, $default:expr) => (match env::var($name) {
+        Ok(ref s) => s.as_str(),
+        Err(_) => $default
+    })
+}
+
 fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Message) {
 
     // Fetch the email from the db.
-    let stmt = connection.prepare(sql!("SELECT fetch_email_context(email_gid := $1)")).unwrap();
+    let stmt = match connection.prepare(sql!("SELECT fetch_email_context(email_gid := $1)")) {
+        Ok(stmt) => stmt,
+        Err(err) => panic!("preparing statement {:?}", err)
+    };
 
     let rows = match stmt.query(&[&message.gid]) {
         Ok(rows) => rows,
@@ -105,19 +114,29 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
         None => panic!("Id not found (or no read access)".to_string())
     };
 
-    let template = mustache::compile_path(Path::new("templates/test.mustache")).unwrap();
+    let template = match mustache::compile_path(Path::new("templates/test.mustache")) {
+        Ok(t) => t,
+        Err(err) => panic!("Template error: {:?}", err)
+    };
 
     let mustache_value = value_to_mustache(object.clone());
     let mut buf = Vec::new();
-    template.render_data(&mut buf, &mustache_value).unwrap();
-
-    let email = EmailBuilder::new()
+    match template.render_data(&mut buf, &mustache_value) {
+        Ok(_) => println!("Rendered template"),
+        Err(err) => panic!("Rendering template {:?}", err),
+    };
+    let email = match EmailBuilder::new()
                 .to("a.esselink@gmail.com")
                 .from("server@dxlb.nl")
                 .subject("TESTING")
-                .body(String::from_utf8(buf).unwrap().as_str())
-                .build()
-                .unwrap();
+                .body(match String::from_utf8(buf) {
+        Ok(ref string) => string.as_str(),
+        Err(err) => panic!("failed converting vec into string {:?}", err)
+    })
+                .build() {
+        Ok(email) => email,
+        Err(err) => panic!("Failed building email {:?}", err)
+    };
 
     let result = mailer.send(email);
 
@@ -130,17 +149,24 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
 
 fn notify_worker(_sender: chan::Sender<()>) {
 
-    let connection = Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None).unwrap();
-    connection.execute(sql!("LISTEN worker_queue"), &[]).unwrap();
+    let connection = match Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None) {
+        Ok(connection) => connection,
+        Err(err) => panic!("Error connecting to database{:?}", err)
+    };
+
+    match connection.execute(sql!("LISTEN worker_queue"), &[]) {
+        Ok(_) => println!("Successfully listening to worker_queue"),
+        Err(err) => panic!("Error listening {:?}", err)
+    };
     let notifications = connection.notifications();
 
 
     // Connect to a remote server on a custom port
-    let mut mailer = SmtpTransportBuilder::new((env::var("SMTP_HOST").unwrap().as_str(), 587)).unwrap()
+    let mut mailer = SmtpTransportBuilder::new((get_env_var!("SMTP_HOST", "localhost"), 587)).unwrap()
         // Set the name sent during EHLO/HELO, default is `localhost`
         // .hello_name("localhost")
         // Add credentials for authentication
-        .credentials(env::var("SMTP_USER").unwrap().as_str(), env::var("SMTP_PASSWORD").unwrap().as_str())
+        .credentials(get_env_var!("SMTP_USER", "user@example.com"), get_env_var!("SMTP_PASSWORD", "password"))
         // Specify a TLS security level. You can also specify an SslContext with
         // .ssl_context(SslContext::Ssl23)
         .security_level(SecurityLevel::AlwaysEncrypt)
