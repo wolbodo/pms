@@ -882,9 +882,45 @@ BEGIN
 END;
 $function$;
 
+-- Error in creating the email or emailing
+CREATE OR REPLACE FUNCTION public.queue_error(gid INT, error JSONB)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    ret_gid INT;
+    _gid ALIAS FOR gid;
+    _error ALIAS FOR error;
+BEGIN
+    UPDATE worker_queue
+        SET (state, error) = ('error', _error)
+        WHERE worker_queue.gid = _gid
+        RETURNING worker_queue.gid INTO STRICT ret_gid;
+    RETURN;
+END;
+$function$;
+
+-- Error in creating the email or emailing
+CREATE OR REPLACE FUNCTION public.queue_done(gid INT)
+    RETURNS VOID
+    LANGUAGE plpgsql
+AS $function$
+DECLARE
+    ret_gid INT;
+    _gid ALIAS FOR gid;
+BEGIN
+    UPDATE worker_queue
+        SET (state, error) = ('done', error)
+        WHERE worker_queue.gid = _gid
+        RETURNING worker_queue.gid INTO STRICT ret_gid;
+    RETURN;
+END;
+$function$;
+
+
 
 -- Update state of email
-CREATE OR REPLACE FUNCTION public.claim_queue_item(gid INT, worker_id TEXT)
+CREATE OR REPLACE FUNCTION public.queue_claim(gid INT, worker_id TEXT)
     RETURNS INT
     LANGUAGE plpgsql
 AS $function$
@@ -957,6 +993,7 @@ BEGIN
 
         LEFT JOIN worker_queue wq
             ON wq.template = 'password_reset'
+            AND wq.state != 'error'
             AND wq.valid_till > NOW()
             AND (wq.data->>'user_gid')::INT = p.gid
         WHERE
@@ -966,7 +1003,7 @@ BEGIN
         FOR UPDATE OF p; -- Lock people table when creating the password reset email
 
     IF email_sent THEN
-        RAISE EXCEPTION '%', jsonb_error('A password reset email is already in the queue');
+        RAISE EXCEPTION '%', jsonb_error('A password reset email is already recently created, try again in 5 minutes.');
     END IF;
 
     -- Generate token
