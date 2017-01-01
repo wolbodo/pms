@@ -42,6 +42,10 @@ struct Message {
     gid: i32
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct SimpleError {
+    error: String
+}
 
 fn value_to_mustache(value: Value) -> Data {
     // Turns a serde_json::Value into mustache::Data
@@ -96,46 +100,79 @@ macro_rules! get_env_var {
     })
 }
 
+macro_rules! email_error {
+    ($gid:expr, $error:expr, $connection:expr) => ({
+        match $connection.execute(
+            sql!("SELECT queue_error(gid := $1, error := $2)"),
+            &[&$gid, &serde_json::to_value(&SimpleError{error: $error})]
+        ) {
+            Ok(_) => (),
+            Err(err) => panic!(format!("error handling error {:?}", err)) // Probably should just error log and return....
+        };
+        return
+    })
+}
+
+
 fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Message) {
+
+    // Claim the email in the database
+    println!("Claiming email: {:?}", message);
+    match connection.execute(
+        sql!("SELECT queue_claim(gid := $1, worker_id := $2)"),
+        &[&message.gid, &"email_worker-1"]
+    ) {
+        Ok(_) => (),
+        Err(err) => return println!("error claiming email {:?}", err) // Probably should just error log and return....
+    };
 
     // Fetch the email from the db.
     let stmt = match connection.prepare(sql!("SELECT fetch_email_context(email_gid := $1)")) {
         Ok(stmt) => stmt,
-        Err(err) => panic!("preparing statement {:?}", err)
+        Err(err) => email_error!(message.gid, format!("preparing statement {:?}", err), connection)
     };
 
     let rows = match stmt.query(&[&message.gid]) {
         Ok(rows) => rows,
-        Err(PgError::Db(err)) => panic!("pgerror({:?})", err),
-        Err(err) => panic!("othererr({:?})", err),
+        Err(PgError::Db(err)) => email_error!(message.gid, format!("pgerror({:?})", err), connection),
+        Err(err) => email_error!(message.gid, format!("othererr({:?})", err), connection),
     };
     let object: Value = match rows.get(0).get(0) {
         Some(value) => value,
-        None => panic!("Id not found (or no read access)".to_string())
+        None => email_error!(message.gid, format!("Id not found (or no read access)"), connection)
     };
 
     let template = match mustache::compile_path(Path::new("templates/test.mustache")) {
         Ok(t) => t,
-        Err(err) => panic!("Template error: {:?}", err)
+        Err(err) => email_error!(message.gid, format!("Template error: {:?}", err), connection)
     };
+
+
 
     let mustache_value = value_to_mustache(object.clone());
     let mut buf = Vec::new();
     match template.render_data(&mut buf, &mustache_value) {
         Ok(_) => println!("Rendered template"),
-        Err(err) => panic!("Rendering template {:?}", err),
+        Err(err) => email_error!(message.gid, format!("Rendering template {:?}", err), connection),
     };
+
+    let email_address = match object.pointer("/email") {
+                    Some(&Value::String(ref string)) => string.as_str(),
+                    _ => ""
+                };
+
+    println!("Emailing to: {:?}", email_address);
     let email = match EmailBuilder::new()
-                .to("a.esselink@gmail.com")
+                .to(email_address)
                 .from("server@dxlb.nl")
                 .subject("TESTING")
                 .body(match String::from_utf8(buf) {
         Ok(ref string) => string.as_str(),
-        Err(err) => panic!("failed converting vec into string {:?}", err)
+        Err(err) => email_error!(message.gid, format!("failed converting vec into string {:?}", err), connection)
     })
                 .build() {
         Ok(email) => email,
-        Err(err) => panic!("Failed building email {:?}", err)
+        Err(err) => email_error!(message.gid, format!("Failed building email {:?}", err), connection)
     };
 
     let result = mailer.send(email);
@@ -144,6 +181,7 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
         println!("Email sent");
     } else {
         println!("Could not send email: {:?}", result);
+        email_error!(message.gid, format!("Could not send email: {:?}", result), connection);
     }
 }
 
@@ -151,19 +189,28 @@ fn notify_worker(_sender: chan::Sender<()>) {
 
     let connection = match Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None) {
         Ok(connection) => connection,
-        Err(err) => panic!("Error connecting to database{:?}", err)
+        Err(err) => panic!(format!("Error connecting to database{:?}", err))
     };
 
     match connection.execute(sql!("LISTEN worker_queue"), &[]) {
         Ok(_) => println!("Successfully listening to worker_queue"),
-        Err(err) => panic!("Error listening {:?}", err)
+        Err(err) => panic!(format!("Error listening {:?}", err))
     };
     let notifications = connection.notifications();
 
+    println!("Connceting to: {:?} {:?}", 
+        get_env_var!("SMTP_HOST", "127.0.0.1"),
+        u16::from_str_radix(get_env_var!("SMTP_PORT", "25"), 10).unwrap()
+    );
 
     // Connect to a remote server on a custom port
-    let mut mailer = SmtpTransportBuilder::new((get_env_var!("SMTP_HOST", "localhost"), 587)).unwrap()
-        // Set the name sent during EHLO/HELO, default is `localhost`
+    let mut mailer = match SmtpTransportBuilder::new((
+        get_env_var!("SMTP_HOST", "127.0.0.1"),
+        u16::from_str_radix(get_env_var!("SMTP_PORT", "25"), 10).unwrap()
+    )) {
+        Ok(mailer) => mailer,
+        Err(err) => panic!(format!("Cannot create conncetion to smtp server {:?}", err))
+    }   // Set the name sent during EHLO/HELO, default is `localhost`
         // .hello_name("localhost")
         // Add credentials for authentication
         .credentials(get_env_var!("SMTP_USER", "user@example.com"), get_env_var!("SMTP_PASSWORD", "password"))
@@ -181,8 +228,8 @@ fn notify_worker(_sender: chan::Sender<()>) {
     //timeout_iter & check None/Some/Err + None + signal-exit => exit
     loop {
         let mut it = notifications.timeout_iter(Duration::from_secs(15));
-        while match it.next().unwrap() {
-            Some(msg) => {
+        while match it.next() {
+            Ok(Some(msg)) => {
                 let payload = msg.payload;
                 // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
                 // I would like the no errors to be Errors too.
@@ -192,8 +239,9 @@ fn notify_worker(_sender: chan::Sender<()>) {
                 handle_email(&connection, &mut mailer, deserialized);
                 true
             },
+            Err(err) => panic!(format!("Error getting notification {:?}", err)),
             _ => false
-        } {};
+        } {}
     }
 
     connection.finish().unwrap();
