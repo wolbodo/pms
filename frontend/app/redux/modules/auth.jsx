@@ -62,9 +62,10 @@ const reducers = {
     });
   },
 
-  [FAIL]: (auth) =>
+  [FAIL]: (auth, { error: { error } }) =>
     auth.merge({
-      fetching: false
+      fetching: false,
+      error
     }),
 
   [CLEAR]: () => initialState

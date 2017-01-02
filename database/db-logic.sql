@@ -1061,7 +1061,8 @@ BEGIN
     SELECT JSON_BUILD_OBJECT(
         'email_id', wq.id,
         'data', wq.data || p.data,
-        'email', p.email
+        'email', p.email,
+        'template', wq.template
     ) INTO STRICT email_context
     FROM worker_queue wq
     JOIN people p

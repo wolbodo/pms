@@ -14,3 +14,4 @@ npm-debug.log
 *.sublime-workspace
 database/email_worker/target/
 database/email_worker/.env
+database/email_worker/Cargo.lock

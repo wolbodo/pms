@@ -102,11 +102,12 @@ macro_rules! get_env_var {
 
 macro_rules! email_error {
     ($gid:expr, $error:expr, $connection:expr) => ({
+        let err = serde_json::to_value(&SimpleError{error: $error});
         match $connection.execute(
             sql!("SELECT queue_error(gid := $1, error := $2)"),
-            &[&$gid, &serde_json::to_value(&SimpleError{error: $error})]
+            &[&$gid, &err]
         ) {
-            Ok(_) => (),
+            Ok(_) => println!("Error: {:?}", err),
             Err(err) => panic!(format!("error handling error {:?}", err)) // Probably should just error log and return....
         };
         return
@@ -142,7 +143,12 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
         None => email_error!(message.gid, format!("Id not found (or no read access)"), connection)
     };
 
-    let template = match mustache::compile_path(Path::new("templates/test.mustache")) {
+    // println!("{:?}", object);
+    let template_path = match object.pointer("/template") {
+        Some(&Value::String(ref string)) => format!("templates/{}.mustache", string),
+        _ => email_error!(message.gid, format!("Email template not found"), connection)
+    };
+    let template = match mustache::compile_path(Path::new(template_path.as_str())) {
         Ok(t) => t,
         Err(err) => email_error!(message.gid, format!("Template error: {:?}", err), connection)
     };
@@ -164,9 +170,9 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
     println!("Emailing to: {:?}", email_address);
     let email = match EmailBuilder::new()
                 .to(email_address)
-                .from("server@dxlb.nl")
+                .from("server@wlbd.nl")
                 .subject("TESTING")
-                .body(match String::from_utf8(buf) {
+                .html(match String::from_utf8(buf) {
         Ok(ref string) => string.as_str(),
         Err(err) => email_error!(message.gid, format!("failed converting vec into string {:?}", err), connection)
     })
@@ -179,6 +185,15 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
 
     if result.is_ok() {
         println!("Email sent");
+
+        match connection.execute(
+            sql!("SELECT queue_done(gid := $1)"),
+            &[&message.gid]
+        ) {
+            Ok(_) => (),
+            Err(err) => return println!("error claiming email {:?}", err) // Probably should just error log and return....
+        };
+        
     } else {
         println!("Could not send email: {:?}", result);
         email_error!(message.gid, format!("Could not send email: {:?}", result), connection);
