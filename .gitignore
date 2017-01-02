@@ -15,3 +15,5 @@ npm-debug.log
 database/email_worker/target/
 database/email_worker/.env
 database/email_worker/Cargo.lock
+backend-rocket/target/
+backend-rocket/Cargo.lock

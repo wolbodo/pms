@@ -1,0 +1,16 @@
+[package]
+name = "backend-rocket"
+version = "0.1.0"
+authors = ["Dexter <dexter@dexterlabs.nl>"]
+
+[dependencies]
+rocket = "*"
+rocket_codegen = "*"
+r2d2 = "*"
+r2d2_postgres = "*"
+postgres = "*"
+serde_json = "*"
+lazy_static = "*"
+
+[dependencies.rocket_contrib]
+features = ["json"]
