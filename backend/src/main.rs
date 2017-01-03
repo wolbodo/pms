@@ -316,8 +316,8 @@ fn handle_password_reset(req: &mut Request) -> IronResult<Response> {
         req => req,
         func => "password_reset",
         args => (
-            reset_token get_param!(req, "token", String),
-            new_password ....
+            reset_token get_param!(req, "token", String)
+            // new_password ....
         )
     ))
 }
@@ -363,8 +363,8 @@ fn main() {
         fields_get_i:    get  "/fields/:table"   => handle_fields_get,
         fields_set:      put  "/fields"          => handle_fields_edit
 
-        password_forgot  get  "/password_forgot/:email" => handle_password_forgot,
-        password_reset   get  "/password_reset/:token"  => handle_password_reset,
+        // password_forgot  get  "/password_forgot/:email" => handle_password_forgot,
+        // password_reset   get  "/password_reset/:token"  => handle_password_reset,
     );
 
     let mut chain = Chain::new(router);

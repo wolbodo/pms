@@ -8,9 +8,13 @@ rocket = "*"
 rocket_codegen = "*"
 r2d2 = "*"
 r2d2_postgres = "*"
-postgres = "*"
+postgres = { version = "*", features = ["with-serde_json"]}
+serde = "*"
 serde_json = "*"
+serde_derive = "*"
 lazy_static = "*"
+postgres_macros = { git = "https://github.com/sfackler/rust-postgres-macros" }
+
 
 [dependencies.rocket_contrib]
 features = ["json"]
