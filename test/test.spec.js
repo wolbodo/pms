@@ -321,11 +321,11 @@ describe('Using pms', function () {
     })
   })
 
-  describe('as board', testUser('sammy@example.com', '1234'))
+  describe('as board', testUser('sammy@wlbd.nl', '1234'))
 
-  describe('as member', testUser('wikkert@example.com', '1234'))
+  describe('as member', testUser('dexter@wlbd.nl', '1234'))
 
-  describe('as admin', testUser('admin@example.com', '1234'))
+  describe('as admin', testUser('dexter+admin@wlbd.nl', '1234'))
 
   describe('unauthorized', function () {
     const session = new Session()
@@ -333,14 +333,14 @@ describe('Using pms', function () {
     it('can not login.', function () {
       return session.swagger()
         .post('/api/login')
-        .send({'user': 'wikkert@example.com', 'password': '1234s'})
+        .send({'user': 'dexter@wlbd.nl', 'password': '1234s'})
         .expectStatus(400)
         .end()
     })
     it('can not login with null password', function () {
       return session.hippie()
         .post('/api/login')
-        .send({'user': 'wikkert@example.com', 'password': null})
+        .send({'user': 'dexter@wlbd.nl', 'password': null})
         .expectStatus(400)
         .end()
     })
