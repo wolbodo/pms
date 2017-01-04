@@ -73,7 +73,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for APIContext {
     fn from_request(request: &'a Request<'r>) -> request::Outcome<APIContext, ()> {
         let keys: Vec<_> = request.headers().get("Authorization").collect();
         if keys.len() != 1 {
-            return Outcome::Failure((Status::BadRequest, ()));
+            return Outcome::Failure((Status::Unauthorized, ()));
         }
 
         let key = keys[0];
@@ -204,7 +204,7 @@ fn fields_get_i(api: APIContext, table: String) -> Result<JSON<Value>, status::C
 }
 
 #[put("/fields")]
-fn fields_set(api: APIContext) -> Result<JSON<Value>, status::Custom<String>> {
+fn fields_set() -> Result<JSON<Value>, status::Custom<String>> {
   Ok(JSON(Value::Bool(false)))
   // db_call!(
     // "SELECT fields_set(token := $1, people_id := $2, data := $3);",
@@ -213,27 +213,64 @@ fn fields_set(api: APIContext) -> Result<JSON<Value>, status::Custom<String>> {
   // )
 }
 
+#[derive(Serialize, Deserialize)]
+struct PasswordForgot {
+  email: String
+}
+
+#[post("/password_forgot", data="<forgot>")]
+fn password_forgot(forgot: JSON<PasswordForgot>) -> Result<JSON<Value>, status::Custom<String>> {
+  db_call!(
+    "SELECT password_forgot(user_email := $1);",
+    &[&forgot.email],
+    status::Custom(Status::InternalServerError, "Id not found (or no read access)".to_string())
+  )
+  // db_call!(
+    // "SELECT fields_set(token := $1, people_id := $2, data := $3);",
+    // &[&api.token, &id, &person.0],
+    // status::Custom(Status::InternalServerError, "Id not found (or no read access)".to_string())
+  // )
+}
+
+#[derive(Serialize, Deserialize)]
+struct PasswordReset {
+  token: String,
+  password: String
+}
+
+
+#[post("/password_reset", data="<reset>")]
+fn password_reset(reset: JSON<PasswordReset>) -> Result<JSON<Value>, status::Custom<String>> {
+  db_call!(
+    "SELECT password_reset(reset_token := $1, new_password := $2);",
+    &[&reset.token, &reset.password],
+    status::Custom(Status::InternalServerError, "Id not found (or no read access)".to_string())
+  )
+}
+
+
+
+
 #[error(400)]
 fn badrequest() -> JSON<Value> { 
   JSON(Value::from_str("{\"error\":\"No Authorization header found\"}").unwrap())
 }
 
+#[error(401)]
+fn unauthorized() -> JSON<Value> { 
+  JSON(Value::from_str("{\"error\":\"An error occurred on the server\"}").unwrap())
+}
+
 fn main() {
     rocket::ignite().mount("/", routes![
       login,
-      people_add,
-      people_get,
-      people_get_i,
-      people_set_i,
-      roles_add,
-      roles_get,
-      roles_get_i,
-      roles_set,
+      people_add, people_get, people_get_i, people_set_i,
+      roles_add, roles_get, roles_get_i, roles_set,
       permissions_get,
-      fields_get,
-      fields_get_i,
-      fields_set,
+      fields_get, fields_get_i, fields_set,
+      password_forgot, password_reset,
+
     ])
-    .catch(errors![badrequest])
+    .catch(errors![badrequest, unauthorized])
     .launch();
 }

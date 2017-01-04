@@ -13,6 +13,12 @@ const initialState = Immutable.fromJS({
 const START = 'pms/auth/LOGIN_START';
 const SUCCESS = 'pms/auth/LOGIN_SUCCESS';
 const FAIL = 'pms/auth/LOGIN_FAIL';
+const FORGOT_START = 'pms/auth/FORGOT_START';
+const FORGOT_SUCCESS = 'pms/auth/FORGOT_SUCCESS';
+const FORGOT_FAIL = 'pms/auth/FORGOT_FAIL';
+const RESET_START = 'pms/auth/RESET_START';
+const RESET_SUCCESS = 'pms/auth/RESET_SUCCESS';
+const RESET_FAIL = 'pms/auth/RESET_FAIL';
 const LOGOUT = 'pms/auth/LOGOUT';
 
 export function login(username, password) {
@@ -23,6 +29,30 @@ export function login(username, password) {
       body: {
         user: username,
         password
+      }
+    }
+  });
+}
+
+export function passwordForgot(email) {
+  return apiAction({
+    types: [FORGOT_START, FORGOT_SUCCESS, FORGOT_FAIL],
+    uri: 'password_forgot',
+    options: {
+      body: {
+        email
+      }
+    }
+  });
+}
+
+export function passwordReset(token, password) {
+  return apiAction({
+    types: [RESET_START, RESET_SUCCESS, RESET_FAIL],
+    uri: 'password_reset',
+    options: {
+      body: {
+        token, password
       }
     }
   });
@@ -41,7 +71,6 @@ const reducers = {
       loggedIn: false,
       fetching: true
     }),
-
   [SUCCESS]: (auth, { data: { token, permissions } }) => {
     // get the userinfo from the token.
     const user = JSON.parse(
@@ -61,8 +90,37 @@ const reducers = {
       user
     });
   },
-
   [FAIL]: (auth, { error: { error } }) =>
+    auth.merge({
+      fetching: false,
+      error
+    }),
+
+  [FORGOT_START]: (auth) =>
+    auth.merge({
+      fetching: true
+    }),
+  [FORGOT_SUCCESS]: (auth, { data: { success } }) =>
+    auth.merge({
+      fetching: false,
+      success
+    }),
+  [FORGOT_FAIL]: (auth, { error }) =>
+    auth.merge({
+      fetching: false,
+      error
+    }),
+
+  [RESET_START]: (auth) =>
+    auth.merge({
+      fetching: true
+    }),
+  [RESET_SUCCESS]: (auth, { data: { success } }) =>
+    auth.merge({
+      fetching: false,
+      success
+    }),
+  [RESET_FAIL]: (auth, { error }) =>
     auth.merge({
       fetching: false,
       error

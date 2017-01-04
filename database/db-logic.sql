@@ -1012,7 +1012,7 @@ BEGIN
     -- Create email
     PERFORM email_create(
         'password_reset',
-        email_context
+        email_context || '{"subject": "Wachtwoord herstellen."}'::JSONB
     );
 
     RETURN JSONB_BUILD_OBJECT('success', 'Sending the email.');

@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import * as mdl from 'react-mdl';
 
+// import { Link } from 'react-router';
+
 import { connect } from 'react-redux';
 
 import * as authActions from 'redux/modules/auth';
@@ -9,11 +11,14 @@ import * as authActions from 'redux/modules/auth';
   (state) => ({
     people: state.get('people').toJS(),
     auth: state.get('auth').toJS()
-  }),
-  { login: authActions.login })
+  }), {
+    login: authActions.login,
+    passwordForgot: authActions.passwordForgot
+  })
 export default class Login extends React.Component {
   static propTypes = {
     login: PropTypes.func,
+    passwordForgot: PropTypes.func,
     auth: PropTypes.object
   };
 
@@ -27,15 +32,16 @@ export default class Login extends React.Component {
   }
 
   onChange(name, value) {
-    this.state[name] = value;
-
-    this.setState(this.state);
+    this.setState({
+      ...this.state,
+      [name]: value
+    });
   }
 
   handleSubmit(event) {
     event.preventDefault();
 
-    this.props.login(this.state.name, this.state.password);
+    this.props.login(this.state.email, this.state.password);
   }
 
   render() {
@@ -46,8 +52,10 @@ export default class Login extends React.Component {
           <mdl.CardTitle>Log in!</mdl.CardTitle>
           <div className="mdl-card__form">
             <mdl.Textfield
-              label="Naam"
-              onChange={({ target }) => this.onChange('name', target.value)}
+              label="Email"
+              onChange={({ target }) => this.onChange('email', target.value)}
+              pattern=".+@.+"
+              error="Input is not an emailaddress!"
               floatingLabel
             />
             <mdl.Textfield
@@ -60,7 +68,14 @@ export default class Login extends React.Component {
             {error && (
               <p className="error">{error}</p>
             )}
-            <a onClick={() => {}}>Wachtwoord vergeten?</a>
+            <a href=""
+              onClick={(ev) => {
+                ev.preventDefault();
+                this.props.passwordForgot(this.state.email);
+
+                debugger;
+              }}
+            >Wachtwoord vergeten?</a>
           </div>
       </mdl.Card>
       </form>

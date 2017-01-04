@@ -151,7 +151,6 @@ class Reference {
           updateValue.get('$ref').match(`\/${description.target}\/(.+)`),
           1
         );
-        debugger;
         // Find all updates where this resource is referenced.
         if (!_.some(value, (ref) => ref.$ref === updateValue.get('$ref'))) {
           // Trigger update on target reference to remove the value.
@@ -164,7 +163,6 @@ class Reference {
             ),
             targetDescription.key
           );
-          debugger;
         // } else if () {
         }
       });
@@ -176,7 +174,6 @@ class Reference {
           updateValue.get('$ref').match(`\/${description.target}\/(.+)`),
           1
         );
-        debugger;
         if (_.some(value, (ref) => ref.$ref === updateValue.get('$ref'))) {
           target.actions.update(
             targetId,

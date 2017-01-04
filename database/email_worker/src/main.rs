@@ -153,8 +153,6 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
         Err(err) => email_error!(message.gid, format!("Template error: {:?}", err), connection)
     };
 
-
-
     let mustache_value = value_to_mustache(object.clone());
     let mut buf = Vec::new();
     match template.render_data(&mut buf, &mustache_value) {
@@ -163,15 +161,21 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
     };
 
     let email_address = match object.pointer("/email") {
-                    Some(&Value::String(ref string)) => string.as_str(),
-                    _ => ""
-                };
+        Some(&Value::String(ref string)) => string.as_str(),
+        _ => ""
+    };
+
+    let email_subject = match object.pointer("/data/subject") {
+        Some(&Value::String(ref string)) => string.as_str(),
+        _ => "Email from PMS"
+    };
+
 
     println!("Emailing to: {:?}", email_address);
     let email = match EmailBuilder::new()
                 .to(email_address)
                 .from("server@wlbd.nl")
-                .subject("TESTING")
+                .subject(email_subject)
                 .html(match String::from_utf8(buf) {
         Ok(ref string) => string.as_str(),
         Err(err) => email_error!(message.gid, format!("failed converting vec into string {:?}", err), connection)

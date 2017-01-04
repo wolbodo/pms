@@ -16,11 +16,8 @@ export default class PeopleResource extends BaseResource {
     return role ?
       _.filter(
         this.wrap(),
-        (person) => {
-          debugger;
-          return person.get('roles')
-                          .some((_role) => _role.get('$ref') === `/roles/${role.id}`);
-        }
+        (person) => person.get('roles')
+                          .some((_role) => _role.get('$ref') === `/roles/${role.id}`)
       ) : this.all();
   }
 }
