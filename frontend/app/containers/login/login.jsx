@@ -45,7 +45,7 @@ export default class Login extends React.Component {
   }
 
   render() {
-    const { auth: { error } } = this.props;
+    const { auth: { error, success } } = this.props;
     return (
       <form className="content" onSubmit={this.handleSubmit}>
         <mdl.Card className="login mdl-color--white mdl-shadow--2dp">
@@ -65,15 +65,14 @@ export default class Login extends React.Component {
               floatingLabel
             />
             <mdl.Button primary raised>Log in</mdl.Button>
-            {error && (
-              <p className="error">{error}</p>
-            )}
+            {success
+              ? (<p className="success">{success}</p>)
+              : (error && (<p className="error">{error}</p>))
+            }
             <a href=""
               onClick={(ev) => {
                 ev.preventDefault();
                 this.props.passwordForgot(this.state.email);
-
-                debugger;
               }}
             >Wachtwoord vergeten?</a>
           </div>

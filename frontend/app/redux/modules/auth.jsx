@@ -84,6 +84,7 @@ const reducers = {
 
     return auth.merge({
       loggedIn: true,
+      error: undefined,
       fetching: false,
       token,
       permissions,
@@ -103,9 +104,10 @@ const reducers = {
   [FORGOT_SUCCESS]: (auth, { data: { success } }) =>
     auth.merge({
       fetching: false,
+      error: undefined,
       success
     }),
-  [FORGOT_FAIL]: (auth, { error }) =>
+  [FORGOT_FAIL]: (auth, { error: { error } }) =>
     auth.merge({
       fetching: false,
       error
@@ -118,9 +120,10 @@ const reducers = {
   [RESET_SUCCESS]: (auth, { data: { success } }) =>
     auth.merge({
       fetching: false,
-      success
+      error: undefined,
+      success,
     }),
-  [RESET_FAIL]: (auth, { error }) =>
+  [RESET_FAIL]: (auth, { error: { error } }) =>
     auth.merge({
       fetching: false,
       error

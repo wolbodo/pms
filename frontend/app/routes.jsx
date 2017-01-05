@@ -8,6 +8,7 @@ import {
   fields,
   permissions,
   Login,
+  PasswordReset,
   App,
   HeaderBar
 } from 'containers';
@@ -131,6 +132,11 @@ export default (store) => (
       name="Logout"
       path="logout"
       onEnter={logout(store)}
+    />
+    <Route
+      name="Password reset"
+      path="password_reset/:token"
+      components={{ main: PasswordReset }}
     />
   </Route>
 );

@@ -27,6 +27,7 @@ use postgres::{Connection, TlsMode};
 use postgres::error::Error as PgError;
 
 use serde_json::Value;
+use serde_json::value;
 
 use fallible_iterator::FallibleIterator;
 use chan_signal::Signal;
@@ -139,7 +140,14 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
         Err(err) => email_error!(message.gid, format!("othererr({:?})", err), connection),
     };
     let object: Value = match rows.get(0).get(0) {
-        Some(value) => value,
+        Some(value) => {
+            let mut mutvalue : value::Map<String,Value> = value::from_value(value).unwrap();
+            mutvalue.insert(
+                "hostname".to_string(),
+                value::to_value(get_env_var!("PMS_BASE_URL", "http://localhost:4242")),
+            );
+            value::to_value(mutvalue)
+        },
         None => email_error!(message.gid, format!("Id not found (or no read access)"), connection)
     };
 
