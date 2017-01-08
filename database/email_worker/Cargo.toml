@@ -1,5 +1,5 @@
 [package]
-name = "emailnotifier"
+name = "email_worker"
 version = "0.0.1"
 authors = ["Benjamin W. Broersma <bw@broersma.com>"]
 publish = false

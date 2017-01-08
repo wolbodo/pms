@@ -15,53 +15,63 @@ use fallible_iterator::FallibleIterator;
 use std::time::Duration;
 use std::thread;
 use chan_signal::Signal;
-use std::sync::atomic::AtomicBool;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Message {
     gid: i64
 }
 
-let static exit = AtomicBool::new(false);
 
 fn main() {
 
     let signal = chan_signal::notify(&[Signal::INT, Signal::TERM]);
-    let (sender, receiver) = chan::sync(0);
+    let (thread_sender, main_receiver) = chan::sync(0);
+    let (main_sender, thread_receiver) = chan::sync(0);
 
-    thread::spawn(move || notify_worker(sender));
+    let worker_thread = thread::spawn(move || notify_worker(thread_sender, thread_receiver));
 
     chan_select! {
         signal.recv() -> signal => {
-            println!("received signal: {:?}", signal)
+            println!("received signal: {:?}, sending exit to worker thread", signal);
+            main_sender.send(());
+            worker_thread.join().unwrap();
+            println!("worker thread exited");
         },
-        receiver.recv() => {
-            println!("Program completed normally.");
+        main_receiver.recv() => {
+            panic!("Worker thread stopped, this should not happen (restart?)");
         }
     }
     println!("Clean exit.");
 }
 
-fn notify_worker(_sender: chan::Sender<()>) {
+fn notify_worker(_thread_sender: chan::Sender<()>, thread_receiver: chan::Receiver<()>) {
     let connection = Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None).unwrap();
     connection.execute(sql!("LISTEN channelname"), &[]).unwrap();
-    let notifications = connection.notifications();
+    
+    {
+        let notifications = connection.notifications();
 
-    //timeout_iter & check None/Some/Err + None + signal-exit => exit
-    loop {
-        let mut it = notifications.timeout_iter(Duration::from_secs(15));
-        while match it.next().unwrap() {
-            Some(msg) => {
-                let payload = msg.payload;
-                // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
-                // I would like the no errors to be Errors too.
-                let deserialized: Message = serde_json::from_str(&payload).unwrap();
+        //timeout_iter & check None/Some/Err + None + signal-exit => exit
+        loop {
+            chan_select! {
+                default => {
+                    let mut it = notifications.timeout_iter(Duration::from_secs(15));
+                    while match it.next().unwrap() {
+                        Some(msg) => {
+                            let payload = msg.payload;
+                            // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
+                            // I would like the no errors to be Errors too.
+                            let deserialized: Message = serde_json::from_str(&payload).unwrap();
 
-                println!("{0}; {1}", payload, deserialized.gid);
-                true
-            },
-            _ => false
-        } {};
+                            println!("{0}; {1}", payload, deserialized.gid);
+                            true
+                        },
+                        _ => false
+                    } {};
+                },
+                thread_receiver.recv() => { break; },
+            }
+        }
     }
 
     connection.finish().unwrap();
