@@ -1,0 +1,21 @@
+[package]
+name = "backend-rocket"
+version = "0.1.0"
+authors = ["Dexter <dexter@dexterlabs.nl>"]
+
+[dependencies]
+rocket = { path = "../../Rocket/lib"}
+rocket_codegen = { path = "../../Rocket/codegen"}
+r2d2 = "*"
+r2d2_postgres = "*"
+postgres = { version = "*", features = ["with-serde_json"]}
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
+lazy_static = "*"
+postgres_macros = { git = "https://github.com/sfackler/rust-postgres-macros" }
+
+
+[dependencies.rocket_contrib]
+path = "../../Rocket/contrib"
+features = ["json"]

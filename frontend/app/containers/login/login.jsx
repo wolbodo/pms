@@ -7,12 +7,14 @@ import * as authActions from 'redux/modules/auth';
 
 @connect(
   (state) => ({
-    people: state.get('people').toJS()
+    people: state.get('people').toJS(),
+    auth: state.get('auth').toJS()
   }),
   { login: authActions.login })
 export default class Login extends React.Component {
   static propTypes = {
-    login: PropTypes.func
+    login: PropTypes.func,
+    auth: PropTypes.object
   };
 
   constructor(props) {
@@ -37,6 +39,7 @@ export default class Login extends React.Component {
   }
 
   render() {
+    const { auth: { error } } = this.props;
     return (
       <form className="content" onSubmit={this.handleSubmit}>
         <mdl.Card className="login mdl-color--white mdl-shadow--2dp">
@@ -53,10 +56,11 @@ export default class Login extends React.Component {
               onChange={({ target }) => this.onChange('password', target.value)}
               floatingLabel
             />
-            <mdl.Button primary raised>Verstuur</mdl.Button>
-            {this.state.error && (
-              <p>Bad login information</p>
+            <mdl.Button primary raised>Log in</mdl.Button>
+            {error && (
+              <p className="error">{error}</p>
             )}
+            <a onClick={() => {}}>Wachtwoord vergeten?</a>
           </div>
       </mdl.Card>
       </form>

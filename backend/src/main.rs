@@ -300,6 +300,28 @@ fn handle_fields_get(req: &mut Request) -> IronResult<Response> {
     ))
 }
 
+
+fn handle_password_forgot(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "password_forgot",
+        args => (
+            user_email get_param!(req, "email", String)
+        )
+    ))
+}
+
+fn handle_password_reset(req: &mut Request) -> IronResult<Response> {
+    caching(&req, &call_db!(
+        req => req,
+        func => "password_reset",
+        args => (
+            reset_token get_param!(req, "token", String)
+            // new_password ....
+        )
+    ))
+}
+
 fn handle_fields_edit(_: &mut Request) -> IronResult<Response> {
     // Update fields, admin only. 
 
@@ -340,9 +362,14 @@ fn main() {
         fields_get:      get  "/fields"          => handle_fields_get,
         fields_get_i:    get  "/fields/:table"   => handle_fields_get,
         fields_set:      put  "/fields"          => handle_fields_edit
+
+        // password_forgot  get  "/password_forgot/:email" => handle_password_forgot,
+        // password_reset   get  "/password_reset/:token"  => handle_password_reset,
     );
 
     let mut chain = Chain::new(router);
+
+    println!("Connecting to database...");
 
     // for unix domain sockets use: postgres://pms@%2Frun%2Fpostgresql
     match PostgresMiddleware::new("postgres://pms@%2Frun%2Fpostgresql") {

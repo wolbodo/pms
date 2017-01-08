@@ -2,12 +2,12 @@ BEGIN;
 
 
 
--- INSERT INTO people (email, password_hash, modified_by) SELECT 'test@example.com', crypt('1234',gen_salt('bf',13)), -1;
+-- INSERT INTO people (email, password_hash, modified_by) SELECT 'dexter+test@wlbd.nl', crypt('1234',gen_salt('bf',13)), -1;
 
 -- "WOLBODOISAWESOME, itmysupersecretpassword"
 INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
-('admin@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
-('wikkert@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1,
+('dexter+admin@wlbd.nl', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
+('dexter@wlbd.nl', '+31152121516', crypt('1234',gen_salt('bf',4)), -1,
     '{
          "nickname": "Wikkert",
          "firstname": "Willem",
@@ -37,7 +37,7 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution", "coasters"]
     }'
 ),
-('sammy@example.com', '+31600000001', crypt('1234',gen_salt('bf',4)), -1,
+('sammy@wlbd.nl', '+31600000001', crypt('1234',gen_salt('bf',4)), -1,
     '{
          "nickname": "Sammy",
          "firstname": "Sam",
@@ -59,8 +59,8 @@ INSERT INTO people (email, phone, password_hash, modified_by, data) VALUES
          "directdebit": ["contribution"]
     }'
 ),
-('keymaster@example.com', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
-('aivd@example.com', '+31793205050', crypt('1234',gen_salt('bf',4)), -1, '{}');
+('dexter+keymaster@wlbd.nl', '+31152121516', crypt('1234',gen_salt('bf',4)), -1, '{}'),
+('dexter+aivd@wlbd.nl', '+31793205050', crypt('1234',gen_salt('bf',4)), -1, '{}');
 
 INSERT INTO roles (name, modified_by)
 VALUES
@@ -77,11 +77,11 @@ VALUES
 INSERT INTO people_roles (people_id, roles_id, modified_by)
 SELECT people.id, roles.id, -1 FROM
     (VALUES
-        ('admin@example.com', array['login','admin']),
-        ('wikkert@example.com', array['login','member']),
-        ('sammy@example.com', array['login','member','board','solvable']),
-        ('keymaster@example.com', array['login','keymanager']),
-        ('aivd@example.com', array['login','keyobserver'])
+        ('dexter+admin@wlbd.nl', array['login','admin']),
+        ('dexter@wlbd.nl', array['login','member']),
+        ('sammy@wlbd.nl', array['login','member','board','solvable']),
+        ('dexter+keymaster@wlbd.nl', array['login','keymanager']),
+        ('dexter+aivd@wlbd.nl', array['login','keyobserver'])
     ) alias (people_email, roles_names)
     JOIN people ON people.valid_till IS NULL AND people.email = alias.people_email
     JOIN roles ON roles.valid_till IS NULL AND roles.name IN (SELECT unnest(alias.roles_names));
