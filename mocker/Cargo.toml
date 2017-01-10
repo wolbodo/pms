@@ -1,0 +1,12 @@
+[package]
+name = "mocker"
+version = "0.1.0"
+authors = ["Dexter <dexter@dexterlabs.nl>"]
+
+[dependencies]
+serde_yaml = "0.5"
+serde_json = "*"
+regex = "*"
+lazy_static = "*"
+serde = "*"
+linked-hash-map = "*"

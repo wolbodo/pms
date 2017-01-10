@@ -1,6 +1,4 @@
 .directory
-backend/Cargo.lock
-backend/target/
 frontend/node_modules/
 frontend/npm-debug.log
 frontend/build/
@@ -12,8 +10,7 @@ node_modules/
 npm-debug.log
 *.sublime-project
 *.sublime-workspace
-database/email_worker/target/
-database/email_worker/.env
-database/email_worker/Cargo.lock
-backend-rocket/target/
-backend-rocket/Cargo.lock
+
+target/
+.env
+Cargo.lock
