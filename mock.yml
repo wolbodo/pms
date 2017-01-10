@@ -1,0 +1,327 @@
+- fields:
+    people: 
+      required:
+        - email
+        - nickname
+      header: [nickname, firstname, lastname, city, gender, mobile, email]
+      form:
+        - title: Persoon
+          fields: 
+            - [nickname]
+            - [firstname, infix, lastname]
+            - [gender]
+            - [birthdate,deathdate]
+        - title: Adres
+          fields:
+            - [street,housenumber]
+            - [zipcode,city]
+            - [country]
+        - title: Bank
+          fields: 
+            - [iban]
+            - [directdebit]
+            - [email]
+            - [mobile]
+            - [phone]
+            - [emergencyinfo]
+        - title: Status
+          fields: 
+            - [membertype, roles]
+            - [membersince,membertill]
+            - [functions]
+            - [notes]
+            - [wantscontact]
+        - title: Sleutel
+          fields: 
+            - [keycode]
+            - [coasters]
+            - [cashregister]
+            - [frontdoor]
+            - [isadmin]
+        - title: System
+          fields: 
+            - [passwordhash]
+      properties:
+        gid: {}
+        id: {}
+        birthdate:
+          type: date
+          title: Geboortedatum
+        boardnotes: {}
+        cashregister:
+          type: boolean
+          title: Kassasysteem
+        city:
+          type: string
+          title: Woonplaats
+        coasters:
+          type: boolean
+          title: Viltjes
+        country:
+          type: string
+          title: Land
+        deathdate:
+          type: date
+          title: Sterfdatum
+        directdebit:
+          type: array
+          title: Overboeking
+        email:
+          pattern: /^.*@.*$/
+        emergencyinfo:
+          type: string
+          title: Noodgeval info
+        favoritenumber: {}
+        firstname:
+          type: string
+          title: Voornaam
+        frontdoor:
+          type: boolean
+          title: Voordeur
+        functions:
+          type: array
+          title: Functies
+        gender:
+          male: Man
+          female: Vrouw
+          trans: Trans
+          other: Anders
+        housenumber:
+          type: string
+          title: Huisnummer
+        iban:
+          type: string
+          title: IBAN
+        infix:
+          type: string
+          title: Tussenvoegsel
+        isadmin:
+          type: boolean
+          title: Admin
+        keycode:
+          type: string
+          title: KeyCode
+        lastname:
+          type: string
+          title: Achternaam
+        membersince:
+          type: string
+          title: Lid sinds
+        membertill:
+          type: string
+          title: Lid tot
+        membertype:
+          type: string
+          title: Lid type
+        mobile:
+          type: string
+          title: Mobiel
+        nickname:
+          type: string
+          title: Bijnaam
+        notes:
+          type: string
+          title: Opmerkingen
+        password_hash:
+          type: string
+          title: Wachtwoord
+        peoplesince: {}
+        phone:
+          type: string
+          title: Telefoon
+        privatenotes: {}
+        roles:
+          type: reference
+          target: roles
+          title: Groepen
+          displayValue: name
+        state:
+        street:
+          type: string
+          title: Straat
+        wantscontact:
+          type: boolean
+          title: Wil contact
+        zipcode:
+          type: string
+          title: Postcode
+    roles:
+      title: Wijzig groep
+      header: [name,description]
+      form:
+        - title: Gegevens
+          fields:
+            - [name]
+            - [description]
+      properties:
+        gid: {}
+        id: {}
+        description:
+          type: string
+          title: Omschrijving
+        members: 
+          type: reference
+          target: people
+          title: Leden
+          displayValue: nickname
+        name: 
+          type: string
+          title: Naam
+    people_roles:
+      properties:
+        name:
+          type: string
+          title: Naam
+        gid: {}
+        id: {}
+        people_id: {}
+        roles_id: {}
+    fields:
+      title: Wijzig veld
+      form:
+        - title: Veld
+          fields: 
+            - [name]
+            - [title]
+            - [type]
+      properties:
+        name:
+          name: name
+          title: Naam
+          type: string
+          readonly: true
+        type:
+          name: type
+          title: Type
+          type: option
+          options:
+            string: Tekst
+            option: Optie
+            enum: Dropdown
+            date: Datum
+            array: Lijst
+            boolean: Booleaan
+            link: Link
+        title:
+          name: title
+          title: Label
+          type: string
+        target:
+          name: target
+          title: Doel
+          type: string
+        displayValue:
+          name: displayValue
+          title: Weergegeven veld
+          type: string
+        options:
+          name: options
+          title: Opties
+          type: array
+
+- people:
+  - email: dexter+admin@wlbd.nl
+    phone: '+31152121516'
+  - email: dexter@wlbd.nl
+    phone: '+31152121516'
+    nickname: Wikkert
+    firstname: Willem
+    infix: van
+    lastname: Olbodo
+    street: Verwersdijk
+    housenumber: 102
+    zipcode: 2611NK
+    city: Delft
+    country: The Netherlands
+    gender: male
+    mobile: +31600000001
+    iban: NL12NOBANK123123123123
+    birthdate: 1939-04-14
+    deathdate: 2029-04-14
+    emergencyinfo: Niet reanimeren!
+    membertype: member
+    peoplesince: 1959-04-14
+    functions: [commissieX]
+    notes: Al 60 jaar stand-bye!
+    favoritenumber: 42
+    wantscontact: yes
+    keycode: 123123
+    coasters:
+      authentication: [pincode,key,fingerprint]
+      balancetopup: 20.00
+    cashregister: true
+    frontdoor: 
+      timelimits:
+        - from: '16:00'
+          to: '02:00'
+          days: [monday,thursday]
+    directdebit: [contribution, coasters]
+  - email: sammy@wlbd.nl
+    phone: '+31600000001'
+    nickname: Sammy
+    firstname: Sam
+    lastname: Anonymous
+    street: Verwersdijk
+    housenumber: 104
+    zipcode: 2611NK
+    city: Delft
+    country: The Netherlands
+    gender: trans
+    iban: NL12NOBANK123123123132
+    birthdate: 1989-04-14
+    peoplesince: 2010-01-01
+    functions: [boardmember, eettafel]
+    keycode: 321321
+    coasters: null
+    cashregister: true
+    frontdoor: true
+    directdebit: [contribution]
+  - email: dexter+keymaster@wlbd.nl
+    phone: '+31152121516'
+  - email: dexter+aivd@wlbd.nl
+
+- roles:
+    - name: login
+      members: [dexter+admin@wlbd.nl, dexter@wlbd.nl, sammy@wlbd.nl, dexter+keymaster@wlbd.nl, dexter+aivd@wlbd.nl]
+    - name: self
+      members: []
+    - name: admin
+      members: [dexter+admin@wlbd.nl]
+    - name: board
+      members: [sammy@wlbd.nl]
+    - name: member
+      members: [dexter@wlbd.nl, sammy@wlbd.nl]
+    - name: solvable
+      members: [sammy@wlbd.nl]
+    - name: oldmember
+      members: []
+    - name: keymanager
+      members: [dexter+keymaster@wlbd.nl]
+    - name: keyobserver
+      members: [dexter+aivd@wlbd.nl]
+
+- permissions:
+  # Permission types: 
+  #   'view', 'edit', 'create', 'custom'
+  # fields:
+  #   type, ref_table, ref_key, ref_value
+
+  - table: [people, roles, people_roles]
+    type: [view, edit]
+    description: Allows editing properties on resources (Should be autogenerated on field create)
+    key: fields
+    value: |
+      SQL(
+        INNER JOIN (SELECT id, ref_table FROM fields) values
+        ON values.ref_table = tables.ref_table
+      )
+
+  - table: [people, roles, people_roles, fields, permissions]
+    type: create
+    description: Allows creating resources (Created initially)
+
+  - table: people_roles
+    type: create
+    description: Allows assigning people to roles. (Should be autogenerated on role create)
+    key: roles_id
+    value: SQL(CROSS JOIN (SELECT id FROM roles) values)

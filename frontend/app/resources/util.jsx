@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 import FieldsResource from './fields';
 import RolesResource from './roles';
+import PeopleResource from './people';
 
 export function memoizeMethod(target, name, description) {
   // TODO: Only cache the last call, since state rarely repeats.
@@ -14,7 +15,12 @@ export function connectResources(resources, defaultActions = {}) {
   // ActionCreators select the resources to map...
 
   // Make sure fields are in the resources
-  const _resources = { fields: FieldsResource, roles: RolesResource, ...resources };
+  const _resources = {
+    fields: FieldsResource,
+    roles: RolesResource,
+    people: PeopleResource,
+    ...resources
+  };
   let stateResources;
 
   function mapStateToProps(state) {

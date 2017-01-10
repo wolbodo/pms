@@ -95,16 +95,23 @@ export default (store) => (
     />
     <Route
       name="Velden"
-      path="velden"
-      components={{ main: fields.View, header: HeaderBar }}
+      path="/velden"
+      components={{ main: fields.Overview, header: HeaderBar }}
       onEnter={requireLogin(store)}
-    />
-    <Route
-      name="Veld"
-      path="velden/:veld"
-      components={{ main: fields.Edit, header: HeaderBar }}
-      onEnter={requireLogin(store)}
-    />
+    >
+      <Route
+        name="Veld overzicht"
+        path=":resource"
+        components={{ content: fields.View }}
+        onEnter={requireLogin(store)}
+      />
+      <Route
+        name="Veld edit"
+        path=":resource/:veld"
+        components={{ content: fields.Edit }}
+        onEnter={requireLogin(store)}
+      />
+    </Route>
     <Route
       name="Groepen"
       path="groepen"

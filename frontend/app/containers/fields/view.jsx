@@ -351,6 +351,7 @@ export default class FieldsView extends React.Component {
     moveField: PropTypes.func,
     createSet: PropTypes.func,
     fields: PropTypes.object,
+    params: PropTypes.object
   }
   constructor(props) {
     super(props);
@@ -372,10 +373,11 @@ export default class FieldsView extends React.Component {
   }
 
   render() {
-    const { fields } = this.props;
+    const { fields, params } = this.props;
+    console.log('View params', params);
 
     // TODO: Fix editing multiple tables, for now, just edit people.
-    const table = 'people';
+    const table = params.resource || 'people';
 
     // <mdl.CardTitle>Alle velden</mdl.CardTitle>
     return (
@@ -384,7 +386,7 @@ export default class FieldsView extends React.Component {
         <Role
           key={i}
           index={i}
-          getFieldURI={(name) => `/velden/${name}`}
+          getFieldURI={(name) => `/velden/${table}/${name}`}
           moveField={this.moveField}
           schema={fields.items[table]}
           addSet={this.addSet}
