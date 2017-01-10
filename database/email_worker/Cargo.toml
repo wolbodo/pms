@@ -1,7 +1,7 @@
 [package]
 name = "email_worker"
 version = "0.0.2"
-authors = ["dexter <dexter@dexterlabs.nl>", "Benjamin W. Broersma <bw@broersma.com>"]
+authors = ["Benjamin W. Broersma <bw@broersma.com>"]
 publish = false
 
 [dependencies]

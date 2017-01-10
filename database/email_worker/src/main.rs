@@ -36,8 +36,6 @@ use lettre::email::EmailBuilder;
 use lettre::transport::EmailTransport;
 use lettre::transport::smtp::{SecurityLevel, SmtpTransport, SmtpTransportBuilder};
 
-// use std::sync::atomic::AtomicBool;
-
 #[derive(Serialize, Deserialize, Debug)]
 struct Message {
     gid: i32
@@ -79,16 +77,20 @@ fn main() {
     dotenv().ok();
 
     let signal = chan_signal::notify(&[Signal::INT, Signal::TERM]);
-    let (sender, receiver) = chan::sync(0);
+    let (thread_sender, main_receiver) = chan::sync(0);
+    let (main_sender, thread_receiver) = chan::sync(0);
 
-    thread::spawn(move || notify_worker(sender));
+    let worker_thread = thread::spawn(move || notify_worker(thread_sender, thread_receiver));
 
     chan_select! {
         signal.recv() -> signal => {
-            println!("received signal: {:?}", signal)
+            println!("received signal: {:?}, sending exit to worker thread", signal);
+            main_sender.send(());
+            worker_thread.join().unwrap();
+            println!("worker thread exited");
         },
-        receiver.recv() => {
-            println!("Program completed normally.");
+        main_receiver.recv() => {
+            panic!("Worker thread stopped, this should not happen (restart?)");
         }
     }
     println!("Clean exit.");
@@ -212,19 +214,16 @@ fn handle_email(connection: &Connection, mailer: &mut SmtpTransport, message: Me
     }
 }
 
-fn notify_worker(_sender: chan::Sender<()>) {
-
+fn notify_worker(_thread_sender: chan::Sender<()>, thread_receiver: chan::Receiver<()>) {
     let connection = match Connection::connect("postgres://pms@%2Frun%2Fpostgresql", TlsMode::None) {
         Ok(connection) => connection,
         Err(err) => panic!(format!("Error connecting to database{:?}", err))
     };
-
     match connection.execute(sql!("LISTEN worker_queue"), &[]) {
         Ok(_) => println!("Successfully listening to worker_queue"),
         Err(err) => panic!(format!("Error listening {:?}", err))
     };
-    let notifications = connection.notifications();
-
+    
     println!("Connceting to: {:?} {:?}", 
         get_env_var!("SMTP_HOST", "127.0.0.1"),
         u16::from_str_radix(get_env_var!("SMTP_PORT", "25"), 10).unwrap()
@@ -251,26 +250,34 @@ fn notify_worker(_sender: chan::Sender<()>) {
         // Enable connection reuse
         .connection_reuse(true).build();
 
+    {
+        let notifications = connection.notifications();
 
-    //timeout_iter & check None/Some/Err + None + signal-exit => exit
-    loop {
-        let mut it = notifications.timeout_iter(Duration::from_secs(15));
-        while match it.next() {
-            Ok(Some(msg)) => {
-                let payload = msg.payload;
-                // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
-                // I would like the no errors to be Errors too.
-                let deserialized: Message = serde_json::from_str(&payload).unwrap();
+        loop {
+            chan_select! {
+                default => {
+                    let mut it = notifications.timeout_iter(Duration::from_secs(15));
+                    while match it.next() {
+                        Ok(Some(msg)) => {
+                            let payload = msg.payload;
+                            // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
+                            // I would like the no errors to be Errors too.
+                            let deserialized: Message = serde_json::from_str(&payload).unwrap();
 
-                println!("{0}; {1}", payload, deserialized.gid);
-                handle_email(&connection, &mut mailer, deserialized);
-                true
-            },
-            Err(err) => panic!(format!("Error getting notification {:?}", err)),
-            _ => false
-        } {}
+                            println!("{0}; {1}", payload, deserialized.gid);
+                            handle_email(&connection, &mut mailer, deserialized);
+                            true
+                        },
+                        Err(err) => panic!(format!("Error getting notification {:?}", err)),
+                        _ => false
+                    } {};
+                },
+                thread_receiver.recv() => break,
+            }
+        }
     }
 
+    mailer.close();
     connection.finish().unwrap();
 }
 
