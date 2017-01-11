@@ -348,24 +348,24 @@ describe('Using pms', function () {
     it('should not get people without authorization.', function () {
       return session.swagger()
         .get('/api/people')
-        .expectStatus(400)
-        .expect(error('No Authorization header found'))
+        .expectStatus(401)
+        .expect(error('An error occurred on the server'))
         .end()
     })
 
     it('should not get roles without authorization.', function () {
       return session.swagger()
         .get('/api/roles')
-        .expectStatus(400)
-        .expect(error('No Authorization header found'))
+        .expectStatus(401)
+        .expect(error('An error occurred on the server'))
         .end()
     })
 
     it('should not get fields without authorization.', function () {
       return session.swagger()
         .get('/api/fields')
-        .expectStatus(400)
-        .expect(error('No Authorization header found'))
+        .expectStatus(401)
+        .expect(error('An error occurred on the server'))
         .end()
     })
   })

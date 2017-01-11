@@ -65,6 +65,10 @@ paths:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       description: Add a new `Person` object
       parameters:
@@ -80,6 +84,10 @@ paths:
             $ref: "#/definitions/PeopleResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
   /people/{people_id}:
@@ -98,6 +106,10 @@ paths:
             $ref: '#/definitions/PeopleResponse'
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
     put:
@@ -120,6 +132,10 @@ paths:
             $ref: '#/definitions/PeopleResponse'
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
   /people/{people_id}/ref:
@@ -145,6 +161,10 @@ paths:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
   /roles:
     get:
@@ -156,6 +176,10 @@ paths:
             $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
     post:
@@ -175,6 +199,10 @@ paths:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
   /roles/{roles_id}:
     get:
       description: Get a single `Role`
@@ -191,6 +219,10 @@ paths:
             $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
     put:
@@ -213,6 +245,10 @@ paths:
             $ref: "#/definitions/RolesResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
   /roles/{roles_id}/ref:
@@ -238,6 +274,10 @@ paths:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
 
   /fields:
     get:
@@ -249,6 +289,10 @@ paths:
             $ref: '#/definitions/FieldsResponse'
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
             
@@ -270,6 +314,10 @@ paths:
           description: An error has occurred on the server.
           schema:
             $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
     post:
       description: Create new field
       parameters:
@@ -285,6 +333,10 @@ paths:
             $ref: "#/definitions/FieldsResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
           
@@ -303,6 +355,10 @@ paths:
             $ref: "#/definitions/FieldsResponse"
         400:
           description: An error has occurred on the server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized request.
           schema:
             $ref: '#/definitions/ErrorResponse'
 
