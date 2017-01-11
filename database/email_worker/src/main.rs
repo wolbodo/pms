@@ -250,35 +250,32 @@ fn notify_worker(_thread_sender: chan::Sender<()>, thread_receiver: chan::Receiv
         // Enable connection reuse
         .connection_reuse(true).build();
 
-    {
-        let notifications = connection.notifications();
+    let notifications = connection.notifications();
 
-        loop {
-            chan_select! {
-                default => {
-                    let mut it = notifications.timeout_iter(Duration::from_secs(15));
-                    while match it.next() {
-                        Ok(Some(msg)) => {
-                            let payload = msg.payload;
-                            // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
-                            // I would like the no errors to be Errors too.
-                            let deserialized: Message = serde_json::from_str(&payload).unwrap();
+    loop {
+        chan_select! {
+            default => {
+                let mut it = notifications.timeout_iter(Duration::from_secs(15));
+                while match it.next() {
+                    Ok(Some(msg)) => {
+                        let payload = msg.payload;
+                        // intersting issues with serde_json: {"gid": 4.3} => 4 (no error), {"gid": "4"} => 4 (no error), {"gid": "4.3"} => Error.
+                        // I would like the no errors to be Errors too.
+                        let deserialized: Message = serde_json::from_str(&payload).unwrap();
 
-                            println!("{0}; {1}", payload, deserialized.gid);
-                            handle_email(&connection, &mut mailer, deserialized);
-                            true
-                        },
-                        Err(err) => panic!(format!("Error getting notification {:?}", err)),
-                        _ => false
-                    } {};
-                },
-                thread_receiver.recv() => break,
-            }
+                        println!("{0}; {1}", payload, deserialized.gid);
+                        handle_email(&connection, &mut mailer, deserialized);
+                        true
+                    },
+                    Err(err) => panic!(format!("Error getting notification {:?}", err)),
+                    _ => false
+                } {};
+            },
+            thread_receiver.recv() => break,
         }
     }
 
     mailer.close();
-    connection.finish().unwrap();
 }
 
 // handle LOTS of corner cases.. (and match unwraps + log to stderr? + log to stdout to syslog) or https://github.com/Geal/rust-syslog log.warning|err|notice|debug(msg); ?
