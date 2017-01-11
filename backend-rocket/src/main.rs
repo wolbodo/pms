@@ -253,12 +253,12 @@ fn password_reset(reset: JSON<PasswordReset>) -> Result<JSON<Value>, status::Cus
 
 #[error(400)]
 fn badrequest() -> JSON<Value> { 
-  JSON(Value::from_str("{\"error\":\"No Authorization header found\"}").unwrap())
+  JSON(Value::from_str("{\"error\":\"An error occurred on the server\"}").unwrap())
 }
 
 #[error(401)]
 fn unauthorized() -> JSON<Value> { 
-  JSON(Value::from_str("{\"error\":\"An error occurred on the server\"}").unwrap())
+  JSON(Value::from_str("{\"error\":\"No Authorization header found\"}").unwrap())
 }
 
 fn main() {

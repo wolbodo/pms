@@ -335,6 +335,7 @@ describe('Using pms', function () {
         .post('/api/login')
         .send({'user': 'dexter@wlbd.nl', 'password': '1234s'})
         .expectStatus(400)
+        .expect(error('Username or password wrong'))
         .end()
     })
     it('can not login with null password', function () {
@@ -342,6 +343,7 @@ describe('Using pms', function () {
         .post('/api/login')
         .send({'user': 'dexter@wlbd.nl', 'password': null})
         .expectStatus(400)
+        .expect(error('Username or password wrong'))
         .end()
     })
 
@@ -349,7 +351,7 @@ describe('Using pms', function () {
       return session.swagger()
         .get('/api/people')
         .expectStatus(401)
-        .expect(error('An error occurred on the server'))
+        .expect(error('No Authorization header found'))
         .end()
     })
 
@@ -357,7 +359,7 @@ describe('Using pms', function () {
       return session.swagger()
         .get('/api/roles')
         .expectStatus(401)
-        .expect(error('An error occurred on the server'))
+        .expect(error('No Authorization header found'))
         .end()
     })
 
@@ -365,7 +367,7 @@ describe('Using pms', function () {
       return session.swagger()
         .get('/api/fields')
         .expectStatus(401)
-        .expect(error('An error occurred on the server'))
+        .expect(error('No Authorization header found'))
         .end()
     })
   })
