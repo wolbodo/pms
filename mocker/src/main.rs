@@ -47,7 +47,8 @@ fn handle_fields(fields: & Value) {
 
   let mut sql_query = String::new();
   sql_query.push_str("\n--#####################--\n-- Creating all fields --\n--#####################--\n\n");
-  sql_query.push_str("\nINSERT INTO fields (ref_table, name, data, modified_by)\nVALUES\n");
+  sql_query.push_str("DELETE FROM fields; ALTER SEQUENCE fields_id_seq RESTART WITH 1;");
+  sql_query.push_str("\nINSERT INTO fields (ref_table, name, data, modified_by)\nVALUES\n--");
   for (ref key, ref value) in fields.as_mapping().unwrap() {
     // Take properties from value
     let ref_table = key.as_str().unwrap();
@@ -57,10 +58,7 @@ fn handle_fields(fields: & Value) {
     // .as_mapping_mut().unwrap();
     let properties = mapping.remove(&to_value("properties")).unwrap();
 
-
-    sql_query.push_str(format!("\t('{}', NULL, '{}', -1)", ref_table, serde_json::to_string(mapping).unwrap()).as_str());
-
-    format!("\t('{}', NULL, '{}', -1)", ref_table, serde_json::to_string(mapping).unwrap());
+    sql_query.push_str(format!(",\n\t('{}', NULL, '{}', -1)", ref_table, serde_json::to_string(mapping).unwrap()).as_str());
 
     properties.as_mapping().unwrap()
       .iter()
@@ -68,10 +66,9 @@ fn handle_fields(fields: & Value) {
         acc.push_str(format!(",\n\t('{}', '{}', '{}', -1)", ref_table, name.as_str().unwrap(), serde_json::to_string(definition).unwrap()).as_str());
         acc
       });
-
-    sql_query.push_str(";");
   }
-  println!("Fields SQL:\n{}", sql_query);
+  sql_query.push_str(";");
+  println!("{}", sql_query);
 }
 fn handle_people(people: & Value) {
   // Unpack the yaml and create insert statements
@@ -79,6 +76,7 @@ fn handle_people(people: & Value) {
   let mut sql_query = String::new();
 
   sql_query.push_str("\n--#####################--\n-- Creating all people --\n--#####################--\n\n");
+  sql_query.push_str("DELETE FROM people; ALTER SEQUENCE people_id_seq RESTART WITH 1;");
   sql_query.push_str("\nINSERT INTO people (email, phone, modified_by, data)\nVALUES\n--");
   for ref value in people.as_sequence().unwrap() {
     // Take properties from value
@@ -105,7 +103,8 @@ fn handle_roles(roles: & Value) {
 
 
   sql_query.push_str("\n--####################--\n-- Creating all roles --\n--####################--\n\n");
-  sql_query.push_str("\nINSERT INTO roles (email, phone, modified_by, data)\nVALUES\n--");
+  sql_query.push_str("DELETE FROM roles; ALTER SEQUENCE roles_id_seq RESTART WITH 1;");
+  sql_query.push_str("\nINSERT INTO roles (name, modified_by)\nVALUES\n--");
   for ref value in roles.as_sequence().unwrap() {
     // Take properties from value
     let role = value.as_mapping().unwrap();
@@ -123,6 +122,7 @@ fn handle_roles(roles: & Value) {
   sql_query.push_str(";");
 
   sql_query.push_str("\n--###########################--\n-- Creating all people_roles --\n--###########################--\n\n");
+  sql_query.push_str("DELETE FROM people_roles;");
 
   sql_query.push_str("INSERT INTO people_roles (people_id, roles_id, modified_by)\n");
   sql_query.push_str("SELECT people.id, roles.id, -1 FROM\n");
@@ -145,7 +145,9 @@ fn handle_permissions(permissions: & Value) {
   }
 
 
-  sql_query.push_str(format!("\\nn--##########################--\n-- Creating all permissions --\n--##########################--\n\n").as_str());
+  sql_query.push_str(format!("\n--##########################--\n-- Creating all permissions --\n--##########################--\n\n").as_str());
+  sql_query.push_str("DELETE FROM permissions; ALTER SEQUENCE permissions_id_seq RESTART WITH 1;");
+
   for permission in permissions.as_sequence().unwrap() {
     // println!("{}", serde_json::to_string_pretty(permission).unwrap().as_str());
 
@@ -155,9 +157,9 @@ fn handle_permissions(permissions: & Value) {
     let p_type = format!("{}::permissions_type", get_string_or_unnest!(permission, "type"));
     let p_description = get_string_or!(permission, "description", "'Nothing'");
     let p_key = get_string_or!(permission, "key", "NULL");
-    let p_value = get_string_or!(permission, "value", "NULL");
+    let p_value = get_string_or!(permission, "value", "NULL::int");
 
-    sql_query.push_str(format!("\n\n-- {}", p_description).as_str());
+    sql_query.push_str(format!("\n\n-- {}\n", p_description).as_str());
 
     sql_query.push_str(format!("INSERT INTO permissions (type, ref_table, ref_key, ref_value, modified_by)\n").as_str());
     sql_query.push_str(format!("SELECT types.type, tables.ref_table, keys.ref_key, values.id, -1 as modified_by FROM\n").as_str());
@@ -171,16 +173,21 @@ fn handle_permissions(permissions: & Value) {
       _ => format!("CROSS JOIN (SELECT {} AS id) values", p_value)
     };
     sql_query.push_str(format!("{};\n", p_value).as_str());
-
-
-// SELECT types.type, tables.ref_table, keys.ref_key, fields.id, -1 as modified_by FROM 
-// (SELECT unnest(array['view', 'edit', 'create'])::permissions_type AS type) types
-// CROSS JOIN (SELECT unnest(array['people', 'roles', 'people_roles', 'fields']) AS ref_table) tables
-// CROSS JOIN (SELECT 'fields' AS ref_key) keys
-// INNER JOIN (SELECT id, ref_table FROM fields) fields
-//  ON fields.ref_table = tables.ref_table;
   }
 
+  println!("{}", sql_query);
+}
+
+fn handle_roles_permissions(permission_maps: & Value) {
+  // Generate a couple of queries based on the items in permissions
+  let mut sql_query = String::new();
+
+  sql_query.push_str(format!("\n--##########################--\n-- Creating all permission mappings --\n--##########################--\n\n").as_str());
+  sql_query.push_str("DELETE FROM roles_permissions;");
+
+  println!("{:?}", permission_maps);
+  println!("{}", serde_json::to_string_pretty(permission_maps).unwrap());
+  println!("{}", serde_yaml::to_string(permission_maps).unwrap());
   println!("{}", sql_query);
 }
 
@@ -203,6 +210,7 @@ fn main() {
         Some("people") => handle_people(value),
         Some("roles") => handle_roles(value),
         Some("permissions") => handle_permissions(value),
+        Some("roles_permissions") => handle_roles_permissions(value),
         Some(_) | None => panic!("No key found")
       }
     }
