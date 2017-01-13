@@ -1,0 +1,12 @@
+[submodule "backend"]
+	path = backend
+	url = git@github.com:wolbodo/pms-backend.git
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:wolbodo/pms-frontend.git
+[submodule "database"]
+	path = database
+	url = git@github.com:wolbodo/pms-database.git
+[submodule "mocker"]
+	path = mocker
+	url = git@github.com:wolbodo/pms-mocker.git
