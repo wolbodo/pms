@@ -1,6 +1,9 @@
 # People Management System
 
 
+# Email worker deps:
+libssl-dev
+
 # Fully dynamic frontend configuration and state management.
 ![Drag and drop functionality demoed](https://raw.githubusercontent.com/wolbodo/pms/master/drag.gif)
 

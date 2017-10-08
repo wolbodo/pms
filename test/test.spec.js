@@ -343,7 +343,7 @@ describe('Using pms', function () {
         .post('/api/login')
         .send({'user': 'dexter@wlbd.nl', 'password': null})
         .expectStatus(400)
-        .expect(error('Username or password wrong'))
+        .expect(error('An error occurred on the server'))
         .end()
     })
 
